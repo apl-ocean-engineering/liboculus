@@ -24,15 +24,11 @@
 
 #pragma once
 
-// #include <QDateTime>
-// #include <QObject>
 #include "Oculus/Oculus.h"
 
 #include <boost/asio.hpp>
 
 using boost::asio::ip::udp;
-
-//class QUdpSocket;
 
 namespace liboculus {
 
@@ -56,7 +52,7 @@ public:
 class OsStatusRx
 {
 public:
-    OsStatusRx(boost::asio::io_context& io_context);
+    OsStatusRx(boost::asio::io_service &context);
     ~OsStatusRx();
 
     void ReadDatagrams();
@@ -66,16 +62,17 @@ public:
 
 private:
 
-  void OsStatusRx::doConnect(const tcp::resolver::results_type& endpoints);
-  void OsStatusRx::doReadStatusMessage()
+  void doConnect(const udp::resolver::iterator &endpoints);
 
+  void handleConnect( const boost::system::error_code& error, udp::resolver::iterator iterator );
 
-    uint16_t     m_port;       // Port to listen on
-    uint16_t     m_valid;      // Number of valid status messages
-    uint16_t     m_invalid;    // Number of invalid status messages
-//    QUdpSocket* m_listener;   // Listening socket for status messages
+//  void doReceiveStatusMessage();
 
-  boost::asio::io_context& _ioContext;
+  uint16_t     m_port;       // Port to listen on
+  uint16_t     m_valid;      // Number of valid status messages
+  uint16_t     m_invalid;    // Number of invalid status messages
+
+  boost::asio::io_service& _ioService;
   udp::socket _socket;
 };
 

@@ -13,7 +13,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 ## C++ flags applied to all builds
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-find_package( Boost REQUIRED COMPONENTS asio )
+find_package( Boost REQUIRED COMPONENTS system )
 
 ## Find Blueprint Oculus SDK
 find_package( OculusSDK REQUIRED )
@@ -21,7 +21,7 @@ find_package( OculusSDK REQUIRED )
 ## Set global include paths
 fips_include_directories(
   ${CMAKE_SOURCE_DIR}/include
-  ${OCULUS_ROOT}
+  ${OCULUS_SDK_ROOT}
  )
 
 

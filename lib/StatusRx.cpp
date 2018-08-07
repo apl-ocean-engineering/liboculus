@@ -22,18 +22,26 @@
  *
  *****************************************************************************/
 
-#include "StatusRx.h"
+#include <string.h>
+#include <sstream>
+
+#include <boost/bind.hpp>
+
+
+#include "liboculus/StatusRx.h"
 #include "g3log/g3log.hpp"
-//#include <QUdpSocket>
+
 
 namespace liboculus {
+
+using std::string;
 
 // ----------------------------------------------------------------------------
 // OsStatusRx - a listening socket for oculus status messages
 
-OsStatusRx::OsStatusRx(boost::asio::io_context& io_context)
-  : _ioContext(io_context),
-    _socket(_ioContext)
+OsStatusRx::OsStatusRx(boost::asio::io_service& context)
+  : _ioService(context),
+    _socket(_ioService)
 {
   // Create and setup a broadcast listening socket
   //m_listener = new QUdpSocket(this);
@@ -43,8 +51,14 @@ OsStatusRx::OsStatusRx(boost::asio::io_context& io_context)
 
   LOG(INFO) << "Connecting to status socket";
 
-  udp::resolver resolver(_ioContext);
-  auto endpoints = resolver.resolve("0.0.0.0",m_port);
+  string portStr;
+  {
+    std::ostringstream portS( portStr );
+    portS << m_port;
+  }
+
+  udp::resolver resolver(_ioService);
+  auto endpoints = resolver.resolve(udp::resolver::query(string("0.0.0.0"), portStr));
 
   doConnect(endpoints);
 
@@ -62,35 +76,36 @@ OsStatusRx::~OsStatusRx()
 
 }
 
-void OsStatusRx::doConnect(const udp::resolver::results_type& endpoints)
+void OsStatusRx::doConnect(const udp::resolver::iterator& endpoints)
 {
   boost::asio::async_connect(_socket, endpoints,
-      [this](boost::system::error_code ec, udp::endpoint)
-      {
-        if (!ec)
-        {
-          doReadStatusMessage();
-        }
-      });
+                            boost::bind(&OsStatusRx::handleConnect,
+                                          this, _1, _2));
 }
 
-void OsStatusRx::doReadStatusMessage()
+void OsStatusRx::handleConnect( const boost::system::error_code &ec, udp::resolver::iterator i )
 {
-  boost::asio::async_read(_socket,
-      boost::asio::buffer(read_msg_.data(), sizeof(OculusStatusMsg)),
-      [this](boost::system::error_code ec, std::size_t /*length*/)
-      {
-
-        // if (!ec && read_msg_.decode_header())
-        // {
-        //   do_read_body();
-        // }
-        // else
-        // {
-        //   _socket.close();
-        // }
-      });
+  // Connect handler
+  if (!ec) {
+    LOG(INFO) << "Connected!";
+    // On connector
+  }
 }
+
+// void OsStatusRx::doReceiveStatusMessage()
+// {
+//   boost::asio::async_read(_socket,
+//       boost::asio::buffer(read_msg_.data(), sizeof(OculusStatusMsg)),
+//       [this](boost::system::error_code ec, std::size_t /*length*/)
+//       {
+//
+//         if (!ec) {
+//           read
+//         } else {
+//           _socket.close();
+//         }
+//       });
+// }
 
 // ----------------------------------------------------------------------------
 // Signalled when there is data available in the socket buffer

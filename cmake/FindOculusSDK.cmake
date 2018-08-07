@@ -20,4 +20,4 @@ find_path(OCULUS_SDK_ROOT Oculus/Oculus.h
          DOC "Location OCULUS SDK"
         )
 
-find_package_handle_standard_args(OCULUSSDK DEFAULT_MSG OCULUS_SDK_ROOT)
+find_package_handle_standard_args(OCULUS_SDK DEFAULT_MSG OCULUS_SDK_ROOT)
