@@ -10,26 +10,18 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# find_package(Eigen3 REQUIRED )
-# find_package(Boost COMPONENTS filesystem system program_options REQUIRED )  #n.b. program_options is only required for my version of Stereolabs "Recorder"
-
-## Default OpenCV version
-list(APPEND OPENCV_COMPONENTS core highgui imgproc )
-find_package(OpenCV COMPONENTS ${OPENCV_COMPONENTS} REQUIRED)
-
 ## C++ flags applied to all builds
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-## Configure OpenCV ##
+find_package( Boost REQUIRED COMPONENTS asio )
 
-## Find Blackmagic SDK
+## Find Blueprint Oculus SDK
 find_package( OculusSDK REQUIRED )
 
 ## Set global include paths
 fips_include_directories(
   ${CMAKE_SOURCE_DIR}/include
-  ${BPOCULUS_INCLUDE_DIR}
-  ${OpenCV_INCLUDE_DIRS}
+  ${OCULUS_ROOT}
  )
 
 
