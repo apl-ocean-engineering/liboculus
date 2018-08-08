@@ -86,25 +86,6 @@ namespace liboculus {
       m_valid    = 0;
       m_invalid  = 0;
 
-
-      //   std::ostringstream portS;
-      //   portS << m_port;
-      //
-      //   udp::resolver resolver(_ioService);
-      //
-      //   LOG(INFO) << "Listening on status socket port " << portS.str();
-      //
-      //   boost::system::error_code ec;
-      //   auto endpoints = resolver.resolve(udp::resolver::query(boost::asio::ip::address_v4::any, portS.str()), ec);
-      //
-      //   for( auto i = endpoints; i != udp::resolver::iterator(); i++ ) {
-      // LOG(INFO) << "Itr " << i->endpoint();
-      // }
-
-      // if( ec ) {
-      //   LOG(WARNING) << "Error on resolve: " << ec.message();
-      // }
-
       doConnect();
     }
 
@@ -158,9 +139,8 @@ namespace liboculus {
 
           LOG(DEBUG) << "Device id " << _osm.deviceId << " ; type: " <<  (uint16_t)_osm.deviceType;
 
-          boost::asio::ip::address_v4 addr( ntohl(_osm.ipAddr) );
-
-          LOG(DEBUG) << "Has ip addr: " << addr;
+          LOG(DEBUG) << "      Sonar ip addr: " << boost::asio::ip::address_v4( ntohl(_osm.ipAddr) );
+          LOG(DEBUG) << " Sonar connected to: " << boost::asio::ip::address_v4( ntohl(_osm.connectedIpAddr) );
 
           _status->update( _osm );
           m_valid++;

@@ -38,11 +38,11 @@ namespace liboculus {
     _sfm.gammaCorrection = 0.5; //gamma;
     _sfm.pingRate        = pingRateHigh;
     _sfm.masterMode      = 2;  // HF mode
-    _sfm.range           = 40; // 40m
+    _sfm.range           = 10; // 40m
     _sfm.gainPercent     = 50;  //gain;
-    _sfm.flags          =  0x01;
+    _sfm.flags          =  0x09;
 
-    _sfm.speedOfSound    = 0;  // m/s  0 for automatic calculation speedOfSound;
+    _sfm.speedOfSound    = 1500;  // m/s  0 for automatic calculation speedOfSound;
     _sfm.salinity        = 0;  // ppt; Freshwater salinity;
   }
 

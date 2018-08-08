@@ -29,6 +29,7 @@
 
 #include "Oculus/Oculus.h"
 
+#include "Ping.h"
 #include "SimpleFireMessage.h"
 
 namespace liboculus {
@@ -58,8 +59,11 @@ private:
   void scheduleWrite();
   void writeHandler(const boost::system::error_code& ec );
 
-  void startReader();
+  void scheduleHeaderRead();
   void readHeader(const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void readSimplePingResult(const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void readData(const boost::system::error_code& ec, std::size_t bytes_transferred );
+
 
   boost::asio::ip::address  _ipAddress;
 
@@ -72,7 +76,7 @@ private:
   std::shared_ptr<SimpleFireMessage> _fireMessage;
 
   // Data back from sonar
-  OculusSimplePingResult _pingHeader;
+  std::shared_ptr<Ping> _currentPing;
 };
 
 }
