@@ -37,11 +37,16 @@ namespace liboculus {
 
 // ----------------------------------------------------------------------------
 // Stores the last status message of a sonar witha given id
-class OsSonarStatus
+class SonarStatus
 {
 public:
+  friend class OsStatusRx;
 
-  OsSonarStatus() {}
+  SonarStatus() {}
+
+private:
+
+  void update( const OculusStatusMsg &msg );
 
   unsigned        id;              // The id of the sonar
   OculusStatusMsg osm;             // The last status message associated with this sonar
@@ -55,29 +60,25 @@ public:
 class OsStatusRx
 {
 public:
-    OsStatusRx(boost::asio::io_service &context );
+    OsStatusRx(boost::asio::io_service &context,
+                const std::shared_ptr<SonarStatus> &status = std::shared_ptr<SonarStatus>(new SonarStatus()) );
     ~OsStatusRx();
-
-    void ReadDatagrams();
-
-    OsSonarStatus status;
-
-// signals:
-//     void NewStatusMsg(OculusStatusMsg osm, uint16_6 valid, uint16_t invalid);
 
 
 private:
 
-  void doConnect(const udp::resolver::iterator &endpoints);
-  void handleConnect( const boost::system::error_code& error, udp::resolver::iterator iterator );
+  void doConnect();
 
   void startReader();
   void handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred );
 
-
-
 //  void doReceiveStatusMessage();
+
+  // "Scratch" copy, network operations write directly to this copy
   OculusStatusMsg _osm;
+
+  // This is the "usable" status, based on the most recently received packet
+  std::shared_ptr<SonarStatus> _status;
 
   uint16_t     m_port;       // Port to listen on
   uint16_t     m_valid;      // Number of valid status messages

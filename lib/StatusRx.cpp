@@ -30,44 +30,54 @@
 #include "liboculus/StatusRx.h"
 #include "g3log/g3log.hpp"
 
-
 namespace liboculus {
 
 using std::string;
 
+
+void SonarStatus::update( const OculusStatusMsg &msg )
+{
+
+}
+
+
+
+
 // ----------------------------------------------------------------------------
 // OsStatusRx - a listening socket for oculus status messages
 
-OsStatusRx::OsStatusRx(boost::asio::io_service &context )
-  : _ioService(context),
+OsStatusRx::OsStatusRx(boost::asio::io_service &context, const std::shared_ptr<SonarStatus> &status )
+  : _status( status ),
+    _ioService(context),
     _socket(_ioService),
     _inputBuffer( sizeof(OculusStatusMsg) ),
     _deadline(_ioService)
 {
   // Create and setup a broadcast listening socket
-  //m_listener = new QUdpSocket(this);
   m_port     = 52102;   // fixed port for status messages
   m_valid    = 0;
   m_invalid  = 0;
 
-  LOG(INFO) << "Listening on status socket";
 
-  string portStr;
-  {
-    std::ostringstream portS( portStr );
-    portS << m_port;
-  }
+//   std::ostringstream portS;
+//   portS << m_port;
+//
+//   udp::resolver resolver(_ioService);
+//
+//   LOG(INFO) << "Listening on status socket port " << portS.str();
+//
+//   boost::system::error_code ec;
+//   auto endpoints = resolver.resolve(udp::resolver::query(boost::asio::ip::address_v4::any, portS.str()), ec);
+//
+//   for( auto i = endpoints; i != udp::resolver::iterator(); i++ ) {
+// LOG(INFO) << "Itr " << i->endpoint();
+// }
 
-  udp::resolver resolver(_ioService);
+  // if( ec ) {
+  //   LOG(WARNING) << "Error on resolve: " << ec.message();
+  // }
 
-  boost::system::error_code ec;
-  auto endpoints = resolver.resolve(udp::resolver::query("0.0.0.0", portStr), ec);
-
-  if( ec ) {
-    LOG(WARNING) << "Error on resolve: " << ec.message();
-  }
-
-  doConnect(endpoints);
+  doConnect();
 }
 
 OsStatusRx::~OsStatusRx()
@@ -75,18 +85,20 @@ OsStatusRx::~OsStatusRx()
 
 }
 
-void OsStatusRx::doConnect(const udp::resolver::iterator& endpoints)
+void OsStatusRx::doConnect()
 {
-  boost::asio::async_connect(_socket, endpoints,
-                            boost::bind(&OsStatusRx::handleConnect,
-                                          this, _1, _2));
-}
+  boost::asio::ip::udp::endpoint local(
+      boost::asio::ip::address_v4::any(),
+      52102);
+boost::system::error_code error;
 
-void OsStatusRx::handleConnect( const boost::system::error_code &ec, udp::resolver::iterator i )
-{
-  // Connect handler
-  if (!ec) {
-    LOG(INFO) << "Connected on " << i->endpoint();
+  _socket.open(boost::asio::ip::udp::v4(), error);
+
+  boost::asio::socket_base::broadcast option(true);
+  _socket.set_option(option);
+
+  if(!error) {
+      _socket.bind(local);
 
     startReader();
   }
@@ -97,7 +109,9 @@ void OsStatusRx::startReader()
   // Set a deadline for the read operation.
   //deadline_.expires_from_now(boost::posix_time::seconds(30));
 
-  // Start an asynchronous operation to read a newline-delimited message.
+  LOG(INFO) << "Listening for " << sizeof(OculusStatusMsg) << " bytes";
+
+  // Start an asynchronous receive
   _socket.async_receive( boost::asio::buffer((void *)&_osm, sizeof(OculusStatusMsg)),
                           boost::bind(&OsStatusRx::handleRead, this, _1, _2));
 }
@@ -106,6 +120,8 @@ void OsStatusRx::handleRead(const boost::system::error_code& ec, std::size_t byt
 {
   // if (stopped_)
   //   return;
+
+  LOG(INFO) << "handleRead";
 
   if (!ec)
   {
@@ -117,11 +133,12 @@ void OsStatusRx::handleRead(const boost::system::error_code& ec, std::size_t byt
     }
 
     LOG(INFO) << "Device id " << _osm.deviceId << " ; type: " <<  _osm.deviceType;
-    LOG(INFO) << "Id addr" << ((_osm.ipAddr & (0xff << 24)) >> 24)
-              << "." << ((_osm.ipAddr & (0xff << 16)) >> 16)
+    LOG(INFO) << "Id addr" << "." << (_osm.ipAddr & 0xff)
               << "." << ((_osm.ipAddr & (0xff <<  8)) >> 8)
-              << "." << (_osm.ipAddr & 0xff);
+              << "." << ((_osm.ipAddr & (0xff << 16)) >> 16)
+              << ((_osm.ipAddr & (0xff << 24)) >> 24);
 
+    _status->update( _osm );
     m_valid++;
 
     // Schedule another read

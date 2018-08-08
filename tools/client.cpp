@@ -15,18 +15,16 @@ int main( int argc, char **argv ) {
 
   CLI::App app{"Simple Oculus Sonar app"};
 
-
   try {
     boost::asio::io_service io_service;
 
     OsStatusRx statusRx( io_service );
 
     io_service.run();
-
   }
   catch (std::exception& e)
   {
-    LOG(WARNING) << "Exception: " << e.what() << "\n";
+    LOG(WARNING) << "Exception: " << e.what();
   }
 
 }

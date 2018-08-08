@@ -24,6 +24,8 @@ fips_include_directories(
   ${OCULUS_SDK_ROOT}
  )
 
+add_definitions( -DBOOST_ASIO_ENABLE_HANDLER_TRACKING )
+
 
 fips_add_subdirectory("lib/")
 
