@@ -27,7 +27,6 @@
 
 #include <boost/bind.hpp>
 
-
 #include "liboculus/StatusRx.h"
 #include "g3log/g3log.hpp"
 
@@ -39,9 +38,11 @@ using std::string;
 // ----------------------------------------------------------------------------
 // OsStatusRx - a listening socket for oculus status messages
 
-OsStatusRx::OsStatusRx(boost::asio::io_service& context)
+OsStatusRx::OsStatusRx(boost::asio::io_service &context )
   : _ioService(context),
-    _socket(_ioService)
+    _socket(_ioService),
+    _inputBuffer( sizeof(OculusStatusMsg) ),
+    _deadline(_ioService)
 {
   // Create and setup a broadcast listening socket
   //m_listener = new QUdpSocket(this);
@@ -49,7 +50,7 @@ OsStatusRx::OsStatusRx(boost::asio::io_service& context)
   m_valid    = 0;
   m_invalid  = 0;
 
-  LOG(INFO) << "Connecting to status socket";
+  LOG(INFO) << "Listening on status socket";
 
   string portStr;
   {
@@ -58,17 +59,15 @@ OsStatusRx::OsStatusRx(boost::asio::io_service& context)
   }
 
   udp::resolver resolver(_ioService);
-  auto endpoints = resolver.resolve(udp::resolver::query(string("0.0.0.0"), portStr));
+
+  boost::system::error_code ec;
+  auto endpoints = resolver.resolve(udp::resolver::query("0.0.0.0", portStr), ec);
+
+  if( ec ) {
+    LOG(WARNING) << "Error on resolve: " << ec.message();
+  }
 
   doConnect(endpoints);
-
-  // Connect the data signal
-  //connect(m_listener, &QUdpSocket::readyRead, this, &OsStatusRx::ReadDatagrams);
-
-  // Bind the socket (added Reuse address hint as this seems to allow other instances
-  // of Oculus Viewer to see Sonars)
-
-  //m_listener->bind(m_port, QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint);
 }
 
 OsStatusRx::~OsStatusRx()
@@ -87,8 +86,52 @@ void OsStatusRx::handleConnect( const boost::system::error_code &ec, udp::resolv
 {
   // Connect handler
   if (!ec) {
-    LOG(INFO) << "Connected!";
-    // On connector
+    LOG(INFO) << "Connected on " << i->endpoint();
+
+    startReader();
+  }
+}
+
+void OsStatusRx::startReader()
+{
+  // Set a deadline for the read operation.
+  //deadline_.expires_from_now(boost::posix_time::seconds(30));
+
+  // Start an asynchronous operation to read a newline-delimited message.
+  _socket.async_receive( boost::asio::buffer((void *)&_osm, sizeof(OculusStatusMsg)),
+                          boost::bind(&OsStatusRx::handleRead, this, _1, _2));
+}
+
+void OsStatusRx::handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred )
+{
+  // if (stopped_)
+  //   return;
+
+  if (!ec)
+  {
+    // Extract the newline-delimited message from the buffer.
+
+    if( bytes_transferred != sizeof(OculusStatusMsg)) {
+      LOG(WARNING) << "Got " << bytes_transferred << " bytes, expected OculusStatusMsg of size " << sizeof(OculusStatusMsg);
+      return;
+    }
+
+    LOG(INFO) << "Device id " << _osm.deviceId << " ; type: " <<  _osm.deviceType;
+    LOG(INFO) << "Id addr" << ((_osm.ipAddr & (0xff << 24)) >> 24)
+              << "." << ((_osm.ipAddr & (0xff << 16)) >> 16)
+              << "." << ((_osm.ipAddr & (0xff <<  8)) >> 8)
+              << "." << (_osm.ipAddr & 0xff);
+
+    m_valid++;
+
+    // Schedule another read
+    startReader();
+  }
+  else
+  {
+    LOG(WARNING) << "Error on receive: " << ec.message();
+
+    //stop();
   }
 }
 

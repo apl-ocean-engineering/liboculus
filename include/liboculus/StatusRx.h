@@ -28,20 +28,23 @@
 
 #include <boost/asio.hpp>
 
-using boost::asio::ip::udp;
 
 namespace liboculus {
 
+  using boost::asio::ip::udp;
+  using boost::asio::deadline_timer;
+
+
 // ----------------------------------------------------------------------------
 // Stores the last status message of a sonar witha given id
-class COsStatusSonar
+class OsSonarStatus
 {
 public:
 
-  COsStatusSonar();
+  OsSonarStatus() {}
 
-  unsigned        m_id;              // The id of the sonar
-  OculusStatusMsg m_osm;             // The last status message associated with this sonar
+  unsigned        id;              // The id of the sonar
+  OculusStatusMsg osm;             // The last status message associated with this sonar
   // QDateTime       m_lastMsgTime;     // The time of the last message
 };
 
@@ -52,21 +55,29 @@ public:
 class OsStatusRx
 {
 public:
-    OsStatusRx(boost::asio::io_service &context);
+    OsStatusRx(boost::asio::io_service &context );
     ~OsStatusRx();
 
     void ReadDatagrams();
 
+    OsSonarStatus status;
+
 // signals:
 //     void NewStatusMsg(OculusStatusMsg osm, uint16_6 valid, uint16_t invalid);
+
 
 private:
 
   void doConnect(const udp::resolver::iterator &endpoints);
-
   void handleConnect( const boost::system::error_code& error, udp::resolver::iterator iterator );
 
+  void startReader();
+  void handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred );
+
+
+
 //  void doReceiveStatusMessage();
+  OculusStatusMsg _osm;
 
   uint16_t     m_port;       // Port to listen on
   uint16_t     m_valid;      // Number of valid status messages
@@ -74,6 +85,9 @@ private:
 
   boost::asio::io_service& _ioService;
   udp::socket _socket;
+
+  boost::asio::streambuf _inputBuffer;
+  deadline_timer _deadline;
 };
 
 }
