@@ -132,7 +132,7 @@ void OsStatusRx::handleRead(const boost::system::error_code& ec, std::size_t byt
       return;
     }
 
-    LOG(INFO) << "Device id " << _osm.deviceId << " ; type: " <<  _osm.deviceType;
+    LOG(INFO) << "Device id " << _osm.deviceId << " ; type: " <<  (uint16_t)_osm.deviceType;
     LOG(INFO) << "Id addr" << "." << (_osm.ipAddr & 0xff)
               << "." << ((_osm.ipAddr & (0xff <<  8)) >> 8)
               << "." << ((_osm.ipAddr & (0xff << 16)) >> 16)
