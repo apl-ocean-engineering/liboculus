@@ -176,6 +176,8 @@ void SonarClient::readSimplePingResult(const boost::system::error_code& ec, std:
       if( _currentPing->validateOculusSimplePingResult() ) {
 
         LOG(DEBUG) << "Expected " << _currentPing->dataLen() << " additional bytes";
+
+        CHECK( (bool)_currentPing->_data );
         boost::asio::async_read( _socket, boost::asio::buffer(_currentPing->_data.get(), _currentPing->dataLen()), boost::bind(&SonarClient::readData, this, _1, _2));
 
       } else {
@@ -199,6 +201,7 @@ void SonarClient::readData(const boost::system::error_code& ec, std::size_t byte
     LOG(DEBUG) << "Received " << bytes_transferred << " bytes of data from sonar";
 
     // Schedule handling of next packet
+    _currentPing->reset();
     scheduleHeaderRead();
   } else {
     LOG(WARNING) << "Error on receive of data: " << ec.message();

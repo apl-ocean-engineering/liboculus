@@ -56,6 +56,12 @@ namespace liboculus {
 
     size_t dataLen() const {  if( _valid ) { return _msg.fireMessage.head.payloadSize + sizeof(OculusMessageHeader) - sizeof(OculusSimplePingResult); } else { return 0; } }
 
+    void reset() {
+      _data.reset( nullptr );
+      memset( (void *)&_msg, 0, sizeof( OculusSimplePingResult ) );
+      _valid = false;
+    }
+
   private:
 
     bool _valid;
