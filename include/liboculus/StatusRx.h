@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <mutex>
+
 #include "Oculus/Oculus.h"
 
 #include <boost/asio.hpp>
@@ -42,14 +44,23 @@ class SonarStatus
 public:
   friend class OsStatusRx;
 
-  SonarStatus() {}
+  SonarStatus();
+
+  OculusStatusMsg operator()( void ) const;
+
+  std::mutex &mutex( void ) { return _writeLock; }
+
+  bool valid() const { return _valid; }
+
+  boost::asio::ip::address ipAddr() const;
 
 private:
 
   void update( const OculusStatusMsg &msg );
 
-  unsigned        id;              // The id of the sonar
-  OculusStatusMsg osm;             // The last status message associated with this sonar
+  mutable std::mutex      _writeLock;
+  bool                    _valid;
+  OculusStatusMsg         _osm;             // The more recent status message
   // QDateTime       m_lastMsgTime;     // The time of the last message
 };
 
@@ -64,6 +75,7 @@ public:
                 const std::shared_ptr<SonarStatus> &status = std::shared_ptr<SonarStatus>(new SonarStatus()) );
     ~OsStatusRx();
 
+    const SonarStatus &status() const { return *_status; }
 
 private:
 

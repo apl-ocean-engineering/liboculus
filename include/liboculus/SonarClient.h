@@ -24,39 +24,56 @@
 
 #pragma once
 
+#include <boost/asio.hpp>
+#include <boost/asio/steady_timer.hpp>
+
 #include "Oculus/Oculus.h"
 
-#include <boost/asio.hpp>
-
+#include "SimpleFireMessage.h"
 
 namespace liboculus {
 
   using boost::asio::ip::udp;
-  using boost::asio::deadline_timer;
-
 
 // ----------------------------------------------------------------------------
 // OsStatusRx - a listening socket for oculus status messages
 
-class OsSonarClient
+class SonarClient
 {
 public:
-    OsSonarClient(boost::asio::io_service &context, uint32_t ip );
-    ~OsSonarClient();
+    SonarClient(boost::asio::io_service &context, uint32_t ip,
+                const std::shared_ptr<SimpleFireMessage> &fire = std::shared_ptr<SimpleFireMessage>() );
+
+    SonarClient(boost::asio::io_service &context, const boost::asio::ip::address &addr,
+                const std::shared_ptr<SimpleFireMessage> &fire = std::shared_ptr<SimpleFireMessage>() );
+
+
+    ~SonarClient();
 
 private:
 
-  void initialize();
+  void doConnect();
+
+  void connectHandler(const boost::system::error_code& error);
+
+  void scheduleWrite();
+  void writeHandler(const boost::system::error_code& ec );
 
   void startReader();
-  void handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void readHeader(const boost::system::error_code& ec, std::size_t bytes_transferred );
 
-  uint32_t     _ipAddress;
+  boost::asio::ip::address  _ipAddress;
 
   boost::asio::io_service& _ioService;
   udp::socket _socket;
 
-  deadline_timer _deadline;
+  boost::asio::steady_timer _writeTimer;
+
+  // Configuration data out to sonar
+  std::shared_ptr<SimpleFireMessage> _fireMessage;
+
+  // Data back from sonar
+  OculusSimplePingResult _pingHeader;
 };
 
 }

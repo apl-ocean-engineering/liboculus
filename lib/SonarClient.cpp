@@ -26,8 +26,10 @@
 #include <sstream>
 
 #include <boost/bind.hpp>
+#include <chrono>
 
 #include "liboculus/SonarClient.h"
+
 #include "g3log/g3log.hpp"
 
 namespace liboculus {
@@ -38,32 +40,26 @@ using std::string;
 // ----------------------------------------------------------------------------
 // SonarClient - a listening socket for oculus status messages
 
-SonarClient::SonarClient(boost::asio::io_service &context, uint32_t ip )
-  : _ipAddress( ip ),
+SonarClient::SonarClient(boost::asio::io_service &context, uint32_t ip,
+                          const std::shared_ptr<SimpleFireMessage> &fire )
+  : _ipAddress( boost::asio::ip::address_v4(ip) ),
     _ioService(context),
     _socket(_ioService),
-    _deadline(_ioService)
+    _writeTimer(_ioService),
+    _fireMessage(fire)
 {
+  doConnect();
+}
 
-
-//   std::ostringstream portS;
-//   portS << m_port;
-//
-//   udp::resolver resolver(_ioService);
-//
-//   LOG(INFO) << "Listening on status socket port " << portS.str();
-//
-//   boost::system::error_code ec;
-//   auto endpoints = resolver.resolve(udp::resolver::query(boost::asio::ip::address_v4::any, portS.str()), ec);
-//
-//   for( auto i = endpoints; i != udp::resolver::iterator(); i++ ) {
-// LOG(INFO) << "Itr " << i->endpoint();
-// }
-
-  // if( ec ) {
-  //   LOG(WARNING) << "Error on resolve: " << ec.message();
-  // }
-
+SonarClient::SonarClient(boost::asio::io_service &context,
+                          const boost::asio::ip::address &addr,
+                          const std::shared_ptr<SimpleFireMessage> &fire )
+  : _ipAddress( addr ),
+    _ioService(context),
+    _socket(_ioService),
+    _writeTimer(_ioService),
+    _fireMessage(fire)
+{
   doConnect();
 }
 
@@ -74,68 +70,70 @@ SonarClient::~SonarClient()
 
 void SonarClient::doConnect()
 {
-  boost::asio::ip::udp::endpoint local(
-      boost::asio::ip::address_v4::any(),
-      52102);
-boost::system::error_code error;
+  uint16_t _port = 52103;
 
-  _socket.open(boost::asio::ip::udp::v4(), error);
+  boost::asio::ip::udp::endpoint sonarEndpoint( _ipAddress, _port);
 
-  boost::asio::socket_base::broadcast option(true);
-  _socket.set_option(option);
+  _socket.async_connect( sonarEndpoint, boost::bind(&SonarClient::connectHandler, this, _1) );
+}
 
-  if(!error) {
-      _socket.bind(local);
 
+void SonarClient::connectHandler(const boost::system::error_code& error)
+{
+  if (!error) {
+    scheduleWrite();
     startReader();
+  } else {
+    // Handler error
   }
 }
 
-void SonarClient::startReader()
+
+//== Data writers
+
+void SonarClient::scheduleWrite()
 {
-  // Set a deadline for the read operation.
-  //deadline_.expires_from_now(boost::posix_time::seconds(30));
-
-  LOG(INFO) << "Listening for " << sizeof(OculusStatusMsg) << " bytes";
-
-  // Start an asynchronous receive
-  _socket.async_receive( boost::asio::buffer((void *)&_osm, sizeof(OculusStatusMsg)),
-                          boost::bind(&SonarClient::handleRead, this, _1, _2));
+  _writeTimer.expires_from_now(std::chrono::milliseconds(500));
+  _writeTimer.async_wait(boost::bind(&SonarClient::writeHandler, this, _1));
 }
 
-void SonarClient::handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred )
+void SonarClient::writeHandler(const boost::system::error_code& ec )
 {
-  // if (stopped_)
-  //   return;
+  if( !ec ) {
+    boost::asio::streambuf msg;
+    _fireMessage->serialize(msg);
 
-  LOG(INFO) << "handleRead";
+    auto result = _socket.send( msg.data() );
 
+    LOG(DEBUG) << "Send " << result << " bytes to sonar";
+  } else {
+    LOG(WARNING) << "Error on write: " << ec.message();
+  }
+
+  // Schedule the next write
+  scheduleWrite();
+}
+
+//=== Readers
+void SonarClient::startReader()
+{
+  // Start an asynchronous receive
+  // _socket.async_receive( boost::asio::buffer((void *)&_pingHeader, sizeof(OculusSimplePingResult)),
+  //                         boost::bind(&SonarClient::readHeader, this, _1, _2));
+}
+
+
+void SonarClient::readHeader(const boost::system::error_code& ec, std::size_t bytes_transferred )
+{
   if (!ec)
   {
-    // Extract the newline-delimited message from the buffer.
-    // 
-    // if( bytes_transferred != sizeof(OculusStatusMsg)) {
-    //   LOG(WARNING) << "Got " << bytes_transferred << " bytes, expected OculusStatusMsg of size " << sizeof(OculusStatusMsg);
-    //   return;
-    // }
-    //
-    // LOG(INFO) << "Device id " << _osm.deviceId << " ; type: " <<  (uint16_t)_osm.deviceType;
-    // LOG(INFO) << "Id addr" << "." << (_osm.ipAddr & 0xff)
-    //           << "." << ((_osm.ipAddr & (0xff <<  8)) >> 8)
-    //           << "." << ((_osm.ipAddr & (0xff << 16)) >> 16)
-    //           << ((_osm.ipAddr & (0xff << 24)) >> 24);
-    //
-    // _status->update( _osm );
-    // m_valid++;
+    LOG(DEBUG) << "Got " << bytes_transferred << " bytes from sonar";
 
-    // Schedule another read
     startReader();
   }
   else
   {
     LOG(WARNING) << "Error on receive: " << ec.message();
-
-    //stop();
   }
 }
 

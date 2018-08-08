@@ -33,7 +33,7 @@ if( NOT FIPS_IMPORT )
   add_subdirectory("tools/")
 
 	if( FIPS_UNITTESTS )
-  #add_subdirectory( test/unit/ )
+			add_subdirectory( test/unit/ )
   endif()
 
   fips_finish()
