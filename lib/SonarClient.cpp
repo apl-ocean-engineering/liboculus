@@ -148,7 +148,21 @@ void SonarClient::readHeader(const boost::system::error_code& ec, std::size_t by
 
             } else {
               // Drop it...
-              scheduleHeaderRead();
+
+              boost::asio::async_read( _socket, boost::asio::buffer( _junkBuffer, _currentPing->_msg.fireMessage.head.payloadSize),
+                                      [this](boost::system::error_code ec, std::size_t bytes_recvd)
+                                              {
+                                                LOG(DEBUG) << "Read and discarded " << bytes_recvd;
+                                                if (!ec && bytes_recvd > 0)
+                                                {
+                                                  scheduleHeaderRead();
+                                                }
+                                                else
+                                                {
+                                                  LOG(WARNING) << "Error on receive of add'l data: " << ec.message();
+                                                }
+                                              });
+
               return;
             }
 

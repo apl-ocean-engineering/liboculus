@@ -72,6 +72,8 @@ private:
 
   boost::asio::steady_timer _writeTimer;
 
+  boost::asio::mutable_buffer _junkBuffer;
+
   // Configuration data out to sonar
   std::shared_ptr<SimpleFireMessage> _fireMessage;
 

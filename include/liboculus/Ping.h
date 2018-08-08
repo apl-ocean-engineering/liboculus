@@ -25,7 +25,7 @@ namespace liboculus {
 
       if( _msg.fireMessage.head.oculusId != 0x4f53 ) return false;
 
-      LOG(DEBUG) << "      Msg id: " << msgId();
+      LOG(DEBUG) << "      Msg id: 0x" << std::hex << msgId() << std::dec;
       LOG(DEBUG) << "Payload size: " << _msg.fireMessage.head.payloadSize;
 
       _valid = true;
@@ -35,8 +35,12 @@ namespace liboculus {
 
     bool validateOculusSimplePingResult() {
 
+      LOG(DEBUG) << "     Mode: " << (int)_msg.fireMessage.masterMode;
+      LOG(DEBUG) << "Ping rate: " << _msg.fireMessage.pingRate;
+
+
       LOG(DEBUG) << "Ping ID: " << _msg.pingId;
-      LOG(DEBUG) << " Status: " << std::hex << _msg.status << std::dec;
+      LOG(DEBUG) << " Status: " << _msg.status;
 
       LOG(DEBUG) << "Num range: " << _msg.nRanges;
       LOG(DEBUG) << "Num beams: " << _msg.nBeams;
