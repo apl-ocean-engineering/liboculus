@@ -33,7 +33,7 @@
 
 namespace liboculus {
 
-  using boost::asio::ip::udp;
+  using boost::asio::ip::tcp;
 
 // ----------------------------------------------------------------------------
 // OsStatusRx - a listening socket for oculus status messages
@@ -42,11 +42,10 @@ class SonarClient
 {
 public:
     SonarClient(boost::asio::io_service &context, uint32_t ip,
-                const std::shared_ptr<SimpleFireMessage> &fire = std::shared_ptr<SimpleFireMessage>() );
+                const std::shared_ptr<SimpleFireMessage> &fire = std::shared_ptr<SimpleFireMessage>(new SimpleFireMessage) );
 
     SonarClient(boost::asio::io_service &context, const boost::asio::ip::address &addr,
-                const std::shared_ptr<SimpleFireMessage> &fire = std::shared_ptr<SimpleFireMessage>() );
-
+                const std::shared_ptr<SimpleFireMessage> &fire = std::shared_ptr<SimpleFireMessage>(new SimpleFireMessage) );
 
     ~SonarClient();
 
@@ -65,7 +64,7 @@ private:
   boost::asio::ip::address  _ipAddress;
 
   boost::asio::io_service& _ioService;
-  udp::socket _socket;
+  tcp::socket _socket;
 
   boost::asio::steady_timer _writeTimer;
 

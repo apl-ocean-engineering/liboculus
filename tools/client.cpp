@@ -102,7 +102,13 @@ int main( int argc, char **argv ) {
           auto addr( statusRx.status().ipAddr() );
 
           LOG(INFO) << "Using detected sonar at IP address " << addr;
+
+          // Is this necessary?
+          ioSrv.stop();
+
           sonarClient.reset( new SonarClient( ioSrv.service(), addr ) );
+
+          ioSrv.start();
         }
       }
 

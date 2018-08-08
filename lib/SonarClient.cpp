@@ -61,6 +61,8 @@ SonarClient::SonarClient(boost::asio::io_service &context,
     _fireMessage(fire)
 {
   doConnect();
+
+  CHECK( (bool)_fireMessage );
 }
 
 SonarClient::~SonarClient()
@@ -72,22 +74,27 @@ void SonarClient::doConnect()
 {
   uint16_t _port = 52103;
 
-  boost::asio::ip::udp::endpoint sonarEndpoint( _ipAddress, _port);
+  boost::asio::ip::tcp::endpoint sonarEndpoint( _ipAddress, _port);
+
+  LOG(DEBUG) << "Connecting to sonar at " << sonarEndpoint;
 
   _socket.async_connect( sonarEndpoint, boost::bind(&SonarClient::connectHandler, this, _1) );
 }
 
 
-void SonarClient::connectHandler(const boost::system::error_code& error)
+void SonarClient::connectHandler(const boost::system::error_code& ec)
 {
-  if (!error) {
-    scheduleWrite();
+  if (!ec) {
+
     startReader();
+
+    // Send one packet immediately.  If successful, it will schedule the next one
+    writeHandler( ec );
+
   } else {
-    // Handler error
+    LOG(WARNING) << "Error on connect: " << ec.message();
   }
 }
-
 
 //== Data writers
 
@@ -101,11 +108,11 @@ void SonarClient::writeHandler(const boost::system::error_code& ec )
 {
   if( !ec ) {
     boost::asio::streambuf msg;
+
     _fireMessage->serialize(msg);
 
     auto result = _socket.send( msg.data() );
-
-    LOG(DEBUG) << "Send " << result << " bytes to sonar";
+    LOG(DEBUG) << "Sent " << result << " bytes to sonar";
   } else {
     LOG(WARNING) << "Error on write: " << ec.message();
   }
