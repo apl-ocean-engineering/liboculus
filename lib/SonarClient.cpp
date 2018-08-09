@@ -157,11 +157,11 @@ void SonarClient::readHeader(const boost::system::error_code& ec, std::size_t by
                 boost::asio::async_read( _socket, boost::asio::buffer( junkBuffer, _hdr.hdr.payloadSize),
                                         [this, junkBuffer](boost::system::error_code ec, std::size_t bytes_recvd)
                                                 {
-                                                  LOG(DEBUG) << "Read and discarded " << bytes_recvd;
+                                                  LOG(DEBUG) << "Read " << bytes_recvd << "of logging info";
                                                   if (!ec && bytes_recvd > 0)
                                                   {
 
-                                                    LOG(DEBUG) << junkBuffer.data();
+                                                    LOG(DEBUG) << (char *)junkBuffer.data();
 
                                                     scheduleHeaderRead();
                                                   }
