@@ -101,7 +101,7 @@ void SonarClient::onConnect(const boost::system::error_code& ec)
 // Schedule a writer in 500ms
 void SonarClient::scheduleWrite()
 {
-  _writeTimer.expires_from_now(std::chrono::milliseconds(500));
+  _writeTimer.expires_from_now(std::chrono::milliseconds(1000));
   _writeTimer.async_wait(boost::bind(&SonarClient::writeHandler, this, _1));
 }
 
@@ -128,7 +128,6 @@ void SonarClient::scheduleHeaderRead()
 {
   _socket.async_receive( boost::asio::buffer((void *)&_hdr.hdr, sizeof(OculusMessageHeader)),
                          boost::bind(&SonarClient::readHeader, this, _1, _2));
-  //boost::asio::async_read( _socket, _currentPing->msgBuffer(), boost::bind(&SonarClient::readHeader, this, _1, _2));
 }
 
 
@@ -140,11 +139,14 @@ void SonarClient::readHeader(const boost::system::error_code& ec, std::size_t by
 
     if( bytes_transferred == sizeof(OculusMessageHeader) ) {
 
+      LOG(DEBUG) << "Validating...";
       if( _hdr.validate() ) {
 
             if( _hdr.msgId() == messageSimplePingResult ) {
 
-              std::shared_ptr<SimplePingResult> ping( new SimplePingResult( _hdr ) );
+              LOG(DEBUG) << "Requesting balance of SimplePingResult header";
+
+              SimplePingResult *ping = new SimplePingResult( _hdr );
 
               // Read the ping hedaer
               auto b = boost::asio::buffer( ping->hdrPtr(), ping->netHdrLen() );
@@ -152,27 +154,27 @@ void SonarClient::readHeader(const boost::system::error_code& ec, std::size_t by
 
             } else if ( _hdr.msgId() == messageLogs && _hdr.hdr.payloadSize > 0 ) {
 
-                std::vector<char> junkBuffer(_hdr.hdr.payloadSize, 0);
+                LOG(DEBUG) << "Requesting balance of Log message";
 
-                boost::asio::async_read( _socket, boost::asio::buffer( junkBuffer, _hdr.hdr.payloadSize),
-                                        [this, junkBuffer](boost::system::error_code ec, std::size_t bytes_recvd)
-                                                {
-                                                  LOG(DEBUG) << "Read " << bytes_recvd << "of logging info";
-                                                  if (!ec && bytes_recvd > 0)
-                                                  {
+                boost::asio::streambuf junkBuffer(_hdr.hdr.payloadSize);
 
-                                                    LOG(DEBUG) << (char *)junkBuffer.data();
+                auto bytes_recvd = boost::asio::read( _socket, junkBuffer );
+                                        //
+                                        // [this, junkBuffer](boost::system::error_code ec, std::size_t bytes_recvd)
+                                        //         {
 
-                                                    scheduleHeaderRead();
-                                                  }
-                                                  else
-                                                  {
-                                                    LOG(WARNING) << "Error on receive of add'l data: " << ec.message();
-                                                  }
+                LOG(DEBUG) << "Read " << bytes_recvd << " of logging info";
+                if (bytes_recvd > 0)
+                {
+                  std::string s( (std::istreambuf_iterator<char>(&junkBuffer)), std::istreambuf_iterator<char>() );
+                  LOG(DEBUG) << s;
 
-                                                  //delete junkBuffer;
-                                                });
-
+                  scheduleHeaderRead();
+                }
+                else
+                {
+                  LOG(WARNING) << "Error on receive of add'l data: " << ec.message();
+                }
 
             } else {
               // Drop it the rest of the message
@@ -181,7 +183,7 @@ void SonarClient::readHeader(const boost::system::error_code& ec, std::size_t by
               LOG(INFO) << "Trying to drain an additional " << discardSz << " bytes";
 
               if( discardSz > 0 ) {
-                std::vector<char> junkBuffer(_hdr.hdr.payloadSize, 0);
+                std::vector<char> junkBuffer(_hdr.hdr.payloadSize);
 
                 boost::asio::async_read( _socket, boost::asio::buffer( junkBuffer, discardSz),
                                         [this](boost::system::error_code ec, std::size_t bytes_recvd)
@@ -220,7 +222,7 @@ void SonarClient::readHeader(const boost::system::error_code& ec, std::size_t by
   }
 }
 
-void SonarClient::readSimplePingResultHeader( std::shared_ptr<SimplePingResult> msg,
+void SonarClient::readSimplePingResultHeader( SimplePingResult *msg,
                                               const boost::system::error_code& ec, std::size_t bytes_transferred )
 {
   if (!ec) {
@@ -249,7 +251,7 @@ void SonarClient::readSimplePingResultHeader( std::shared_ptr<SimplePingResult> 
   }
 }
 
-void SonarClient::readSimplePingResultData( std::shared_ptr<SimplePingResult> msg,
+void SonarClient::readSimplePingResultData( SimplePingResult *msg,
                             const boost::system::error_code& ec, std::size_t bytes_transferred )
 {
   if (!ec) {

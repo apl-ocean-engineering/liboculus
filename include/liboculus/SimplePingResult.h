@@ -17,12 +17,12 @@ namespace liboculus {
       }
 
       uint16_t msgId() const { return hdr.msgId; }
+      bool valid() const { return _valid; }
 
       bool validate() {
         _valid = false;
 
-        LOG(DEBUG) <<    "Oculus Id: 0x" << std::hex << hdr.oculusId;
-
+        LOG(DEBUG) <<    "   Oculus Id: 0x" << std::hex << hdr.oculusId;
         if( hdr.oculusId != 0x4f53 ) return false;
 
         LOG(DEBUG) << "      Msg id: 0x" << std::hex << msgId();
@@ -50,14 +50,19 @@ namespace liboculus {
       :  _valid(false), _msg(), _data( nullptr )
     {
       memcpy( (void *)&_msg, (void *)&(hdr.hdr), sizeof( OculusMessageHeader) );
-      memset( hdrPtr(), 0, netHdrLen());
 
-      _data.reset( new char[dataLen()] );
+      if( hdr.valid() ) {
+        LOG(DEBUG) << "Initializing header of length " << netHdrLen();
+        memset( hdrPtr(), 0, netHdrLen());
+
+        LOG(DEBUG) << "    .. and data array of " << dataLen();
+        _data.reset( new char[dataLen()] );
+      }
     }
 
     ~SimplePingResult() {}
 
-    void *hdrPtr()  { return (void *)(&_msg + sizeof(OculusMessageHeader)); }
+    void *hdrPtr()  { return reinterpret_cast<unsigned char*>(&_msg)+sizeof(OculusMessageHeader); }
     void *dataPtr() { return _data.get(); }
 
     bool validate() {
@@ -77,8 +82,9 @@ namespace liboculus {
       LOG(DEBUG) << "   Data size: " << _msg.dataSize;
       LOG(DEBUG) << "Message size: " << _msg.messageSize;
 
-      _valid = true;
+      LOG_IF(WARNING, _msg.messageSize != (dataLen() + sizeof(OculusSimplePingResult)) ) << _msg.messageSize << " != " << (dataLen() + sizeof(OculusSimplePingResult));
 
+      _valid = true;
       return _valid;
     }
 

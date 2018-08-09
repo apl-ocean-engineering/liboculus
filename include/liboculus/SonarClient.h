@@ -61,8 +61,8 @@ private:
 
   void scheduleHeaderRead();
   void readHeader(const boost::system::error_code& ec, std::size_t bytes_transferred );
-  void readSimplePingResultHeader( std::shared_ptr<SimplePingResult> msg, const boost::system::error_code& ec, std::size_t bytes_transferred );
-  void   readSimplePingResultData( std::shared_ptr<SimplePingResult> msg, const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void readSimplePingResultHeader( SimplePingResult *msg, const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void   readSimplePingResultData( SimplePingResult *msg, const boost::system::error_code& ec, std::size_t bytes_transferred );
 
 
   boost::asio::ip::address  _ipAddress;
