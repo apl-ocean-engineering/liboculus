@@ -84,6 +84,8 @@ namespace liboculus {
 
       LOG_IF(WARNING, _msg.messageSize != (dataLen() + sizeof(OculusSimplePingResult)) ) << _msg.messageSize << " != " << (dataLen() + sizeof(OculusSimplePingResult));
 
+      LOG(DEBUG) << "Expect " << DataSize(_msg.dataSize) * _msg.nRanges * _msg.nBeams << " bytes of sonar data";
+
       _valid = true;
       return _valid;
     }

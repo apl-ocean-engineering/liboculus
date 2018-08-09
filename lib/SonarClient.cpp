@@ -88,7 +88,7 @@ void SonarClient::onConnect(const boost::system::error_code& ec)
   if (!ec) {
     scheduleHeaderRead();
 
-    // Send one packet immediately.  If successful, it will schedule the next one
+    // Send one SimpleFireMessage immediately. 
     writeHandler( ec );
 
   } else {
