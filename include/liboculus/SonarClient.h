@@ -29,7 +29,7 @@
 
 #include "Oculus/Oculus.h"
 
-#include "Ping.h"
+#include "SimplePingResult.h"
 #include "SimpleFireMessage.h"
 
 namespace liboculus {
@@ -54,15 +54,15 @@ private:
 
   void doConnect();
 
-  void connectHandler(const boost::system::error_code& error);
+  void onConnect(const boost::system::error_code& error);
 
   void scheduleWrite();
   void writeHandler(const boost::system::error_code& ec );
 
   void scheduleHeaderRead();
   void readHeader(const boost::system::error_code& ec, std::size_t bytes_transferred );
-  void readSimplePingResult(const boost::system::error_code& ec, std::size_t bytes_transferred );
-  void readData(const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void readSimplePingResultHeader( std::shared_ptr<SimplePingResult> msg, const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void   readSimplePingResultData( std::shared_ptr<SimplePingResult> msg, const boost::system::error_code& ec, std::size_t bytes_transferred );
 
 
   boost::asio::ip::address  _ipAddress;
@@ -72,13 +72,11 @@ private:
 
   boost::asio::steady_timer _writeTimer;
 
-  boost::asio::mutable_buffer _junkBuffer;
-
   // Configuration data out to sonar
   std::shared_ptr<SimpleFireMessage> _fireMessage;
 
-  // Data back from sonar
-  std::shared_ptr<Ping> _currentPing;
+  MessageHeader _hdr;
+
 };
 
 }

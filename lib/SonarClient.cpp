@@ -47,7 +47,7 @@ SonarClient::SonarClient(boost::asio::io_service &context, uint32_t ip,
     _socket(_ioService),
     _writeTimer(_ioService),
     _fireMessage(fire),
-    _currentPing( new Ping() )
+    _hdr()
 {
   doConnect();
 }
@@ -60,7 +60,7 @@ SonarClient::SonarClient(boost::asio::io_service &context,
     _socket(_ioService),
     _writeTimer(_ioService),
     _fireMessage(fire),
-    _currentPing( new Ping() )
+    _hdr()
 {
   doConnect();
 
@@ -69,7 +69,6 @@ SonarClient::SonarClient(boost::asio::io_service &context,
 
 SonarClient::~SonarClient()
 {
-
 }
 
 void SonarClient::doConnect()
@@ -80,11 +79,11 @@ void SonarClient::doConnect()
 
   LOG(DEBUG) << "Connecting to sonar at " << sonarEndpoint;
 
-  _socket.async_connect( sonarEndpoint, boost::bind(&SonarClient::connectHandler, this, _1) );
+  _socket.async_connect( sonarEndpoint, boost::bind(&SonarClient::onConnect, this, _1) );
 }
 
 
-void SonarClient::connectHandler(const boost::system::error_code& ec)
+void SonarClient::onConnect(const boost::system::error_code& ec)
 {
   if (!ec) {
     scheduleHeaderRead();
@@ -99,12 +98,14 @@ void SonarClient::connectHandler(const boost::system::error_code& ec)
 
 //== Data writers
 
+// Schedule a writer in 500ms
 void SonarClient::scheduleWrite()
 {
   _writeTimer.expires_from_now(std::chrono::milliseconds(500));
   _writeTimer.async_wait(boost::bind(&SonarClient::writeHandler, this, _1));
 }
 
+// Write _fireMessage
 void SonarClient::writeHandler(const boost::system::error_code& ec )
 {
   if( !ec ) {
@@ -125,7 +126,7 @@ void SonarClient::writeHandler(const boost::system::error_code& ec )
 //=== Readers
 void SonarClient::scheduleHeaderRead()
 {
-  _socket.async_receive( boost::asio::buffer((void *)&_currentPing->_msg, sizeof(OculusMessageHeader)),
+  _socket.async_receive( boost::asio::buffer((void *)&_hdr.hdr, sizeof(OculusMessageHeader)),
                          boost::bind(&SonarClient::readHeader, this, _1, _2));
   //boost::asio::async_read( _socket, _currentPing->msgBuffer(), boost::bind(&SonarClient::readHeader, this, _1, _2));
 }
@@ -134,74 +135,105 @@ void SonarClient::scheduleHeaderRead()
 void SonarClient::readHeader(const boost::system::error_code& ec, std::size_t bytes_transferred )
 {
   if (!ec) {
+
     LOG(DEBUG) << "Got " << bytes_transferred << " bytes of header from sonar";
 
     if( bytes_transferred == sizeof(OculusMessageHeader) ) {
 
-      if( _currentPing->validateOculusMessageHeader() ) {
+      if( _hdr.validate() ) {
 
-            if( _currentPing->msgId() == messageSimplePingResult || _currentPing->msgId() == 0x80 ) {
+            if( _hdr.msgId() == messageSimplePingResult ) {
 
+              std::shared_ptr<SimplePingResult> ping( new SimplePingResult( _hdr ) );
 
-              const size_t pingHeaderSz = sizeof(OculusSimplePingResult) - bytes_transferred;
-              LOG(DEBUG) << "Receiving " << pingHeaderSz << " more bytes of OculusSimplePingResult header";
+              // Read the ping hedaer
+              auto b = boost::asio::buffer( ping->hdrPtr(), ping->netHdrLen() );
+              _socket.async_receive( b, boost::bind(&SonarClient::readSimplePingResultHeader, this, ping, _1, _2));
 
-              auto b = boost::asio::buffer((void *)((&_currentPing->_msg)+bytes_transferred), pingHeaderSz);
-              // _socket.async_receive( boost::asio::buffer((void *)&_currentPing->_msg, sizeof(OculusSimplePingResult) - sizeof(OculusMessageHeader)),
-              //                        boost::bind(&SonarClient::readSimplePingResult, this, _1, _2));
+            } else if ( _hdr.msgId() == messageLogs && _hdr.hdr.payloadSize > 0 ) {
 
-              _socket.async_receive( b, boost::bind(&SonarClient::readSimplePingResult, this, _1, _2));
+                std::vector<char> junkBuffer(_hdr.hdr.payloadSize, 0);
+
+                boost::asio::async_read( _socket, boost::asio::buffer( junkBuffer, _hdr.hdr.payloadSize),
+                                        [this, junkBuffer](boost::system::error_code ec, std::size_t bytes_recvd)
+                                                {
+                                                  LOG(DEBUG) << "Read and discarded " << bytes_recvd;
+                                                  if (!ec && bytes_recvd > 0)
+                                                  {
+
+                                                    LOG(DEBUG) << junkBuffer.data();
+
+                                                    scheduleHeaderRead();
+                                                  }
+                                                  else
+                                                  {
+                                                    LOG(WARNING) << "Error on receive of add'l data: " << ec.message();
+                                                  }
+
+                                                  //delete junkBuffer;
+                                                });
+
 
             } else {
-              // Drop it...
+              // Drop it the rest of the message
 
-              const size_t discardSz = _currentPing->_msg.fireMessage.head.payloadSize-sizeof(OculusMessageHeader);
+              const size_t discardSz = _hdr.hdr.payloadSize;
               LOG(INFO) << "Trying to drain an additional " << discardSz << " bytes";
 
-              boost::asio::async_read( _socket, boost::asio::buffer( _junkBuffer, discardSz),
-                                      [this](boost::system::error_code ec, std::size_t bytes_recvd)
-                                              {
-                                                LOG(DEBUG) << "Read and discarded " << bytes_recvd;
-                                                if (!ec && bytes_recvd > 0)
+              if( discardSz > 0 ) {
+                std::vector<char> junkBuffer(_hdr.hdr.payloadSize, 0);
+
+                boost::asio::async_read( _socket, boost::asio::buffer( junkBuffer, discardSz),
+                                        [this](boost::system::error_code ec, std::size_t bytes_recvd)
                                                 {
-                                                  scheduleHeaderRead();
-                                                }
-                                                else
-                                                {
-                                                  LOG(WARNING) << "Error on receive of add'l data: " << ec.message();
-                                                }
-                                              });
+                                                  LOG(DEBUG) << "Read and discarded " << bytes_recvd;
+                                                  if (!ec && bytes_recvd > 0)
+                                                  {
+                                                    scheduleHeaderRead();
+                                                  }
+                                                  else
+                                                  {
+                                                    LOG(WARNING) << "Error on receive of add'l data: " << ec.message();
+                                                  }
+
+                                                  //delete junkBuffer;
+                                                });
+
+                } else {
+                  // Otherwise, just schedule the next read
+                  scheduleHeaderRead();
+                }
 
               return;
             }
 
       } else {
-        LOG(WARNING) << "Incoming packet invalid";
+        LOG(WARNING) << "Incoming header invalid";
       }
 
     } else {
-      LOG(WARNING) << "Received short header of " << bytes_transferred << " expected " << sizeof(OculusSimplePingResult);
+      LOG(WARNING) << "Received short header of " << bytes_transferred << " expected " << sizeof(OculusMessageHeader);
     }
-  }
-  else
-  {
+
+  } else {
     LOG(WARNING) << "Error on receive of header: " << ec.message();
   }
 }
 
-void SonarClient::readSimplePingResult(const boost::system::error_code& ec, std::size_t bytes_transferred )
+void SonarClient::readSimplePingResultHeader( std::shared_ptr<SimplePingResult> msg,
+                                              const boost::system::error_code& ec, std::size_t bytes_transferred )
 {
   if (!ec) {
     LOG(DEBUG) << "Got " << bytes_transferred << " bytes of SimplePingResult from sonar";
 
-    if( bytes_transferred == sizeof(OculusSimplePingResult) - sizeof(OculusMessageHeader) ) {
+    if( bytes_transferred == msg->netHdrLen() ) {
 
-      if( _currentPing->validateOculusSimplePingResult() ) {
+      if( msg->validate() ) {
 
-        LOG(DEBUG) << "Expected " << _currentPing->dataLen() << " additional bytes";
+        LOG(DEBUG) << "Data valid, reading " << msg->dataLen() << " bytes of sonar data";
 
-        CHECK( (bool)_currentPing->_data );
-        boost::asio::async_read( _socket, boost::asio::buffer(_currentPing->_data.get(), _currentPing->dataLen()), boost::bind(&SonarClient::readData, this, _1, _2));
+        CHECK( (bool)msg->_data );
+        boost::asio::async_read( _socket, boost::asio::buffer(msg->dataPtr(), msg->dataLen()), boost::bind(&SonarClient::readSimplePingResultData, this, msg, _1, _2));
 
       } else {
         LOG(WARNING) << "Incoming packet invalid";
@@ -209,7 +241,7 @@ void SonarClient::readSimplePingResult(const boost::system::error_code& ec, std:
 
 
     } else {
-      LOG(WARNING) << "Received short header of " << bytes_transferred << " expected " << (sizeof(OculusSimplePingResult) - sizeof(OculusMessageHeader));
+      LOG(WARNING) << "Received short header of " << bytes_transferred << " expected " << msg->netHdrLen();
     }
 
   } else {
@@ -217,70 +249,18 @@ void SonarClient::readSimplePingResult(const boost::system::error_code& ec, std:
   }
 }
 
-void SonarClient::readData(const boost::system::error_code& ec, std::size_t bytes_transferred )
+void SonarClient::readSimplePingResultData( std::shared_ptr<SimplePingResult> msg,
+                            const boost::system::error_code& ec, std::size_t bytes_transferred )
 {
   if (!ec) {
     LOG(DEBUG) << "Received " << bytes_transferred << " bytes of data from sonar";
 
-    // Schedule handling of next packet
-    _currentPing->reset();
+    // Save the data
+
     scheduleHeaderRead();
   } else {
     LOG(WARNING) << "Error on receive of data: " << ec.message();
   }
 }
-
-
-
-// void SonarClient::doReceiveStatusMessage()
-// {
-//   boost::asio::async_read(_socket,
-//       boost::asio::buffer(read_msg_.data(), sizeof(OculusStatusMsg)),
-//       [this](boost::system::error_code ec, std::size_t /*length*/)
-//       {
-//
-//         if (!ec) {
-//           read
-//         } else {
-//           _socket.close();
-//         }
-//       });
-// }
-
-// ----------------------------------------------------------------------------
-// Signalled when there is data available in the socket buffer
-// Note that if the Oculus Viewer software is running on a PC with two network ports then it is
-// possible that both these ports will receive the status message
-// In this case we will see twice as many status messages as expected
-// void SonarClient::ReadDatagrams()
-// {
-//   // Read through any available datagrams
-//   while (m_listener->hasPendingDatagrams())
-//   {
-//     // Read the datagram out of the socket buffer
-//     QByteArray datagram;
-//
-//     datagram.resize(m_listener->pendingDatagramSize());
-//     m_listener->readDatagram(datagram.data(), datagram.size());
-//
-//     // If datagra is of correct size, cast and signal any observers
-//     if (datagram.size() == sizeof(OculusStatusMsg))
-//     {
-//       OculusStatusMsg osm;
-//       memcpy(&osm, datagram.data(), datagram.size());
-//
-//       if (osm.hdr.oculusId == OCULUS_CHECK_ID)
-//       {
-//         m_valid++;
-//
-//         emit NewStatusMsg(osm, m_valid, m_invalid);
-//       }
-//     }
-//     else
-//     {
-//       m_invalid++;
-//     }
-//   }
-// }
 
 }
