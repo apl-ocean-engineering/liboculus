@@ -25,7 +25,9 @@ namespace liboculus {
 
       if( _msg.fireMessage.head.oculusId != 0x4f53 ) return false;
 
-      LOG(DEBUG) << "      Msg id: 0x" << std::hex << msgId() << std::dec;
+      LOG(DEBUG) << "      Msg id: 0x" << std::hex << msgId();
+      LOG(DEBUG) << "      Dst ID: " << std::hex << _msg.fireMessage.head.dstDeviceId;
+      LOG(DEBUG) << "      Src ID: " << std::hex << _msg.fireMessage.head.srcDeviceId;
       LOG(DEBUG) << "Payload size: " << _msg.fireMessage.head.payloadSize;
 
       _valid = true;

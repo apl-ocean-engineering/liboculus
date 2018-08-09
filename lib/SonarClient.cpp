@@ -119,7 +119,7 @@ void SonarClient::writeHandler(const boost::system::error_code& ec )
   }
 
   // Schedule the next write
-  scheduleWrite();
+  //scheduleWrite();
 }
 
 //=== Readers
@@ -140,16 +140,25 @@ void SonarClient::readHeader(const boost::system::error_code& ec, std::size_t by
 
       if( _currentPing->validateOculusMessageHeader() ) {
 
-            if( _currentPing->msgId() == messageSimplePingResult || _currentPing->msgId() == 128) {
+            if( _currentPing->msgId() == messageSimplePingResult || _currentPing->msgId() == 0x80 ) {
 
-              LOG(DEBUG) << "Receiving " << sizeof(OculusSimplePingResult) - sizeof(OculusMessageHeader) << " more bytes of OculusSimplePingResult header";
-              _socket.async_receive( boost::asio::buffer((void *)(&_currentPing->_msg+sizeof(OculusMessageHeader)), sizeof(OculusSimplePingResult) - sizeof(OculusMessageHeader)),
-                                     boost::bind(&SonarClient::readSimplePingResult, this, _1, _2));
+
+              const size_t pingHeaderSz = sizeof(OculusSimplePingResult) - bytes_transferred;
+              LOG(DEBUG) << "Receiving " << pingHeaderSz << " more bytes of OculusSimplePingResult header";
+
+              auto b = boost::asio::buffer((void *)((&_currentPing->_msg)+bytes_transferred), pingHeaderSz);
+              // _socket.async_receive( boost::asio::buffer((void *)&_currentPing->_msg, sizeof(OculusSimplePingResult) - sizeof(OculusMessageHeader)),
+              //                        boost::bind(&SonarClient::readSimplePingResult, this, _1, _2));
+
+              _socket.async_receive( b, boost::bind(&SonarClient::readSimplePingResult, this, _1, _2));
 
             } else {
               // Drop it...
 
-              boost::asio::async_read( _socket, boost::asio::buffer( _junkBuffer, _currentPing->_msg.fireMessage.head.payloadSize),
+              const size_t discardSz = _currentPing->_msg.fireMessage.head.payloadSize-sizeof(OculusMessageHeader);
+              LOG(INFO) << "Trying to drain an additional " << discardSz << " bytes";
+
+              boost::asio::async_read( _socket, boost::asio::buffer( _junkBuffer, discardSz),
                                       [this](boost::system::error_code ec, std::size_t bytes_recvd)
                                               {
                                                 LOG(DEBUG) << "Read and discarded " << bytes_recvd;
@@ -183,7 +192,7 @@ void SonarClient::readHeader(const boost::system::error_code& ec, std::size_t by
 void SonarClient::readSimplePingResult(const boost::system::error_code& ec, std::size_t bytes_transferred )
 {
   if (!ec) {
-    LOG(DEBUG) << "Got " << bytes_transferred << " bytes of SimplePingResult  from sonar";
+    LOG(DEBUG) << "Got " << bytes_transferred << " bytes of SimplePingResult from sonar";
 
     if( bytes_transferred == sizeof(OculusSimplePingResult) - sizeof(OculusMessageHeader) ) {
 
@@ -202,9 +211,8 @@ void SonarClient::readSimplePingResult(const boost::system::error_code& ec, std:
     } else {
       LOG(WARNING) << "Received short header of " << bytes_transferred << " expected " << (sizeof(OculusSimplePingResult) - sizeof(OculusMessageHeader));
     }
-  }
-  else
-  {
+
+  } else {
     LOG(WARNING) << "Error on receive of header: " << ec.message();
   }
 }

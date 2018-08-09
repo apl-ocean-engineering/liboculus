@@ -68,13 +68,10 @@ int main( int argc, char **argv ) {
 
   CLI11_PARSE(app, argc, argv);
 
-  switch(verbosity) {
-          case 1:
-                  logger.stderrHandle->call( &ColorStderrSink::setThreshold, INFO );
-                  break;
-          case 2:
-                  logger.stderrHandle->call( &ColorStderrSink::setThreshold, DEBUG );
-                  break;
+  if( verbosity == 1 ) {
+    logger.stderrHandle->call( &ColorStderrSink::setThreshold, INFO );
+  } else if (verbosity > 1 ) {
+    logger.stderrHandle->call( &ColorStderrSink::setThreshold, DEBUG );
   }
 
 
@@ -103,12 +100,10 @@ int main( int argc, char **argv ) {
 
           LOG(INFO) << "Using detected sonar at IP address " << addr;
 
-          // Is this necessary?
-          ioSrv.stop();
+          if( verbosity > 0 ) statusRx.status().dump();
 
           sonarClient.reset( new SonarClient( ioSrv.service(), addr ) );
 
-          ioSrv.start();
         }
       }
 

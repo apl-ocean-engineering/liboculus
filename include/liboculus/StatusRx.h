@@ -51,6 +51,7 @@ public:
   std::mutex &mutex( void ) { return _writeLock; }
 
   bool valid() const { return _valid; }
+  void dump() const;
 
   boost::asio::ip::address ipAddr() const;
 

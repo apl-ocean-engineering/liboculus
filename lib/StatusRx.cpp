@@ -68,6 +68,25 @@ namespace liboculus {
     _valid = true;
   }
 
+  void SonarStatus::dump() const
+  {
+    LOG(DEBUG) << "Device id " << _osm.deviceId << " ; type: " <<  (uint16_t)_osm.deviceType << " ; part num: " << (uint16_t)_osm.partNumber;
+
+    LOG(DEBUG) << "             Status: " << std::hex << _osm.status;
+    LOG(DEBUG) << "      Sonar ip addr: " << boost::asio::ip::address_v4( ntohl(_osm.ipAddr) );
+    LOG(DEBUG) << " Sonar connected to: " << boost::asio::ip::address_v4( ntohl(_osm.connectedIpAddr) );
+
+    LOG(DEBUG) << "Versions:";
+    LOG(DEBUG) << "   firmwareVersion0: " << std::hex << _osm.versionInfo.firmwareVersion0;
+    LOG(DEBUG) << "      firmwareDate0: " << std::hex << _osm.versionInfo.firmwareDate0;
+
+    LOG(DEBUG) << "   firmwareVersion1: " << std::hex << _osm.versionInfo.firmwareVersion1;
+    LOG(DEBUG) << "      firmwareDate1: " << std::hex << _osm.versionInfo.firmwareDate1;
+
+    LOG(DEBUG) << "   firmwareVersion2: " << std::hex << _osm.versionInfo.firmwareVersion2;
+    LOG(DEBUG) << "      firmwareDate2: " << std::hex << _osm.versionInfo.firmwareDate2;
+  }
+
 
 
 
@@ -136,11 +155,6 @@ namespace liboculus {
             LOG(WARNING) << "Got " << bytes_transferred << " bytes, expected OculusStatusMsg of size " << sizeof(OculusStatusMsg);
             return;
           }
-
-          LOG(DEBUG) << "Device id " << _osm.deviceId << " ; type: " <<  (uint16_t)_osm.deviceType;
-
-          LOG(DEBUG) << "      Sonar ip addr: " << boost::asio::ip::address_v4( ntohl(_osm.ipAddr) );
-          LOG(DEBUG) << " Sonar connected to: " << boost::asio::ip::address_v4( ntohl(_osm.connectedIpAddr) );
 
           _status->update( _osm );
           m_valid++;

@@ -11,10 +11,11 @@ namespace liboculus {
   {
     memset( &_sfm, 0, sizeof(OculusSimpleFireMessage));
 
+    _sfm.head.oculusId    = 0x4f53;
     _sfm.head.msgId       = messageSimpleFire;
     _sfm.head.srcDeviceId = 0;
     _sfm.head.dstDeviceId = 0;
-    _sfm.head.oculusId    = 0x4f53;
+    _sfm.head.payloadSize = sizeof(OculusSimpleFireMessage) - sizeof(OculusMessageHeader);
 
     // OculusMessageHeader head;     // The standard message header
     //
@@ -25,25 +26,31 @@ namespace liboculus {
     // uint8_t networkSpeed;         // Used to reduce the network comms speed (useful for high latency shared links)
     // uint8_t gammaCorrection;      // 0 and 0xff = gamma correction = 1.0
     //                               // Set to 127 for gamma correction = 0.5
-    // uint8_t flags;                // bit 0: 0 = interpret range as percent, 1 = interpret range as meters
-    //                               // bit 1: 0 = 8 bit data, 1 = 16 bit data
-    //                               // bit 2: 0 = wont send gain, 1 = send gain
-    //                               // bit 3: 0 = send full return message, 1 = send simple return message
+
     // double range;                 // The range demand in percent or m depending on flags
     // double gainPercent;           // The gain demand
     // double speedOfSound;          // ms-1, if set to zero then internal calc will apply using salinity
     // double salinity;              // ppt, set to zero if we are in fresh water
 
-    // Initial values
-    _sfm.gammaCorrection = 0.5; //gamma;
-    _sfm.pingRate        = pingRateHigh;
-    _sfm.masterMode      = 2;  // HF mode
-    _sfm.range           = 10; // 40m
-    _sfm.gainPercent     = 50;  //gain;
-    _sfm.flags          =  0x09;
+    _sfm.masterMode      = 2;
 
-    _sfm.speedOfSound    = 1500;  // m/s  0 for automatic calculation speedOfSound;
-    _sfm.salinity        = 0;  // ppt; Freshwater salinity;
+    _sfm.networkSpeed = 0xff;
+
+    // Initial values
+    _sfm.gammaCorrection = 0; //gamma;
+    _sfm.pingRate        = pingRateLowest;
+    _sfm.range           = 10; //
+    _sfm.gainPercent     = 100; // gain;
+
+    // uint8_t flags;                // bit 0: 0 = interpret range as percent, 1 = interpret range as meters
+    //                               // bit 1: 0 = 8 bit data, 1 = 16 bit data
+    //                               // bit 2: 0 = wont send gain, 1 = send gain
+    //                               // bit 3: 0 = send full return message, 1 = send simple return message
+
+    _sfm.flags          =  0x19; // Send simple return msg; range in meters
+
+    _sfm.speedOfSound    = 0.0;  // m/s  0 for automatic calculation speedOfSound;
+    _sfm.salinity        = 0.0;  // ppt; Freshwater salinity;
   }
 
   void SimpleFireMessage::serialize( boost::asio::streambuf &stream )
