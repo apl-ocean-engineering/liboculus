@@ -15,13 +15,14 @@ set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 find_package( Boost REQUIRED COMPONENTS system )
 
-## Find Blueprint Oculus SDK
-find_package( OculusSDK REQUIRED )
+# Actually not using full SDK, just the header files
+# in thirdparty/Oculus
+#find_package( OculusSDK REQUIRED )
 
 ## Set global include paths
 fips_include_directories(
   ${CMAKE_SOURCE_DIR}/include
-  ${OCULUS_SDK_ROOT}
+  ${CMAKE_SOURCE_DIR}/thirdparty
  )
 
 ## Verbose output about ASIO handlers
