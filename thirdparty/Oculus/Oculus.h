@@ -69,7 +69,8 @@ enum OculusMessageType : uint16_t
   messageSimpleFire         = 0x15,
   messagePingResult         = 0x22,
   messageSimplePingResult   = 0x23,
-  messageUserConfig			= 0x55,
+  messageUserConfig			    = 0x55,
+  messageLogs               = 0x80,
   messageDummy              = 0xff,
 };
 
@@ -162,7 +163,7 @@ public:
     double frequency;				/* The acoustic frequency (Hz) */
     double temperature;				/* The external temperature (deg C) */
     double pressure;				/* The external pressure (bar) */
-    double speeedOfSoundUsed;		/* The actual used speed of sound (m/s). May be different to the speed of sound set in the fire message */
+    double speedOfSoundUsed;		/* The actual used speed of sound (m/s). May be different to the speed of sound set in the fire message */
     uint32_t pingStartTime;
     DataSizeType dataSize; 			/* The size of the individual data entries */
     double rangeResolution;			/* The range in metres corresponding to a single range line */
@@ -200,7 +201,7 @@ public:
   OculusDeviceType   deviceType;
   OculusPartNumberType partNumber;
   uint32_t   status;
-  OculusVersionInfo versinInfo;
+  OculusVersionInfo versionInfo;
   uint32_t   ipAddr;
   uint32_t   ipMask;
   uint32_t   connectedIpAddr;
