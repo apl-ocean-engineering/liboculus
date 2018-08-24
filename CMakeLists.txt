@@ -21,8 +21,8 @@ find_package( Boost REQUIRED COMPONENTS system )
 
 ## Set global include paths
 fips_include_directories(
-  ${CMAKE_SOURCE_DIR}/include
-  ${CMAKE_SOURCE_DIR}/thirdparty
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty
  )
 
 ## Verbose output about ASIO handlers
