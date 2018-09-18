@@ -56,7 +56,7 @@ private:
 
 int main( int argc, char **argv ) {
 
-  libg3log::G3Logger logger("ocClient");
+  libg3logger::G3Logger logger("ocClient");
 
   CLI::App app{"Simple Oculus Sonar app"};
 
