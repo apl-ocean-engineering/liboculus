@@ -1,6 +1,6 @@
 /******************************************************************************
  * This file has been derived from the original Blueprint Subsea
- * Oculus SDK file "SonarClient.h".
+ * Oculus SDK file "DataRx.h".
  *
  * The original Oculus copyright notie follows
  *
@@ -28,31 +28,32 @@
 #include <boost/bind.hpp>
 #include <chrono>
 
-#include "liboculus/SonarClient.h"
+#include "liboculus/DataRx.h"
 
 #include "g3log/g3log.hpp"
 
 namespace liboculus {
 
 using std::string;
-
+using std::shared_ptr;
 
 // ----------------------------------------------------------------------------
-// SonarClient - a listening socket for oculus status messages
+// DataRx - a listening socket for oculus status messages
 
-SonarClient::SonarClient(boost::asio::io_service &context, uint32_t ip,
+DataRx::DataRx(boost::asio::io_service &context, uint32_t ip,
                           const std::shared_ptr<SimpleFireMessage> &fire )
   : _ipAddress( boost::asio::ip::address_v4(ip) ),
     _ioService(context),
     _socket(_ioService),
     _writeTimer(_ioService),
     _fireMessage(fire),
-    _hdr()
+    _hdr(),
+    _queue()
 {
   doConnect();
 }
 
-SonarClient::SonarClient(boost::asio::io_service &context,
+DataRx::DataRx(boost::asio::io_service &context,
                           const boost::asio::ip::address &addr,
                           const std::shared_ptr<SimpleFireMessage> &fire )
   : _ipAddress( addr ),
@@ -60,18 +61,19 @@ SonarClient::SonarClient(boost::asio::io_service &context,
     _socket(_ioService),
     _writeTimer(_ioService),
     _fireMessage(fire),
-    _hdr()
+    _hdr(),
+    _queue()
 {
   doConnect();
 
   CHECK( (bool)_fireMessage );
 }
 
-SonarClient::~SonarClient()
+DataRx::~DataRx()
 {
 }
 
-void SonarClient::doConnect()
+void DataRx::doConnect()
 {
   uint16_t _port = 52100;
 
@@ -79,16 +81,16 @@ void SonarClient::doConnect()
 
   LOG(DEBUG) << "Connecting to sonar at " << sonarEndpoint;
 
-  _socket.async_connect( sonarEndpoint, boost::bind(&SonarClient::onConnect, this, _1) );
+  _socket.async_connect( sonarEndpoint, boost::bind(&DataRx::onConnect, this, _1) );
 }
 
 
-void SonarClient::onConnect(const boost::system::error_code& ec)
+void DataRx::onConnect(const boost::system::error_code& ec)
 {
   if (!ec) {
     scheduleHeaderRead();
 
-    // Send one SimpleFireMessage immediately. 
+    // Send one SimpleFireMessage immediately.
     writeHandler( ec );
 
   } else {
@@ -99,14 +101,14 @@ void SonarClient::onConnect(const boost::system::error_code& ec)
 //== Data writers
 
 // Schedule a writer in 500ms
-void SonarClient::scheduleWrite()
+void DataRx::scheduleWrite()
 {
   _writeTimer.expires_from_now(std::chrono::milliseconds(1000));
-  _writeTimer.async_wait(boost::bind(&SonarClient::writeHandler, this, _1));
+  _writeTimer.async_wait(boost::bind(&DataRx::writeHandler, this, _1));
 }
 
 // Write _fireMessage
-void SonarClient::writeHandler(const boost::system::error_code& ec )
+void DataRx::writeHandler(const boost::system::error_code& ec )
 {
   if( !ec ) {
     boost::asio::streambuf msg;
@@ -124,14 +126,14 @@ void SonarClient::writeHandler(const boost::system::error_code& ec )
 }
 
 //=== Readers
-void SonarClient::scheduleHeaderRead()
+void DataRx::scheduleHeaderRead()
 {
   _socket.async_receive( boost::asio::buffer((void *)&_hdr.hdr, sizeof(OculusMessageHeader)),
-                         boost::bind(&SonarClient::readHeader, this, _1, _2));
+                         boost::bind(&DataRx::readHeader, this, _1, _2));
 }
 
 
-void SonarClient::readHeader(const boost::system::error_code& ec, std::size_t bytes_transferred )
+void DataRx::readHeader(const boost::system::error_code& ec, std::size_t bytes_transferred )
 {
   if (!ec) {
 
@@ -146,11 +148,12 @@ void SonarClient::readHeader(const boost::system::error_code& ec, std::size_t by
 
               LOG(DEBUG) << "Requesting balance of SimplePingResult header";
 
-              SimplePingResult *ping = new SimplePingResult( _hdr );
+              // Rely on ref-counting of shared_ptr to clean up any dropped packets
+              shared_ptr<SimplePingResult> ping( new SimplePingResult( _hdr ) );
 
               // Read the ping hedaer
               auto b = boost::asio::buffer( ping->hdrPtr(), ping->netHdrLen() );
-              _socket.async_receive( b, boost::bind(&SonarClient::readSimplePingResultHeader, this, ping, _1, _2));
+              _socket.async_receive( b, boost::bind(&DataRx::readSimplePingResultHeader, this, ping, _1, _2));
 
             } else if ( _hdr.msgId() == messageLogs && _hdr.hdr.payloadSize > 0 ) {
 
@@ -177,7 +180,7 @@ void SonarClient::readHeader(const boost::system::error_code& ec, std::size_t by
                 }
 
             } else {
-              // Drop it the rest of the message
+              // Drop the rest of the message
 
               const size_t discardSz = _hdr.hdr.payloadSize;
               LOG(INFO) << "Trying to drain an additional " << discardSz << " bytes";
@@ -222,7 +225,7 @@ void SonarClient::readHeader(const boost::system::error_code& ec, std::size_t by
   }
 }
 
-void SonarClient::readSimplePingResultHeader( SimplePingResult *msg,
+void DataRx::readSimplePingResultHeader( const shared_ptr<SimplePingResult> &msg,
                                               const boost::system::error_code& ec, std::size_t bytes_transferred )
 {
   if (!ec) {
@@ -235,7 +238,8 @@ void SonarClient::readSimplePingResultHeader( SimplePingResult *msg,
         LOG(DEBUG) << "Data valid, reading " << msg->dataLen() << " bytes of sonar data";
 
         CHECK( (bool)msg->_data );
-        boost::asio::async_read( _socket, boost::asio::buffer(msg->dataPtr(), msg->dataLen()), boost::bind(&SonarClient::readSimplePingResultData, this, msg, _1, _2));
+        boost::asio::async_read( _socket, boost::asio::buffer(msg->dataPtr(), msg->dataLen()),
+                                boost::bind(&DataRx::readSimplePingResultData, this, msg, _1, _2));
 
       } else {
         LOG(WARNING) << "Incoming packet invalid";
@@ -251,14 +255,16 @@ void SonarClient::readSimplePingResultHeader( SimplePingResult *msg,
   }
 }
 
-void SonarClient::readSimplePingResultData( SimplePingResult *msg,
+void DataRx::readSimplePingResultData( const shared_ptr<SimplePingResult> &msg,
                             const boost::system::error_code& ec, std::size_t bytes_transferred )
 {
   if (!ec) {
     LOG(DEBUG) << "Received " << bytes_transferred << " bytes of data from sonar";
 
-    // Save the data
+    // Push the data
+    _queue.push( msg );
 
+    // And return to the home state
     scheduleHeaderRead();
   } else {
     LOG(WARNING) << "Error on receive of data: " << ec.message();

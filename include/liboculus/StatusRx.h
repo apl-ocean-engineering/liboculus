@@ -1,6 +1,6 @@
 /******************************************************************************
  * This file has been derived from the original Blueprint Subsea
- * Oculus SDK file "OsStatusRx.h".
+ * Oculus SDK file "StatusRx.h".
  *
  * The original Oculus copyright notice follows
  *
@@ -25,10 +25,13 @@
 #pragma once
 
 #include <mutex>
+#include <chrono>
 
 #include "Oculus/Oculus.h"
 
 #include <boost/asio.hpp>
+
+#include "liboculus/SonarStatus.h"
 
 
 namespace liboculus {
@@ -36,47 +39,30 @@ namespace liboculus {
   using boost::asio::ip::udp;
   using boost::asio::deadline_timer;
 
-
 // ----------------------------------------------------------------------------
-// Stores the last status message of a sonar witha given id
-class SonarStatus
+// StatusRx - a listening socket for oculus status messages
+//
+// Operates in a kind of double-buffering mode.   As new packets comes in,
+// they are assembled in _osm.   Once received and validated, it gets
+// copied to _status->osm
+//
+// Two modes of operation:
+//    If the constructor is provided with a shared_ptr<SonarStatus>,
+//    will copy the latest status packet into that struct.
+//
+//    If not provided, it will make its own internally, which can be
+//    queried with status()
+//
+class StatusRx
 {
 public:
-  friend class OsStatusRx;
-
-  SonarStatus();
-
-  OculusStatusMsg operator()( void ) const;
-
-  std::mutex &mutex( void ) { return _writeLock; }
-
-  bool valid() const { return _valid; }
-  void dump() const;
-
-  boost::asio::ip::address ipAddr() const;
-
-private:
-
-  void update( const OculusStatusMsg &msg );
-
-  mutable std::mutex      _writeLock;
-  bool                    _valid;
-  OculusStatusMsg         _osm;             // The more recent status message
-  // QDateTime       m_lastMsgTime;     // The time of the last message
-};
-
-
-// ----------------------------------------------------------------------------
-// OsStatusRx - a listening socket for oculus status messages
-
-class OsStatusRx
-{
-public:
-    OsStatusRx(boost::asio::io_service &context,
+    StatusRx(boost::asio::io_service &context,
                 const std::shared_ptr<SonarStatus> &status = std::shared_ptr<SonarStatus>(new SonarStatus()) );
-    ~OsStatusRx();
+    ~StatusRx();
 
     const SonarStatus &status() const { return *_status; }
+
+
 
 private:
 

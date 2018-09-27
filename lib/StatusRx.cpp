@@ -1,6 +1,6 @@
 /******************************************************************************
 * This file has been derived from the original Blueprint Subsea
-* Oculus SDK file "OsStatusRx.h".
+* Oculus SDK file "StatusRx.h".
 *
 * The original Oculus copyright notie follows
 *
@@ -38,67 +38,15 @@ namespace liboculus {
 
   using boost::asio::ip::address_v4;
 
-  SonarStatus::SonarStatus()
-  : _writeLock(),
-    _valid(false)
-  {}
-
-
-  OculusStatusMsg SonarStatus::operator()( void ) const
-  {
-    std::lock_guard<std::mutex> lock( _writeLock );
-
-    // Copy constructor?
-    OculusStatusMsg osm;
-    memcpy( (void *)&osm, (void *)&_osm, sizeof(OculusStatusMsg) );
-
-    return osm;
-  }
-
-  boost::asio::ip::address SonarStatus::ipAddr() const {
-    std::lock_guard<std::mutex> lock( _writeLock );
-    return address_v4( ntohl( _osm.ipAddr ));
-  }
-
-  void SonarStatus::update( const OculusStatusMsg &msg )
-  {
-    std::lock_guard<std::mutex> lock( _writeLock );
-
-    memcpy( (void *)&_osm, (void *)&msg, sizeof(OculusStatusMsg) );
-    _valid = true;
-  }
-
-  void SonarStatus::dump() const
-  {
-    LOG(DEBUG) << "Device id " << _osm.deviceId << " ; type: " <<  (uint16_t)_osm.deviceType << " ; part num: " << (uint16_t)_osm.partNumber;
-
-    LOG(DEBUG) << "             Status: " << std::hex << _osm.status;
-    LOG(DEBUG) << "      Sonar ip addr: " << boost::asio::ip::address_v4( ntohl(_osm.ipAddr) );
-    LOG(DEBUG) << " Sonar connected to: " << boost::asio::ip::address_v4( ntohl(_osm.connectedIpAddr) );
-
-    LOG(DEBUG) << "Versions:";
-    LOG(DEBUG) << "   firmwareVersion0: " << std::hex << _osm.versionInfo.firmwareVersion0;
-    LOG(DEBUG) << "      firmwareDate0: " << std::hex << _osm.versionInfo.firmwareDate0;
-
-    LOG(DEBUG) << "   firmwareVersion1: " << std::hex << _osm.versionInfo.firmwareVersion1;
-    LOG(DEBUG) << "      firmwareDate1: " << std::hex << _osm.versionInfo.firmwareDate1;
-
-    LOG(DEBUG) << "   firmwareVersion2: " << std::hex << _osm.versionInfo.firmwareVersion2;
-    LOG(DEBUG) << "      firmwareDate2: " << std::hex << _osm.versionInfo.firmwareDate2;
-  }
-
-
-
-
     // ----------------------------------------------------------------------------
-    // OsStatusRx - a listening socket for oculus status messages
+    // StatusRx - a listening socket for oculus status messages
 
-    OsStatusRx::OsStatusRx(boost::asio::io_service &context, const std::shared_ptr<SonarStatus> &status )
-    : _status( status ),
-    _ioService(context),
-    _socket(_ioService),
-    _inputBuffer( sizeof(OculusStatusMsg) ),
-    _deadline(_ioService)
+    StatusRx::StatusRx(boost::asio::io_service &context, const std::shared_ptr<SonarStatus> &status )
+                : _status( status ),
+                _ioService(context),
+                _socket(_ioService),
+                _inputBuffer( sizeof(OculusStatusMsg) ),
+                _deadline(_ioService)
     {
       // Create and setup a broadcast listening socket
       m_port     = 52102;   // fixed port for status messages
@@ -108,16 +56,14 @@ namespace liboculus {
       doConnect();
     }
 
-    OsStatusRx::~OsStatusRx()
+    StatusRx::~StatusRx()
     {
 
     }
 
-    void OsStatusRx::doConnect()
+    void StatusRx::doConnect()
     {
-      boost::asio::ip::udp::endpoint local(
-        boost::asio::ip::address_v4::any(),
-        52102);
+      boost::asio::ip::udp::endpoint local( boost::asio::ip::address_v4::any(), 52102);
         boost::system::error_code error;
 
         _socket.open(boost::asio::ip::udp::v4(), error);
@@ -132,17 +78,17 @@ namespace liboculus {
         }
       }
 
-      void OsStatusRx::startReader()
+      void StatusRx::startReader()
       {
         // Set a deadline for the read operation.
         //deadline_.expires_from_now(boost::posix_time::seconds(30));
 
         // Start an asynchronous receive
         _socket.async_receive( boost::asio::buffer((void *)&_osm, sizeof(OculusStatusMsg)),
-        boost::bind(&OsStatusRx::handleRead, this, _1, _2));
+        boost::bind(&StatusRx::handleRead, this, _1, _2));
       }
 
-      void OsStatusRx::handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred )
+      void StatusRx::handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred )
       {
         // if (stopped_)
         //   return;
@@ -156,8 +102,8 @@ namespace liboculus {
             return;
           }
 
-          _status->update( _osm );
-          m_valid++;
+        if( _status ) _status->update( _osm );
+        m_valid++;
 
           // Schedule another read
           startReader();
@@ -170,7 +116,8 @@ namespace liboculus {
         }
       }
 
-      // void OsStatusRx::doReceiveStatusMessage()
+
+      // void StatusRx::doReceiveStatusMessage()
       // {
       //   boost::asio::async_read(_socket,
       //       boost::asio::buffer(read_msg_.data(), sizeof(OculusStatusMsg)),
@@ -190,7 +137,7 @@ namespace liboculus {
       // Note that if the Oculus Viewer software is running on a PC with two network ports then it is
       // possible that both these ports will receive the status message
       // In this case we will see twice as many status messages as expected
-      // void OsStatusRx::ReadDatagrams()
+      // void StatusRx::ReadDatagrams()
       // {
       //   // Read through any available datagrams
       //   while (m_listener->hasPendingDatagrams())

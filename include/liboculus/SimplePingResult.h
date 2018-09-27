@@ -63,7 +63,7 @@ namespace liboculus {
       _numBeams = numBeams;
 
       LOG(DEBUG) << "Loaded " << _numBeams << " bearings";
-      
+
       // for(unsigned int i = 0; i < _numBeams; ++i)
       //   LOG(DEBUG) << i << " : " << at(i);
     }
@@ -105,7 +105,7 @@ private:
 
 
   class SimplePingResult {
-    friend class SonarClient;
+    friend class DataRx;
 
   public:
     SimplePingResult( const MessageHeader &hdr )

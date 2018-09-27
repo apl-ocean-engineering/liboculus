@@ -13,7 +13,7 @@ using std::string;
 
 
 #include "liboculus/StatusRx.h"
-#include "liboculus/SonarClient.h"
+#include "liboculus/DataRx.h"
 
 
 using namespace liboculus;
@@ -78,8 +78,8 @@ int main( int argc, char **argv ) {
   try {
     IoServiceThread ioSrv;
 
-    OsStatusRx statusRx( ioSrv.service() );
-    std::unique_ptr<SonarClient> sonarClient( nullptr );
+    StatusRx statusRx( ioSrv.service() );
+    std::unique_ptr<DataRx> dataRx( nullptr );
 
     if( ipAddr != "auto" ) {
       LOG(INFO) << "Connecting to sonar with IP address " << ipAddr;
@@ -87,14 +87,14 @@ int main( int argc, char **argv ) {
 
       LOG_IF(FATAL,addr.is_unspecified()) << "Hm, couldn't parse IP address";
 
-      sonarClient.reset( new SonarClient( ioSrv.service(), addr ) );
+      dataRx.reset( new DataRx( ioSrv.service(), addr ) );
     }
 
     ioSrv.start();
 
     while(true) {
 
-      if( !sonarClient && ipAddr == "auto") {
+      if( !dataRx && ipAddr == "auto") {
         if( statusRx.status().valid() ) {
           auto addr( statusRx.status().ipAddr() );
 
@@ -102,12 +102,12 @@ int main( int argc, char **argv ) {
 
           if( verbosity > 0 ) statusRx.status().dump();
 
-          sonarClient.reset( new SonarClient( ioSrv.service(), addr ) );
+          dataRx.reset( new DataRx( ioSrv.service(), addr ) );
 
         }
       }
 
-      if( sonarClient ) {
+      if( dataRx ) {
         // Do some stuff
         sleep(1);
       }

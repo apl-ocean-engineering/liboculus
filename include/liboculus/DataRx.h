@@ -24,8 +24,12 @@
 
 #pragma once
 
+#include <memory>
+
 #include <boost/asio.hpp>
 #include <boost/asio/steady_timer.hpp>
+
+#include "active_object/bounded_shared_queue.h"
 
 #include "Oculus/Oculus.h"
 
@@ -34,21 +38,29 @@
 
 namespace liboculus {
 
+  using std::shared_ptr;
   using boost::asio::ip::tcp;
 
 // ----------------------------------------------------------------------------
-// OsStatusRx - a listening socket for oculus status messages
+// DataRx - a state machine for receiving sonar data over the network
 
-class SonarClient
+// TODO.   Currently, the queue depth is fixed at 20.   Template?
+
+class DataRx
 {
 public:
-    SonarClient(boost::asio::io_service &context, uint32_t ip,
-                const std::shared_ptr<SimpleFireMessage> &fire = std::shared_ptr<SimpleFireMessage>(new SimpleFireMessage) );
 
-    SonarClient(boost::asio::io_service &context, const boost::asio::ip::address &addr,
-                const std::shared_ptr<SimpleFireMessage> &fire = std::shared_ptr<SimpleFireMessage>(new SimpleFireMessage) );
+  typedef active_object::bounded_shared_queue< shared_ptr<SimplePingResult>, 20 > Queue;
 
-    ~SonarClient();
+  DataRx(boost::asio::io_service &context, uint32_t ip,
+              const std::shared_ptr<SimpleFireMessage> &fire = std::shared_ptr<SimpleFireMessage>(new SimpleFireMessage) );
+
+  DataRx(boost::asio::io_service &context, const boost::asio::ip::address &addr,
+              const std::shared_ptr<SimpleFireMessage> &fire = std::shared_ptr<SimpleFireMessage>(new SimpleFireMessage) );
+
+  ~DataRx();
+
+  Queue &queue() { return _queue; }
 
 private:
 
@@ -61,13 +73,12 @@ private:
 
   void scheduleHeaderRead();
   void readHeader(const boost::system::error_code& ec, std::size_t bytes_transferred );
-  void readSimplePingResultHeader( SimplePingResult *msg, const boost::system::error_code& ec, std::size_t bytes_transferred );
-  void   readSimplePingResultData( SimplePingResult *msg, const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void readSimplePingResultHeader( const shared_ptr<SimplePingResult> &msg, const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void   readSimplePingResultData( const shared_ptr<SimplePingResult> &msg, const boost::system::error_code& ec, std::size_t bytes_transferred );
 
 
+  boost::asio::io_service  &_ioService;
   boost::asio::ip::address  _ipAddress;
-
-  boost::asio::io_service& _ioService;
   tcp::socket _socket;
 
   boost::asio::steady_timer _writeTimer;
@@ -76,6 +87,8 @@ private:
   std::shared_ptr<SimpleFireMessage> _fireMessage;
 
   MessageHeader _hdr;
+
+  Queue _queue;
 
 };
 
