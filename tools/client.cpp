@@ -75,6 +75,8 @@ int main( int argc, char **argv ) {
   }
 
 
+  bool notDone = true;
+
   try {
     IoServiceThread ioSrv;
 
@@ -92,25 +94,37 @@ int main( int argc, char **argv ) {
 
     ioSrv.start();
 
-    while(true) {
+    while( notDone ) {
 
-      if( !dataRx && ipAddr == "auto") {
-        if( statusRx.status().valid() ) {
-          auto addr( statusRx.status().ipAddr() );
+      while( !dataRx ) {
 
-          LOG(INFO) << "Using detected sonar at IP address " << addr;
+        if( statusRx.status().wait() ) {
 
-          if( verbosity > 0 ) statusRx.status().dump();
+          if( statusRx.status().valid() ) {
+            auto addr( statusRx.status().ipAddr() );
 
-          dataRx.reset( new DataRx( ioSrv.service(), addr ) );
+            LOG(INFO) << "Using detected sonar at IP address " << addr;
 
+            if( verbosity > 0 ) statusRx.status().dump();
+
+            dataRx.reset( new DataRx( ioSrv.service(), addr ) );
+
+          }
+
+        } else {
+          // Failed to get status, try again.
         }
+
       }
 
-      if( dataRx ) {
-        // Do some stuff
-        sleep(1);
-      }
+      shared_ptr<SimplePingResult> ping;
+
+      dataRx->queue().wait_and_pop( ping );
+
+        // Do something
+      auto valid = ping->validate();
+      LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
+
 
     }
 

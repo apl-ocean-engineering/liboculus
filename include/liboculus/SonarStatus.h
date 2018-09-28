@@ -22,7 +22,21 @@ public:
 
   OculusStatusMsg operator()( void ) const;
 
-  //std::mutex &mutex( void ) { return _writeLock; }
+  bool wait() const
+  { return wait_for( std::chrono::seconds(0) ); }
+
+  template< class Rep, class Period = std::ratio<1> >
+  bool wait_for( const std::chrono::duration<Rep,Period> &timeout = std::chrono::duration<Rep,Period>(0) ) const
+  {
+    std::unique_lock<std::mutex> lock(_statusMutex);
+
+   if( timeout.count() > 0 ) {
+       if( _statusUpdateCond.wait_for(lock, timeout) == std::cv_status::timeout ) return false;
+    } else {
+      _statusUpdateCond.wait(lock);
+    }
+    return true;
+  }
 
   bool valid() const { return _valid; }
   void dump() const;
@@ -34,7 +48,7 @@ public:
 protected:
 
   mutable std::mutex       _statusMutex;
-  std::condition_variable  _statusUpdateCond;
+  mutable std::condition_variable  _statusUpdateCond;
 
 private:
 
