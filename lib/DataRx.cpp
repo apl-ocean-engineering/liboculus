@@ -42,8 +42,8 @@ using std::shared_ptr;
 
 DataRx::DataRx(boost::asio::io_service &context, uint32_t ip,
                           const std::shared_ptr<SimpleFireMessage> &fire )
-  : _ipAddress( boost::asio::ip::address_v4(ip) ),
-    _ioService(context),
+  : _ioService(context),
+    _ipAddress( boost::asio::ip::address_v4(ip) ),
     _socket(_ioService),
     _writeTimer(_ioService),
     _fireMessage(fire),
@@ -56,8 +56,8 @@ DataRx::DataRx(boost::asio::io_service &context, uint32_t ip,
 DataRx::DataRx(boost::asio::io_service &context,
                           const boost::asio::ip::address &addr,
                           const std::shared_ptr<SimpleFireMessage> &fire )
-  : _ipAddress( addr ),
-    _ioService(context),
+  : _ioService(context),
+    _ipAddress( addr ),
     _socket(_ioService),
     _writeTimer(_ioService),
     _fireMessage(fire),
