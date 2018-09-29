@@ -77,6 +77,8 @@ int main( int argc, char **argv ) {
 
   bool notDone = true;
 
+  LOG(DEBUG) << "Starting loop";
+
   try {
     IoServiceThread ioSrv;
 
@@ -98,8 +100,10 @@ int main( int argc, char **argv ) {
 
       while( !dataRx ) {
 
-        if( statusRx.status().wait() ) {
+        LOG(DEBUG) << "Need to find the sonar.  Waiting for sonar...";
+        if( statusRx.status().wait_for(std::chrono::seconds(1)) ) {
 
+          LOG(DEBUG) << "   ... got status message";
           if( statusRx.status().valid() ) {
             auto addr( statusRx.status().ipAddr() );
 
@@ -109,6 +113,8 @@ int main( int argc, char **argv ) {
 
             dataRx.reset( new DataRx( ioSrv.service(), addr ) );
 
+          } else {
+            LOG(DEBUG) << "   ... but it wasn't valid";
           }
 
         } else {

@@ -39,8 +39,10 @@ namespace liboculus {
     std::lock_guard<std::mutex> lock( _statusMutex );
 
     memcpy( (void *)&_osm, (void *)&msg, sizeof(OculusStatusMsg) );
+    _valid = true;  // TODO:  Should validate
     _msgTime = msgTime;
 
+    //LOG(DEBUG) << "Updating all listeners!";
     _statusUpdateCond.notify_all();
   }
 

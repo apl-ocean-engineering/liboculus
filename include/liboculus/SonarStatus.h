@@ -7,6 +7,8 @@
 
 #include <boost/asio.hpp>
 
+#include "libg3logger/g3logger.h"
+
 #include "Oculus/Oculus.h"
 
 namespace liboculus {
@@ -23,19 +25,18 @@ public:
   OculusStatusMsg operator()( void ) const;
 
   bool wait() const
-  { return wait_for( std::chrono::seconds(0) ); }
-
-  template< class Rep, class Period = std::ratio<1> >
-  bool wait_for( const std::chrono::duration<Rep,Period> &timeout = std::chrono::duration<Rep,Period>(0) ) const
   {
     std::unique_lock<std::mutex> lock(_statusMutex);
+    _statusUpdateCond.wait(lock);
 
-   if( timeout.count() > 0 ) {
-       if( _statusUpdateCond.wait_for(lock, timeout) == std::cv_status::timeout ) return false;
-    } else {
-      _statusUpdateCond.wait(lock);
-    }
     return true;
+  }
+
+  template< class Rep, class Period = std::ratio<1> >
+  bool wait_for( const std::chrono::duration<Rep,Period> &timeout ) const
+  {
+    std::unique_lock<std::mutex> lock(_statusMutex);
+    return (_statusUpdateCond.wait_for( lock, timeout ) != std::cv_status::timeout);
   }
 
   bool valid() const { return _valid; }
