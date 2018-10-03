@@ -4,7 +4,7 @@
 
 namespace liboculus {
 
-  inline size_t DataSize( DataSizeType d ) {
+  inline size_t SizeOfDataSize( DataSizeType d ) {
     switch(d) {
       case dataSize8Bit:
         return 1;

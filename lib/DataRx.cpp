@@ -152,8 +152,8 @@ void DataRx::readHeader(const boost::system::error_code& ec, std::size_t bytes_t
               shared_ptr<SimplePingResult> ping( new SimplePingResult( _hdr ) );
 
               // Read the ping hedaer
-              auto b = boost::asio::buffer( ping->hdrPtr(), ping->netHdrLen() );
-              _socket.async_receive( b, boost::bind(&DataRx::readSimplePingResultHeader, this, ping, _1, _2));
+              auto b = boost::asio::buffer( ping->ptrAfterHeader(), ping->hdr()->payloadSize );
+              _socket.async_receive( b, boost::bind(&DataRx::readSimplePingResult, this, ping, _1, _2));
 
             } else if ( _hdr.msgId() == messageLogs && _hdr.hdr.payloadSize > 0 ) {
 
@@ -225,49 +225,34 @@ void DataRx::readHeader(const boost::system::error_code& ec, std::size_t bytes_t
   }
 }
 
-void DataRx::readSimplePingResultHeader( const shared_ptr<SimplePingResult> &msg,
-                                              const boost::system::error_code& ec, std::size_t bytes_transferred )
+void DataRx::readSimplePingResult( const shared_ptr<SimplePingResult> &ping,
+                                            const boost::system::error_code& ec,
+                                            std::size_t bytes_transferred )
 {
   if (!ec) {
     LOG(DEBUG) << "Got " << bytes_transferred << " bytes of SimplePingResult from sonar";
 
-    if( bytes_transferred == msg->netHdrLen() ) {
+    if( bytes_transferred == ping->hdr()->payloadSize ) {
 
-      if( msg->validate() ) {
+      if( ping->validate() ) {
 
-        LOG(DEBUG) << "Data valid, reading " << msg->dataLen() << " bytes of sonar data";
+        LOG(DEBUG) << "Data valid!";
 
-        CHECK( (bool)msg->_data );
-        boost::asio::async_read( _socket, boost::asio::buffer(msg->dataPtr(), msg->dataLen()),
-                                boost::bind(&DataRx::readSimplePingResultData, this, msg, _1, _2));
+        _queue.push( ping );
 
+        // And return to the home state
+        scheduleHeaderRead();
       } else {
         LOG(WARNING) << "Incoming packet invalid";
       }
 
 
     } else {
-      LOG(WARNING) << "Received short header of " << bytes_transferred << " expected " << msg->netHdrLen();
+      LOG(WARNING) << "Received short header of " << bytes_transferred << " expected " << ping->hdr()->payloadSize;
     }
 
   } else {
     LOG(WARNING) << "Error on receive of header: " << ec.message();
-  }
-}
-
-void DataRx::readSimplePingResultData( const shared_ptr<SimplePingResult> &msg,
-                            const boost::system::error_code& ec, std::size_t bytes_transferred )
-{
-  if (!ec) {
-    LOG(DEBUG) << "Received " << bytes_transferred << " bytes of data from sonar";
-
-    // Push the data
-    _queue.push( msg );
-
-    // And return to the home state
-    scheduleHeaderRead();
-  } else {
-    LOG(WARNING) << "Error on receive of data: " << ec.message();
   }
 }
 

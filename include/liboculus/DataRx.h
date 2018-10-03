@@ -73,8 +73,7 @@ private:
 
   void scheduleHeaderRead();
   void readHeader(const boost::system::error_code& ec, std::size_t bytes_transferred );
-  void readSimplePingResultHeader( const shared_ptr<SimplePingResult> &msg, const boost::system::error_code& ec, std::size_t bytes_transferred );
-  void   readSimplePingResultData( const shared_ptr<SimplePingResult> &msg, const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void readSimplePingResult( const shared_ptr<SimplePingResult> &msg, const boost::system::error_code& ec, std::size_t bytes_transferred );
 
 
   boost::asio::io_service  &_ioService;
