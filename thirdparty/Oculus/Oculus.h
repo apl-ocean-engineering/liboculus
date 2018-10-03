@@ -246,7 +246,7 @@ struct OculusInfo {
 	// Maximum high-frequency range
 	double maxHF;
 	// Description
-	char* model;
+	const char* model;
 };
 
 #pragma pack(pop)
@@ -266,6 +266,7 @@ const OculusInfo OculusSonarInfo[] = {
 		true,
 		// Up to 40m range
 		40,
+    "partNumberUndefined"
 	},
 	// -------------------------------------------------------------------------
 	// M370
@@ -278,7 +279,8 @@ const OculusInfo OculusSonarInfo[] = {
 		// No HF mode
 		false,
 		// Up to 40m range
-		-1
+		-1,
+    "M370s"
 	},
 	// M370s
 	{
@@ -289,7 +291,8 @@ const OculusInfo OculusSonarInfo[] = {
 		200,
 		// No HF mode
 		false,
-		-1
+		-1,
+    "M370s_Artemis"
 	},
 	// M370s_Deep
 	{
@@ -300,7 +303,8 @@ const OculusInfo OculusSonarInfo[] = {
 		200,
 		// No HF mode
 		false,
-		-1
+		-1,
+    "M370s_Deep"
 	},
 	// M373
 	{
@@ -311,7 +315,8 @@ const OculusInfo OculusSonarInfo[] = {
 		200,
 		// No HF mode
 		false,
-		-1
+		-1,
+    "M373s"
 	},
 	// M373s_Deep
 	{
@@ -322,7 +327,8 @@ const OculusInfo OculusSonarInfo[] = {
 		200,
 		// No HF mode
 		false,
-		-1
+		-1,
+    "M373s_Deep"
 	},
 	// -------------------------------------------------------------------------
 	// M1200d
@@ -335,7 +341,8 @@ const OculusInfo OculusSonarInfo[] = {
 		// Supports HF mode
 		true,
 		// Up to 10m range
-		10
+		10,
+    "M1200d"
 	},
 	{
 		partNumberM1200d_Deep,
@@ -346,8 +353,9 @@ const OculusInfo OculusSonarInfo[] = {
 		// Supports HF mode
 		true,
 		// Up to 10m range
-		10
+		10,
+    "M1200d_Deep"
 	},
 	// End of the list
-	{ partNumberEnd }
+	{ partNumberEnd, false, -1, false, -1, "end" }
 };
