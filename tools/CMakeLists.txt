@@ -1,4 +1,4 @@
-fips_begin_app( ocClient cmdline )
+fips_begin_app( oc_client cmdline )
   fips_files(
     client.cpp
   )
