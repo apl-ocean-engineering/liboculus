@@ -2,6 +2,7 @@
 #include <memory>
 #include <thread>
 #include <string>
+#include <fstream>
 
 using std::string;
 
@@ -14,45 +15,14 @@ using std::string;
 
 #include "liboculus/StatusRx.h"
 #include "liboculus/DataRx.h"
+#include "liboculus/IoServiceThread.h"
+#include "liboculus/playback.h"
 
 
 using namespace liboculus;
 
-class IoServiceThread {
-public:
-    IoServiceThread()
-      : _service(),
-        _thread() {}
-
-    ~IoServiceThread() {}
-
-    void start()
-    {
-        if (_thread) return; // running
-
-        _thread.reset(new std::thread(
-            boost::bind(&boost::asio::io_service::run, &_service)
-        ));
-    }
-
-    void stop()
-    {
-        if (!_thread) return; // stopped
-
-        _service.stop();
-        _thread->join();
-        _service.reset();
-        _thread.reset();
-    }
-
-    boost::asio::io_service &service()
-    { return _service; }
-
-private:
-    boost::asio::io_service _service;
-    std::unique_ptr<std::thread> _thread;
-};
-
+using std::ofstream;
+using std::ios_base;
 
 int main( int argc, char **argv ) {
 
@@ -64,7 +34,13 @@ int main( int argc, char **argv ) {
   app.add_flag("-v", verbosity, "Additional output (use -vv for even more!)");
 
   string ipAddr("auto");
-  app.add_option("-i,--ip", ipAddr, "IP address of sonar or \"auto\" to automatically detect.");
+  app.add_option("--ip", ipAddr, "IP address of sonar or \"auto\" to automatically detect.");
+
+  string outputFilename("");
+  app.add_option("-o,--output", outputFilename, "Filename to save sonar data to.");
+
+  string inputFilename("");
+  app.add_option("-i,--input", inputFilename, "Filename to read sonar data from.");
 
   CLI11_PARSE(app, argc, argv);
 
@@ -75,6 +51,23 @@ int main( int argc, char **argv ) {
   }
 
 
+  if( !inputFilename.empty() ) {
+    return playbackSonarFile( inputFilename );
+  }
+
+
+  ofstream output;
+
+  if( !outputFilename.empty() ) {
+    output.open( outputFilename, ios_base::binary | ios_base::out );
+
+    if( !output.is_open() ) {
+      LOG(WARNING) << "Unable to open " << outputFilename << " for output.";
+      exit(-1);
+    }
+  }
+
+
   bool notDone = true;
 
   LOG(DEBUG) << "Starting loop";
@@ -82,7 +75,7 @@ int main( int argc, char **argv ) {
   try {
     IoServiceThread ioSrv;
 
-    StatusRx statusRx( ioSrv.service() );
+    std::unique_ptr<StatusRx> statusRx( new StatusRx( ioSrv.service() ) );
     std::unique_ptr<DataRx> dataRx( nullptr );
 
     if( ipAddr != "auto" ) {
@@ -94,22 +87,22 @@ int main( int argc, char **argv ) {
       dataRx.reset( new DataRx( ioSrv.service(), addr ) );
     }
 
-    ioSrv.start();
+    ioSrv.fork();
 
     while( notDone ) {
 
       while( !dataRx ) {
 
         LOG(DEBUG) << "Need to find the sonar.  Waiting for sonar...";
-        if( statusRx.status().wait_for(std::chrono::seconds(1)) ) {
+        if( statusRx->status().wait_for(std::chrono::seconds(1)) ) {
 
           LOG(DEBUG) << "   ... got status message";
-          if( statusRx.status().valid() ) {
-            auto addr( statusRx.status().ipAddr() );
+          if( statusRx->status().valid() ) {
+            auto addr( statusRx->status().ipAddr() );
 
             LOG(INFO) << "Using detected sonar at IP address " << addr;
 
-            if( verbosity > 0 ) statusRx.status().dump();
+            if( verbosity > 0 ) statusRx->status().dump();
 
             dataRx.reset( new DataRx( ioSrv.service(), addr ) );
 
@@ -131,6 +124,9 @@ int main( int argc, char **argv ) {
       auto valid = ping->validate();
       LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
 
+      if( output.is_open() ) {
+        output.write( (const char *)ping->data(), ping->dataSize() );
+      }
 
     }
 
@@ -142,6 +138,7 @@ int main( int argc, char **argv ) {
     LOG(WARNING) << "Exception: " << e.what();
   }
 
+  if( output.is_open() ) output.close();
 
 
 }
