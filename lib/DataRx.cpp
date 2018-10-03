@@ -146,14 +146,15 @@ void DataRx::readHeader(const boost::system::error_code& ec, std::size_t bytes_t
 
             if( _hdr.msgId() == messageSimplePingResult ) {
 
-              LOG(DEBUG) << "Requesting balance of SimplePingResult header";
-
               // Rely on ref-counting of shared_ptr to clean up any dropped packets
               shared_ptr<SimplePingResult> ping( new SimplePingResult( _hdr ) );
 
               // Read the ping hedaer
               auto b = boost::asio::buffer( ping->ptrAfterHeader(), ping->hdr()->payloadSize );
-              _socket.async_receive( b, boost::bind(&DataRx::readSimplePingResult, this, ping, _1, _2));
+              LOG(DEBUG) << "Requesting balance of SimplePingResult header, " << ping->hdr()->payloadSize << " bytes";
+
+//_socket.async_read( b, boost::bind(&DataRx::readSimplePingResult, this, ping, _1, _2));
+	      boost::asio::async_read( _socket, b, boost::bind(&DataRx::readSimplePingResult, this, ping, _1, _2));
 
             } else if ( _hdr.msgId() == messageLogs && _hdr.hdr.payloadSize > 0 ) {
 
