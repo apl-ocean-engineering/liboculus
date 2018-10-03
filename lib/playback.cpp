@@ -22,8 +22,8 @@ int playbackSonarFile( const std::string &filename ) {
 
   while( !input.eof() ) {
 
-    // Advance to the next header byte
-    while( input.peek() != 0x4f ) {
+    // Advance to the next header byte (actually LSB of header since we're little-endian)
+    while( input.peek() != 0x53 ) {
       char c;
       input.get(c);
       if( input.eof() ) return 0;
