@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string.h>
 
 #include <libg3logger/g3logger.h>
 
@@ -131,7 +132,7 @@ private:
 
     ~SimplePingResult() {}
 
-    void *data()     { return reinterpret_cast<unsigned char*>(&_data); }
+    void *data()     { return reinterpret_cast<unsigned char*>(_data.get()); }
     const size_t dataSize() const { return _dataSize; }
 
     OculusSimplePingResult *ping() { return reinterpret_cast<OculusSimplePingResult *>( _data.get() ); }
