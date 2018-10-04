@@ -58,10 +58,11 @@ namespace liboculus {
       {}
 
 
-    short at( unsigned int i ) {
+    // Returns bearing in degrees
+    float at( unsigned int i ) const {
       CHECK( i < _numBeams ) << "Requested beam " << i << " out of range";
 
-      return _ptr[i];
+      return _ptr[i]/100.0;
     }
 
     void set( void *ptr, uint16_t numBeams ) {
@@ -85,12 +86,22 @@ private:
   class ImageData {
   public:
     ImageData()
-      : _set(false)
+      : _ptr(nullptr)
       {}
 
-    void set( void *ptr, uint16_t numRanges, uint16_t numBeams, DataSizeType bytesPerDatum ) {
-      _set = true;
+    // TODO.  Deal with non-8-bit data somehow
+    uint8_t at( unsigned int bearing, unsigned int range ) const {
+      CHECK( _dataSz == 1 ) << "Sorry, can only handle 8-bit data right now";
+      if( _ptr == nullptr ) return 0;
 
+      //TODO range check
+      const unsigned int index = range * _numBeams + bearing;
+      CHECK( index < (_numRanges * _numBeams) );
+
+      return ( (uint8_t *)_ptr)[range * _numBeams + bearing];
+    }
+
+    void set( void *ptr, uint16_t numRanges, uint16_t numBeams, DataSizeType bytesPerDatum ) {
       _ptr = ptr;
       _numRanges = numRanges;
       _numBeams = numBeams;
@@ -103,7 +114,6 @@ private:
     }
 
 private:
-    bool _set;
     void *_ptr;
     uint16_t _numRanges, _numBeams;
     uint8_t _dataSz;
@@ -156,6 +166,9 @@ private:
     OculusMessageHeader *hdr() { return &(ping()->fireMessage.head); }
 
     void *ptrAfterHeader() { return reinterpret_cast<void *>( _data.get() + sizeof(OculusMessageHeader)); }
+
+    const BearingData &bearings() const { return _bearings; }
+    const ImageData   &image() const    { return _image; }
 
 
     // size_t imageLen const { return header()->payloadSize  }

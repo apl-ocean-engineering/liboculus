@@ -24,6 +24,9 @@ using namespace liboculus;
 using std::ofstream;
 using std::ios_base;
 
+int playbackSonarFile( const std::string &filename );
+
+
 int main( int argc, char **argv ) {
 
   libg3logger::G3Logger logger("ocClient");
@@ -141,4 +144,22 @@ int main( int argc, char **argv ) {
   if( output.is_open() ) output.close();
 
 
+}
+
+
+int playbackSonarFile( const std::string &filename ) {
+  SonarPlayer player;
+  if( !player.open(filename) ) {
+    LOG(INFO) << "Failed to open " << filename;
+    return -1;
+  }
+
+  std::shared_ptr<SimplePingResult> ping( player.nextPing() );
+  while( ping ) {
+    ping->validate();
+
+    ping = player.nextPing();
+  }
+
+  return 0;
 }

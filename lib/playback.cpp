@@ -70,25 +70,6 @@ std::shared_ptr<SimplePingResult> SonarPlayer::nextPing() {
 
 
 
-
-
-int playbackSonarFile( const std::string &filename ) {
-  SonarPlayer player;
-  if( !player.open(filename) ) {
-    LOG(INFO) << "Failed to open " << filename;
-    return -1;
-  }
-
-  std::shared_ptr<SimplePingResult> ping( player.nextPing() );
-  while( ping.get() != nullptr ) {
-    ping->validate();
-    ping = player.nextPing();
-  }
-
-  return 0;
-}
-
-
 }
 
 
