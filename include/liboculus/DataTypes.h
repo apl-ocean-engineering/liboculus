@@ -4,6 +4,21 @@
 
 namespace liboculus {
 
+  inline const char *DataSizeToString( DataSizeType d ) {
+    switch(d) {
+      case dataSize8Bit:
+        return "8-bit";
+      case dataSize16Bit:
+        return "16-bit";
+      case dataSize24Bit:
+        return "24-bit";
+      case dataSize32Bit:
+        return "32-bit";
+    }
+
+    return "unknown";
+  }
+
   inline size_t SizeOfDataSize( DataSizeType d ) {
     switch(d) {
       case dataSize8Bit:

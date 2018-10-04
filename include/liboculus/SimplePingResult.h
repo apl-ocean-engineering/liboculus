@@ -65,7 +65,7 @@ namespace liboculus {
       LOG(DEBUG) << "Loaded " << _numBeams << " bearings";
 
       // for(unsigned int i = 0; i < _numBeams; ++i)
-      //   LOG(DEBUG) << i << " : " << at(i);
+      //   LOG(DEBUG) << i << " : " << _ptr[i];
     }
 
 private:
@@ -91,7 +91,7 @@ private:
       LOG(DEBUG) << "Loaded " << _numRanges << " x " << _numBeams << " imaging data";
 
        for(unsigned int i = 0; i < 10; ++i)
-          LOG(DEBUG) << i << " : " << std::hex << static_cast<int>(((uint8_t *)&_ptr)[i]);
+          LOG(DEBUG) << i << " : " << std::hex << static_cast<uint16_t>(((uint8_t *)_ptr)[i]);
     }
 
 private:
@@ -128,6 +128,16 @@ private:
         memcpy( (void *)_data.get(), (void *)&(hdr.hdr), sizeof( OculusMessageHeader) );
       }
     }
+
+    SimplePingResult( char *data )
+      :  _valid(false), _data( nullptr ), _bearings(), _image()
+    {
+      _data.reset( (unsigned char*)data );
+
+      OculusMessageHeader *hdr = reinterpret_cast<OculusMessageHeader *>(_data.get());
+      _dataSize = sizeof(OculusMessageHeader) + hdr->payloadSize;
+    }
+
 
     ~SimplePingResult() {}
 
@@ -171,7 +181,7 @@ private:
 
       LOG(DEBUG) << "  Image size: " << ping()->imageSize;
       LOG(DEBUG) << "Image offset: " << ping()->imageOffset;
-      LOG(DEBUG) << "   Data size: " << ping()->dataSize;
+      LOG(DEBUG) << "   Data size: " << DataSizeToString(ping()->dataSize);
       LOG(DEBUG) << "Message size: " << ping()->messageSize;
 
       //LOG_IF(WARNING, hdr().messageSize != _dataSize ) << ping()->messageSize << " != " << _dataSize;
