@@ -35,4 +35,25 @@ namespace liboculus {
   }
 
 
+  //=== Message types
+
+  inline const char *MessageTypeToString( OculusMessageType t ) {
+    switch(t) {
+      case messageSimpleFire:
+          return "messageSimpleFire";
+      case messagePingResult:
+          return "messagePingResult";
+      case messageSimplePingResult:
+          return "messageSimplePingResult";
+      case messageUserConfig:
+          return "messageUserConfig";
+      case messageLogs:
+          return "messageLogs";
+      case messageDummy:
+          return "messageDummy";
+    }
+
+      return "(unknown)";
+  }
+
 }

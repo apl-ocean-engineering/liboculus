@@ -18,7 +18,15 @@ namespace liboculus {
         memset( (void *)&hdr, 0, sizeof(hdr) );
       }
 
-      uint16_t msgId() const { return hdr.msgId; }
+    MessageHeader( const char *data )
+      : _valid(false)
+      {
+          memcpy( (void *)&hdr, (void *)data, sizeof(OculusMessageHeader) );
+      }
+
+      // Convenience accessors
+      OculusMessageType msgId() const { return static_cast<OculusMessageType>(hdr.msgId); }
+
       bool valid() const { return _valid; }
 
       bool validate() {
@@ -27,7 +35,7 @@ namespace liboculus {
         LOG(DEBUG) <<    "   Oculus Id: 0x" << std::hex << hdr.oculusId;
         if( hdr.oculusId != 0x4f53 ) return false;
 
-        LOG(DEBUG) << "      Msg id: 0x" << std::hex << msgId();
+        LOG(DEBUG) << "      Msg id: 0x" << std::hex << static_cast<uint16_t>(msgId());
         LOG(DEBUG) << "      Dst ID: " << std::hex << hdr.dstDeviceId;
         LOG(DEBUG) << "      Src ID: " << std::hex << hdr.srcDeviceId;
         LOG(DEBUG) << "Payload size: " << hdr.payloadSize << " bytes";

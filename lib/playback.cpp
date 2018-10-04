@@ -5,8 +5,8 @@
 
 #include "libg3logger/g3logger.h"
 
+#include "liboculus/DataTypes.h"
 #include "liboculus/SimplePingResult.h"
-
 #include "liboculus/playback.h"
 
 namespace liboculus {
@@ -54,12 +54,12 @@ std::shared_ptr<SimplePingResult> SonarPlayer::nextPing() {
   char *data = nullptr;
   while( (data = nextPacket()) != nullptr ) {
 
-    OculusMessageHeader *header = reinterpret_cast<OculusMessageHeader *>(data);
+    MessageHeader header(data);
 
-    LOG(DEBUG) << std::hex << header->msgId;
-
-    if( header->msgId == messageSimplePingResult ) {
+    if( header.msgId() == messageSimplePingResult ) {
       return std::shared_ptr<SimplePingResult>( new SimplePingResult( data ) );
+    } else {
+      LOG(DEBUG) << "Skipping " << MessageTypeToString( header.msgId() );
     }
 
   }
