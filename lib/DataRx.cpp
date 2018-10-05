@@ -41,7 +41,7 @@ using std::shared_ptr;
 // DataRx - a listening socket for oculus status messages
 
 DataRx::DataRx(boost::asio::io_service &context, uint32_t ip,
-                          const std::shared_ptr<SimpleFireMessage> &fire )
+                          const SimpleFireMessage &fire )
   : _ioService(context),
     _ipAddress( boost::asio::ip::address_v4(ip) ),
     _socket(_ioService),
@@ -55,7 +55,7 @@ DataRx::DataRx(boost::asio::io_service &context, uint32_t ip,
 
 DataRx::DataRx(boost::asio::io_service &context,
                           const boost::asio::ip::address &addr,
-                          const std::shared_ptr<SimpleFireMessage> &fire )
+                          const SimpleFireMessage &fire )
   : _ioService(context),
     _ipAddress( addr ),
     _socket(_ioService),
@@ -65,8 +65,6 @@ DataRx::DataRx(boost::asio::io_service &context,
     _queue()
 {
   doConnect();
-
-  CHECK( (bool)_fireMessage );
 }
 
 DataRx::~DataRx()
@@ -113,7 +111,7 @@ void DataRx::writeHandler(const boost::system::error_code& ec )
   if( !ec ) {
     boost::asio::streambuf msg;
 
-    _fireMessage->serialize(msg);
+    _fireMessage.serialize(msg);
 
     auto result = _socket.send( msg.data() );
     LOG(DEBUG) << "Sent " << result << " bytes to sonar";
@@ -123,6 +121,15 @@ void DataRx::writeHandler(const boost::system::error_code& ec )
 
   // Schedule the next write
   //scheduleWrite();
+}
+
+void DataRx::updateFireMessage( const SimpleFireMessage &msg ) {
+  _fireMessage = msg;
+
+  boost::asio::streambuf buf;
+  _fireMessage.serialize(buf);
+  auto result = _socket.send( buf.data() );
+  LOG(DEBUG) << "Sent " << result << " bytes to sonar";
 }
 
 //=== Readers

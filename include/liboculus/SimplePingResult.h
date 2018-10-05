@@ -58,7 +58,6 @@ namespace liboculus {
       : _set(false)
       {}
 
-
     // Returns bearing in degrees
     float at( unsigned int i ) const {
       CHECK( i < _numBeams ) << "Requested beam " << i << " out of range";

@@ -53,14 +53,17 @@ public:
   typedef active_object::bounded_shared_queue< shared_ptr<SimplePingResult>, 20 > Queue;
 
   DataRx(boost::asio::io_service &context, uint32_t ip,
-              const std::shared_ptr<SimpleFireMessage> &fire = std::shared_ptr<SimpleFireMessage>(new SimpleFireMessage) );
+              const SimpleFireMessage &fire = SimpleFireMessage() );
 
   DataRx(boost::asio::io_service &context, const boost::asio::ip::address &addr,
-              const std::shared_ptr<SimpleFireMessage> &fire = std::shared_ptr<SimpleFireMessage>(new SimpleFireMessage) );
+              const SimpleFireMessage &fire = SimpleFireMessage() );
 
   ~DataRx();
 
   Queue &queue() { return _queue; }
+
+  SimpleFireMessage fireMessage() { return _fireMessage; }
+  void updateFireMessage( const SimpleFireMessage &msg );
 
 private:
 
@@ -83,7 +86,7 @@ private:
   boost::asio::steady_timer _writeTimer;
 
   // Configuration data out to sonar
-  std::shared_ptr<SimpleFireMessage> _fireMessage;
+  SimpleFireMessage _fireMessage;
 
   MessageHeader _hdr;
 
