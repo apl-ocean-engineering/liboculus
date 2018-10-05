@@ -16,7 +16,7 @@ using std::string;
 #include "liboculus/StatusRx.h"
 #include "liboculus/DataRx.h"
 #include "liboculus/IoServiceThread.h"
-#include "liboculus/playback.h"
+#include "liboculus/SonarPlayer.h"
 
 
 using namespace liboculus;

@@ -7,7 +7,7 @@
 
 #include "liboculus/DataTypes.h"
 #include "liboculus/SimplePingResult.h"
-#include "liboculus/playback.h"
+#include "liboculus/SonarPlayer.h"
 
 namespace liboculus {
 
