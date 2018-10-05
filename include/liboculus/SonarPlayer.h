@@ -2,6 +2,8 @@
 
 #include <fstream>
 
+#include "liboculus/SimplePingResult.h"
+
 namespace liboculus {
 
 
