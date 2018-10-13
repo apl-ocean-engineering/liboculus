@@ -124,7 +124,7 @@ private:
 
   // A single OculusSimplePingResult (msg) is actually three nested structs:
   //   OculusMessageHeader     (as msg.fireMessage.head)
-  //   OculusSimpleFireMessage (as mg.fireMessage)
+  //   OculusSimpleFireMessage (as msg.fireMessage)
   //   then the rest of OculusSimplePingResult
   class SimplePingResult {
     friend class DataRx;
@@ -141,7 +141,10 @@ private:
 
         _dataSize = sizeof(OculusMessageHeader) + hdr.hdr.payloadSize;
         LOG(DEBUG) << "Creating message buffer of " << _dataSize;
-        _data.reset( new uint8_t[_dataSize] );
+
+        // alloc a 4-byte aligned buffer
+        size_t alignSize = ((_dataSize + 3) >> 2) << 2;
+        _data.reset( new uint8_t[alignSize] );
 
         memcpy( (void *)_data.get(), (void *)&(hdr.hdr), sizeof( OculusMessageHeader) );
       }
@@ -150,10 +153,17 @@ private:
     SimplePingResult( char *data )
       :  _valid(false), _data( nullptr ), _bearings(), _image()
     {
-      _data.reset( (unsigned char*)data );
+      //_data.reset( (unsigned char*)data );
 
-      OculusMessageHeader *hdr = reinterpret_cast<OculusMessageHeader *>(_data.get());
+      OculusMessageHeader *hdr = reinterpret_cast<OculusMessageHeader *>(data);
+
       _dataSize = sizeof(OculusMessageHeader) + hdr->payloadSize;
+
+      // alloc a 4-byte aligned buffer
+      size_t alignSize = ((_dataSize + 3) >> 2) << 2;
+      _data.reset( new uint8_t[alignSize] );
+
+      memcpy( (void *)_data.get(), (void *)data, _dataSize );
     }
 
 
@@ -164,6 +174,8 @@ private:
 
     OculusSimplePingResult *ping() { return reinterpret_cast<OculusSimplePingResult *>( _data.get() ); }
     OculusMessageHeader *hdr() { return &(ping()->fireMessage.head); }
+
+    MessageHeader header() { return MessageHeader( (const char *)_data.get() ); }
 
     void *ptrAfterHeader() { return reinterpret_cast<void *>( _data.get() + sizeof(OculusMessageHeader)); }
 
