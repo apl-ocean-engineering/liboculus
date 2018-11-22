@@ -3,7 +3,7 @@ fips_begin_app( oc_client cmdline )
     client.cpp
   )
 
-  fips_deps( oculus active_object  )
+  fips_deps( oculus activeobject  )
 
   fips_include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
