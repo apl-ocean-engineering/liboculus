@@ -24,7 +24,7 @@ using namespace liboculus;
 using std::ofstream;
 using std::ios_base;
 
-int playbackSonarFile( const std::string &filename, int stopAfter = -1 );
+int playbackSonarFile( const std::string &filename, ofstream &output, int stopAfter = -1 );
 
 
 int main( int argc, char **argv ) {
@@ -34,7 +34,7 @@ int main( int argc, char **argv ) {
   CLI::App app{"Simple Oculus Sonar app"};
 
   int verbosity = 0;
-  app.add_flag("-v", verbosity, "Additional output (use -vv for even more!)");
+  app.add_flag("-v,--verbose", verbosity, "Additional output (use -vv for even more!)");
 
   string ipAddr("auto");
   app.add_option("--ip", ipAddr, "IP address of sonar or \"auto\" to automatically detect.");
@@ -57,15 +57,10 @@ int main( int argc, char **argv ) {
     logger.stderrHandle->call( &ColorStderrSink::setThreshold, DEBUG );
   }
 
-
-  if( !inputFilename.empty() ) {
-    return playbackSonarFile( inputFilename, stopAfter );
-  }
-
-
   ofstream output;
 
   if( !outputFilename.empty() ) {
+    LOG(DEBUG) << "Opening output file " << outputFilename;
     output.open( outputFilename, ios_base::binary | ios_base::out );
 
     if( !output.is_open() ) {
@@ -74,6 +69,10 @@ int main( int argc, char **argv ) {
     }
   }
 
+  if( !inputFilename.empty() ) {
+     playbackSonarFile( inputFilename, output, stopAfter );
+     return 0;
+   }
 
   bool notDone = true;
   int count = 0;
@@ -138,7 +137,7 @@ int main( int argc, char **argv ) {
 
 
       count++;
-      if( (stopAfter>0) && (count > stopAfter)) notDone = false;
+      if( (stopAfter>0) && (count >= stopAfter)) notDone = false;
 
     }
 
@@ -152,27 +151,40 @@ int main( int argc, char **argv ) {
 
   if( output.is_open() ) output.close();
 
-
+  return 0;
 }
 
 
-int playbackSonarFile( const std::string &filename, int stopAfter ) {
-  SonarPlayer player;
-  if( !player.open(filename) ) {
+int playbackSonarFile( const std::string &filename, ofstream &output, int stopAfter ) {
+  std::shared_ptr<SonarPlayerBase> player( SonarPlayerBase::OpenFile(filename) );
+
+  if( !player ) {
+    LOG(WARNING) << "Unable to open sonar file";
+    return -1;
+  }
+
+  if( !player->open(filename) ) {
     LOG(INFO) << "Failed to open " << filename;
     return -1;
   }
 
   int count = 0;
-  std::shared_ptr<SimplePingResult> ping( player.nextPing() );
-  while( ping ) {
+  std::shared_ptr<SimplePingResult> ping( player->nextPing() );
+  while( ping && !player->eof() ) {
+
     ping->validate();
 
-    count++;
-    if( (stopAfter > 0) && (count > stopAfter) ) break;
+    if( output.is_open() ) {
+      output.write( (const char *)ping->data(), ping->dataSize() );
+    }
 
-    ping = player.nextPing();
+    count++;
+    if( (stopAfter > 0) && (count >= stopAfter) ) break;
+
+    ping = player->nextPing();
   }
+
+  LOG(INFO) << count << " sonar packets decoded";
 
   return 0;
 }
