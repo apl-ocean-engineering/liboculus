@@ -24,7 +24,7 @@ using namespace liboculus;
 using std::ofstream;
 using std::ios_base;
 
-int playbackSonarFile( const std::string &filename );
+int playbackSonarFile( const std::string &filename, int stopAfter = -1 );
 
 
 int main( int argc, char **argv ) {
@@ -45,6 +45,10 @@ int main( int argc, char **argv ) {
   string inputFilename("");
   app.add_option("-i,--input", inputFilename, "Filename to read sonar data from.");
 
+  int stopAfter = -1;
+  app.add_option("-n,--frames", stopAfter, "Stop after (n) frames.");
+
+
   CLI11_PARSE(app, argc, argv);
 
   if( verbosity == 1 ) {
@@ -55,7 +59,7 @@ int main( int argc, char **argv ) {
 
 
   if( !inputFilename.empty() ) {
-    return playbackSonarFile( inputFilename );
+    return playbackSonarFile( inputFilename, stopAfter );
   }
 
 
@@ -72,6 +76,7 @@ int main( int argc, char **argv ) {
 
 
   bool notDone = true;
+  int count = 0;
 
   LOG(DEBUG) << "Starting loop";
 
@@ -131,6 +136,10 @@ int main( int argc, char **argv ) {
         output.write( (const char *)ping->data(), ping->dataSize() );
       }
 
+
+      count++;
+      if( (stopAfter>0) && (count > stopAfter)) notDone = false;
+
     }
 
     ioSrv.stop();
@@ -147,16 +156,20 @@ int main( int argc, char **argv ) {
 }
 
 
-int playbackSonarFile( const std::string &filename ) {
+int playbackSonarFile( const std::string &filename, int stopAfter ) {
   SonarPlayer player;
   if( !player.open(filename) ) {
     LOG(INFO) << "Failed to open " << filename;
     return -1;
   }
 
+  int count = 0;
   std::shared_ptr<SimplePingResult> ping( player.nextPing() );
   while( ping ) {
     ping->validate();
+
+    count++;
+    if( (stopAfter > 0) && (count > stopAfter) ) break;
 
     ping = player.nextPing();
   }
