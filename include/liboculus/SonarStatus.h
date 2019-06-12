@@ -7,7 +7,7 @@
 
 #include <boost/asio.hpp>
 
-#include "libg3logger/g3logger.h"
+#include "g3log/g3log.hpp"
 
 #include "Oculus/Oculus.h"
 

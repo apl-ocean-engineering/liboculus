@@ -2,7 +2,7 @@
 
 #include "liboculus/SonarStatus.h"
 
-#include "libg3logger/g3logger.h"
+#include "g3log/g3log.hpp"
 
 
 namespace liboculus {

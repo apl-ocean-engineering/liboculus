@@ -30,7 +30,7 @@
 #include <boost/bind.hpp>
 
 #include "liboculus/StatusRx.h"
-#include "libg3logger/g3logger.h"
+#include "g3log/g3log.hpp"
 
 namespace liboculus {
 
