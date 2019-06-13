@@ -149,7 +149,7 @@ void DataRx::readHeader(const boost::system::error_code& ec, std::size_t bytes_t
     if( bytes_transferred == sizeof(OculusMessageHeader) ) {
 
       LOG(DEBUG) << "Validating...";
-      if( _hdr.validate() ) {
+      if( _hdr.valid() ) {
 
             if( _hdr.msgId() == messageSimplePingResult ) {
 
@@ -242,7 +242,7 @@ void DataRx::readSimplePingResult( const shared_ptr<SimplePingResult> &ping,
 
     if( bytes_transferred == ping->hdr()->payloadSize ) {
 
-      if( ping->validate() ) {
+      if( ping->update() ) {
 
         LOG(DEBUG) << "Data valid!";
 

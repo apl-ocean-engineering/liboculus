@@ -81,7 +81,7 @@ namespace liboculus {
     MessageHeader header;
     _input.read( (char *)&(header.hdr), sizeof(OculusMessageHeader) );
 
-    if( !header.validate() ) {
+    if( !header.valid() ) {
       LOG(WARNING) << "Incoming header invalid";
       return nullptr;
     }
@@ -227,7 +227,7 @@ namespace liboculus {
     CHECK(data != nullptr);
 
     MessageHeader header( data );
-    if( !header.validate() ) {
+    if( !header.valid() ) {
       LOG(INFO) << "Invalid header";
       return std::shared_ptr<SimplePingResult>(nullptr);
     }
