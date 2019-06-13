@@ -64,3 +64,7 @@ Here's the help string for `oc_client`:
 The `--output` format works for both live data, and datafiles
 specified with `--input`.  The generated files are raw binary
 streams of sonar packets, and can be opened by `oc_client`.
+
+## License
+
+This code is released under the [MIT license](LICENSE.md).
