@@ -16,7 +16,8 @@ This library contains code for:
     - (A scaffold exists for reading files saved by the Oculus client, but it receives sonar data in an undocumented ping format).
 
 The library contains no special provisions for _saving_ sonar data,
-but it's straightforward to write packets as a raw binary stream (which the library can read).
+but it's straightforward to write packets as a raw binary stream
+(which the library can read).
 
 We use the [fips](http://floooh.github.io/fips/) C++
 dependency management tool, so this library is based on fips,
@@ -30,9 +31,13 @@ The code has a few dependencies:
 
 Both of these dependencies are handled by fips.
 
-The (optional) test suite also requires Googletest and the (also optional) binary `oc_client` requires [CLI11](https://github.com/CLIUtils/CLI11), both of which are also handled by fips.
+The (optional) test suite also requires Googletest and the (also optional)
+binary `oc_client` requires [CLI11](https://github.com/CLIUtils/CLI11),
+both of which are also handled by fips.
 
-Internally, the ethernet interface uses [Boost::asio](https://www.boost.org/doc/libs/1_66_0/doc/html/boost_asio.html), so Boost needs to be installed.
+Internally, the ethernet interface uses
+[Boost::asio](https://www.boost.org/doc/libs/1_66_0/doc/html/boost_asio.html),
+so Boost needs to be installed.
 
 To build (with fips):
 
