@@ -14,40 +14,39 @@ namespace liboculus {
   class MessageHeader {
   public:
     MessageHeader()
-      : _valid(false)
       {
         memset( (void *)&hdr, 0, sizeof(hdr) );
       }
 
     MessageHeader( const char *data )
-      : _valid(false)
       {
           memcpy( (void *)&hdr, (void *)data, sizeof(OculusMessageHeader) );
       }
 
-      // Convenience accessors
-      OculusMessageType msgId() const { return static_cast<OculusMessageType>(hdr.msgId); }
+    // Convenience accessors
+    OculusMessageType msgId() const       { return static_cast<OculusMessageType>(hdr.msgId); }
+    uint16_t          oculusId() const    { return hdr.oculusId; }
+    uint16_t          srcDeviceId() const { return hdr.srcDeviceId; }
+    uint16_t          dstDeviceId() const { return hdr.dstDeviceId; }
+    uint16_t          msgVersion() const  { return hdr.msgVersion; }
+    uint32_t          payloadSize() const { return hdr.payloadSize; }
 
-      bool valid() const { return _valid; }
 
-      bool validate() {
-        _valid = false;
+    bool valid() const {
+      if( hdr.oculusId != 0x4f53 ) return false;
 
-        LOG(DEBUG) <<    "   Oculus Id: 0x" << std::hex << hdr.oculusId;
-        if( hdr.oculusId != 0x4f53 ) return false;
+      return true;
+    }
 
-        LOG(DEBUG) << "      Msg id: 0x" << std::hex << static_cast<uint16_t>(msgId());
-        LOG(DEBUG) << "      Dst ID: " << std::hex << hdr.dstDeviceId;
-        LOG(DEBUG) << "      Src ID: " << std::hex << hdr.srcDeviceId;
-        LOG(DEBUG) << "Payload size: " << hdr.payloadSize << " bytes";
+    void dump() const {
+      LOG(DEBUG) <<    "   Oculus Id: 0x" << std::hex << hdr.oculusId;
+      LOG(DEBUG) << "      Msg id: 0x" << std::hex << static_cast<uint16_t>(msgId());
+      LOG(DEBUG) << "      Dst ID: " << std::hex << hdr.dstDeviceId;
+      LOG(DEBUG) << "      Src ID: " << std::hex << hdr.srcDeviceId;
+      LOG(DEBUG) << "Payload size: " << hdr.payloadSize << " bytes";
+    }
 
-        _valid = true;
-
-        return _valid;
-      }
-
-      bool _valid;
-      OculusMessageHeader hdr;
+    OculusMessageHeader hdr;
 
   };
 
@@ -131,7 +130,7 @@ private:
 
   public:
     SimplePingResult( const MessageHeader &hdr )
-      :  _valid(false), _data( nullptr ), _bearings(), _image()
+      :  _data( nullptr ), _bearings(), _image()
     {
       //memcpy( (void *)&_msg,
 
@@ -151,7 +150,7 @@ private:
     }
 
     SimplePingResult( char *data )
-      :  _valid(false), _data( nullptr ), _bearings(), _image()
+      :  _data( nullptr ), _bearings(), _image()
     {
       //_data.reset( (unsigned char*)data );
 
@@ -169,13 +168,15 @@ private:
 
     ~SimplePingResult() {}
 
-    void *data()     { return reinterpret_cast<unsigned char*>(_data.get()); }
+    void *data()                  { return reinterpret_cast<unsigned char*>(_data.get()); }
     const size_t dataSize() const { return _dataSize; }
 
     OculusSimplePingResult *ping() { return reinterpret_cast<OculusSimplePingResult *>( _data.get() ); }
-    OculusMessageHeader *hdr() { return &(ping()->fireMessage.head); }
+    OculusMessageHeader *hdr()     { return &(ping()->fireMessage.head); }
 
-    MessageHeader header() { return MessageHeader( (const char *)_data.get() ); }
+    MessageHeader header()             { return MessageHeader( (const char *)_data.get() ); }
+    const MessageHeader header() const { return MessageHeader( (const char *)_data.get() ); }
+
 
     void *ptrAfterHeader() { return reinterpret_cast<void *>( _data.get() + sizeof(OculusMessageHeader)); }
 
@@ -193,8 +194,7 @@ private:
 //    void *dataPtr() { return _data.get(); }
 //    void *imagePtr() { return reinterpret_cast<unsigned char*>(_data.get())+sizeof(_msg.imageOffset)-sizeof(OculusSimplePingResult); }
 
-    bool validate() {
-      _valid = false;
+    bool valid() {
 
       LOG(DEBUG) << "     Mode: " << (int)ping()->fireMessage.masterMode;
       LOG(DEBUG) << "Ping rate: " << ping()->fireMessage.pingRate;
@@ -223,7 +223,7 @@ private:
 
       if( ping()->imageSize != expectedImageSize ) {
         LOG(WARNING) << "ImageSize size in header " << ping()->imageSize << " does not match expected data size of " << expectedImageSize;
-        return _valid;
+        return false;
       }
 
       // size_t totalSize = expectedImageSize + _msg.imageOffset;
@@ -233,17 +233,21 @@ private:
       // }
 
       CHECK( ping()->imageOffset > sizeof(OculusSimplePingResult) );
+      return true;
+    }
+
+    bool update() {
+
+      if( !valid() ) return false;
 
       _bearings.set( _data.get() + sizeof(OculusSimplePingResult), ping()->nBeams );
       _image.set(   _data.get() + ping()->imageOffset, ping()->nRanges, ping()->nBeams, ping()->dataSize );
 
-      _valid = true;
-      return _valid;
+      return true;
     }
 
   private:
 
-    bool _valid;
     std::unique_ptr<uint8_t> _data;
     size_t _dataSize;
 

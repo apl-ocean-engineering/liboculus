@@ -128,7 +128,7 @@ int main( int argc, char **argv ) {
       dataRx->queue().wait_and_pop( ping );
 
         // Do something
-      auto valid = ping->validate();
+      auto valid = ping->valid();
       LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
 
       if( output.is_open() ) {
@@ -172,7 +172,7 @@ int playbackSonarFile( const std::string &filename, ofstream &output, int stopAf
   std::shared_ptr<SimplePingResult> ping( player->nextPing() );
   while( ping && !player->eof() ) {
 
-    ping->validate();
+    ping->valid();
 
     if( output.is_open() ) {
       output.write( (const char *)ping->data(), ping->dataSize() );
