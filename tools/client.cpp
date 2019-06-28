@@ -40,10 +40,10 @@ int main( int argc, char **argv ) {
   app.add_option("--ip", ipAddr, "IP address of sonar or \"auto\" to automatically detect.");
 
   string outputFilename("");
-  app.add_option("-o,--output", outputFilename, "Filename to save sonar data to.");
+  app.add_option("-o,--output", outputFilename, "Saves raw sonar data to specified file.");
 
   string inputFilename("");
-  app.add_option("-i,--input", inputFilename, "Filename to read sonar data from.");
+  app.add_option("-i,--input", inputFilename, "Reads raw sonar data from specified file.   Plays file contents rather than contacting \"real\" sonar on network.");
 
   int stopAfter = -1;
   app.add_option("-n,--frames", stopAfter, "Stop after (n) frames.");
