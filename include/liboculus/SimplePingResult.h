@@ -181,8 +181,6 @@ private:
       _image.set(    _buffer->ptr() + ping()->imageOffset, ping()->nRanges, ping()->nBeams, ping()->dataSize );
     }
 
-
-
     virtual ~SimplePingResult() {}
 
     OculusSimplePingResult *ping()             { return reinterpret_cast<OculusSimplePingResult *>( _buffer->ptr() ); }
@@ -218,8 +216,6 @@ private:
       LOG(DEBUG) << "   Data size: " << DataSizeToString(ping()->dataSize);
       LOG(DEBUG) << "Message size: " << ping()->messageSize;
 
-      //LOG_IF(WARNING, hdr().messageSize != _dataSize ) << ping()->messageSize << " != " << _dataSize;
-
       size_t expectedImageSize = SizeOfDataSize(ping()->dataSize) * ping()->nRanges * ping()->nBeams;
 
       if( ping()->imageSize != expectedImageSize ) {
@@ -239,9 +235,6 @@ private:
 
 
   private:
-
-    std::unique_ptr<uint8_t> _data;
-    size_t _dataSize;
 
     // Objects which overlay _data for interpretation
     BearingData _bearings;
