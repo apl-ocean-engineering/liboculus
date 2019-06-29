@@ -1,4 +1,3 @@
-#pragma once
 
 #include "liboculus/SimplePingResult.h"
 
