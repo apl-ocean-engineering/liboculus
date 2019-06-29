@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -8,6 +9,8 @@
 #include <iostream>
 
 #include <gtest/gtest.h>
+
+#include "liboculus/SimplePingResult.h"
 
 // NOTE: must be set via CMake
 #ifndef TEST_DATA_PATH
@@ -37,6 +40,11 @@ namespace Oculus_TestData {
     inf.read( &out[0], sz );
 
     return vector<char>(out.begin(), out.end());
+  }
+
+  inline std::shared_ptr<liboculus::MessageBuffer> LoadMessageBuffer( const std::string &filename ) {
+    std::vector<char> pingData = Load( filename );
+    return std::shared_ptr<liboculus::MessageBuffer>( new liboculus::MessageBuffer( pingData ) );
   }
 
 
