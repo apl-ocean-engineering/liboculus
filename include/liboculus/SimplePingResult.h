@@ -23,7 +23,6 @@ namespace liboculus {
     MessageBuffer( const char *data, size_t len );
     MessageBuffer( const std::vector<char> &vec );
 
-
     ~MessageBuffer();
 
     char *ptr();
@@ -49,11 +48,6 @@ namespace liboculus {
     MessageHeader() = delete;
     MessageHeader( const MessageHeader & ) = delete;
 
-    // MessageHeader()
-    //   {
-    //     //memset( (void *)&hdr, 0, sizeof(hdr) );
-    //   }
-
     MessageHeader( const shared_ptr<MessageBuffer> &buffer )
       : _buffer( buffer )
       { ; }
@@ -69,9 +63,6 @@ namespace liboculus {
     uint16_t          msgVersion() const  { return hdr()->msgVersion; }
     uint32_t          payloadSize() const { return hdr()->payloadSize; }
 
-
-    const OculusMessageHeader *hdr() const { return reinterpret_cast<OculusMessageHeader *>(_buffer->headerPtr()); }
-
     virtual bool valid() const {
       if( hdr()->oculusId != 0x4f53 ) return false;
 
@@ -83,15 +74,16 @@ namespace liboculus {
 
 
     void dump() const {
-      LOG(DEBUG) <<    "   Oculus Id: 0x" << std::hex << hdr()->oculusId;
+      LOG(DEBUG) <<    "   Oculus Id: 0x" << std::hex << oculusId();
       LOG(DEBUG) << "      Msg id: 0x" << std::hex << static_cast<uint16_t>(msgId());
-      LOG(DEBUG) << "      Dst ID: " << std::hex << hdr()->dstDeviceId;
-      LOG(DEBUG) << "      Src ID: " << std::hex << hdr()->srcDeviceId;
-      LOG(DEBUG) << "Payload size: " << hdr()->payloadSize << " bytes";
+      LOG(DEBUG) << "      Dst ID: " << std::hex << dstDeviceId();
+      LOG(DEBUG) << "      Src ID: " << std::hex << srcDeviceId();
+      LOG(DEBUG) << "Payload size: " << payloadSize() << " bytes";
     }
 
   protected:
 
+    const OculusMessageHeader *hdr() const { return reinterpret_cast<OculusMessageHeader *>(_buffer->headerPtr()); }
     std::shared_ptr<MessageBuffer> _buffer;
 
   };
@@ -180,73 +172,27 @@ private:
     SimplePingResult( const SimplePingResult & ) = delete;
 
     SimplePingResult( const shared_ptr<MessageBuffer> &buffer )
-      :  MessageHeader(buffer),  _bearings(), _image()
+      :  MessageHeader(buffer),
+        _bearings(),
+        _image()
     {
-//       //memcpy( (void *)&_msg,
-//
-//       if( hdr.valid() ) {
-// //        LOG(DEBUG) << "Initializing header of length " << netHdrLen();
-// //        memset( hdrPtr(), 0, netHdrLen());
-//
-//         _dataSize = sizeof(OculusMessageHeader) + hdr.hdr.payloadSize;
-//         LOG(DEBUG) << "Creating message buffer of " << _dataSize;
-//
-//         // alloc a 4-byte aligned buffer
-//         size_t alignSize = ((_dataSize + 3) >> 2) << 2;
-//         _data.reset( new uint8_t[alignSize] );
-//
-//         memcpy( (void *)_data.get(), (void *)&(hdr.hdr), sizeof( OculusMessageHeader) );
-//       }
+      // TODO, this could be done through a constructor
+      _bearings.set( _buffer->ptr() + sizeof(OculusSimplePingResult), ping()->nBeams );
+      _image.set(    _buffer->ptr() + ping()->imageOffset, ping()->nRanges, ping()->nBeams, ping()->dataSize );
     }
 
-    // SimplePingResult( char *data )
-    //   :  _data( nullptr ), _bearings(), _image()
-    // {
-    //   //_data.reset( (unsigned char*)data );
-    //
-    //   OculusMessageHeader *hdr = reinterpret_cast<OculusMessageHeader *>(data);
-    //
-    //   _dataSize = sizeof(OculusMessageHeader) + hdr->payloadSize;
-    //
-    //   // alloc a 4-byte aligned buffer
-    //   size_t alignSize = ((_dataSize + 3) >> 2) << 2;
-    //   _data.reset( new uint8_t[alignSize] );
-    //
-    //   memcpy( (void *)_data.get(), (void *)data, _dataSize );
-    // }
 
 
     virtual ~SimplePingResult() {}
-
-    // void *data()                  { return reinterpret_cast<unsigned char*>(_data.get()); }
-    // const size_t dataSize() const { return _dataSize; }
 
     OculusSimplePingResult *ping()             { return reinterpret_cast<OculusSimplePingResult *>( _buffer->ptr() ); }
     const OculusSimplePingResult *ping() const { return reinterpret_cast<const OculusSimplePingResult *>( _buffer->ptr() ); }
 
     OculusSimpleFireMessage *fireMsg() { return reinterpret_cast<OculusSimpleFireMessage *>( _buffer->ptr() ); }
     const OculusSimpleFireMessage *fireMsg() const { return reinterpret_cast<const OculusSimpleFireMessage *>( _buffer->ptr() ); }
-    //OculusMessageHeader *hdr()     { return &(ping()->fireMessage.head); }
-
-    // MessageHeader header()             { return MessageHeader( (const char *)_data.get() ); }
-    // const MessageHeader header() const { return MessageHeader( (const char *)_data.get() ); }
-
-
-    // void *ptrAfterHeader() { return reinterpret_cast<void *>( _data.get() + sizeof(OculusMessageHeader)); }
 
     const BearingData &bearings() const { return _bearings; }
     const ImageData   &image() const    { return _image; }
-
-
-    // size_t imageLen const { return header()->payloadSize  }
-    //
-    // size_t netHdrLen() const { return sizeof(OculusSimplePingResult) - sizeof(OculusMessageHeader); }
-    // size_t dataLen() const { return _msg.fireMessage.head.payloadSize - netHdrLen(); }
-
-
-//    void *hdrPtr()  { return reinterpret_cast<unsigned char*>(&_msg)+sizeof(OculusMessageHeader); }
-//    void *dataPtr() { return _data.get(); }
-//    void *imagePtr() { return reinterpret_cast<unsigned char*>(_data.get())+sizeof(_msg.imageOffset)-sizeof(OculusSimplePingResult); }
 
     virtual bool valid() const {
       if( !MessageHeader::valid() ) return false;
@@ -291,15 +237,6 @@ private:
       return true;
     }
 
-    bool update() {
-
-      if( !valid() ) return false;
-
-      _bearings.set( _buffer->ptr() + sizeof(OculusSimplePingResult), ping()->nBeams );
-      _image.set(    _buffer->ptr() + ping()->imageOffset, ping()->nRanges, ping()->nBeams, ping()->dataSize );
-
-      return true;
-    }
 
   private:
 

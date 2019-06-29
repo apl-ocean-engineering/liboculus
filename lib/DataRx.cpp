@@ -245,7 +245,7 @@ namespace liboculus {
 
           shared_ptr< SimplePingResult > ping( new SimplePingResult( buffer ) );
 
-          if( ping->update() ) {
+          if( ping->valid() ) {
 
             LOG(DEBUG) << "Data valid!";
 
