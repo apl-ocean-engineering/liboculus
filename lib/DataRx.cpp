@@ -42,26 +42,22 @@ namespace liboculus {
 
   DataRx::DataRx(boost::asio::io_service &context, uint32_t ip, const SimpleFireMessage &fire )
     : _ioService(context),
-    _ipAddress( boost::asio::ip::address_v4(ip) ),
-    _socket(_ioService),
-    _writeTimer(_ioService),
-    _fireMessage(fire),
-    _hdr(),
-    _queue()
+      _ipAddress( boost::asio::ip::address_v4(ip) ),
+      _socket(_ioService),
+      _writeTimer(_ioService),
+      _fireMessage(fire),
+      _queue()
     {
       doConnect();
     }
 
-  DataRx::DataRx(boost::asio::io_service &context,
-  const boost::asio::ip::address &addr,
-  const SimpleFireMessage &fire )
-  : _ioService(context),
-  _ipAddress( addr ),
-  _socket(_ioService),
-  _writeTimer(_ioService),
-  _fireMessage(fire),
-  _hdr(),
-  _queue()
+  DataRx::DataRx(boost::asio::io_service &context, const boost::asio::ip::address &addr, const SimpleFireMessage &fire )
+    : _ioService(context),
+      _ipAddress( addr ),
+      _socket(_ioService),
+      _writeTimer(_ioService),
+      _fireMessage(fire),
+      _queue()
   {
     doConnect();
   }
@@ -134,12 +130,14 @@ namespace liboculus {
   //=== Readers
   void DataRx::scheduleHeaderRead()
   {
-    _socket.async_receive( boost::asio::buffer((void *)&_hdr.hdr, sizeof(OculusMessageHeader)),
-    boost::bind(&DataRx::readHeader, this, _1, _2));
+    std::shared_ptr<MessageBuffer> buffer( new MessageBuffer() );
+
+    _socket.async_receive( boost::asio::buffer((void *)buffer->headerPtr(), sizeof(OculusMessageHeader)),
+                           boost::bind(&DataRx::readHeader, this, buffer, _1, _2));
   }
 
 
-  void DataRx::readHeader(const boost::system::error_code& ec, std::size_t bytes_transferred )
+  void DataRx::readHeader(const shared_ptr<MessageBuffer> &buffer, const boost::system::error_code& ec, std::size_t bytes_transferred )
   {
     if (!ec) {
 
@@ -147,31 +145,33 @@ namespace liboculus {
 
       if( bytes_transferred == sizeof(OculusMessageHeader) ) {
 
-        LOG(DEBUG) << "Validating...";
-        if( _hdr.valid() ) {
+        MessageHeader hdr( buffer );
 
-          if( _hdr.msgId() == messageSimplePingResult ) {
+        LOG(DEBUG) << "Validating...";
+        if( hdr.valid() ) {
+
+          if( hdr.msgId() == messageSimplePingResult ) {
+
+            if( !buffer->expandForPayload() ) {
+              LOG(WARNING) << "Unable to expand for payload";
+            }
 
             // Rely on ref-counting of shared_ptr to clean up any dropped packets
-            shared_ptr<SimplePingResult> ping( new SimplePingResult( _hdr ) );
+            //shared_ptr<SimplePingResult> ping( new SimplePingResult( _hdr ) );
 
             // Read the ping hedaer
-            auto b = boost::asio::buffer( ping->ptrAfterHeader(), ping->hdr()->payloadSize );
-            LOG(DEBUG) << "Requesting balance of SimplePingResult header, " << ping->hdr()->payloadSize << " bytes";
+            auto b = boost::asio::buffer( buffer->dataPtr(), buffer->payloadSize() );
+            //LOG(DEBUG) << "Requesting balance of SimplePingResult header, " << ping->hdr()->payloadSize << " bytes";
 
             //_socket.async_read( b, boost::bind(&DataRx::readSimplePingResult, this, ping, _1, _2));
-            boost::asio::async_read( _socket, b, boost::bind(&DataRx::readSimplePingResult, this, ping, _1, _2));
+            boost::asio::async_read( _socket, b, boost::bind(&DataRx::readSimplePingResult, this, buffer, _1, _2));
 
-          } else if ( _hdr.msgId() == messageLogs && _hdr.hdr.payloadSize > 0 ) {
+          } else if ( hdr.msgId() == messageLogs && hdr.payloadSize() > 0 ) {
 
             LOG(DEBUG) << "Requesting balance of Log message";
 
-            boost::asio::streambuf junkBuffer(_hdr.hdr.payloadSize);
-
+            boost::asio::streambuf junkBuffer( hdr.payloadSize() );
             auto bytes_recvd = boost::asio::read( _socket, junkBuffer );
-            //
-            // [this, junkBuffer](boost::system::error_code ec, std::size_t bytes_recvd)
-            //         {
 
             LOG(DEBUG) << "Read " << bytes_recvd << " of logging info";
             if (bytes_recvd > 0)
@@ -183,17 +183,17 @@ namespace liboculus {
             }
             else
             {
-              LOG(WARNING) << "Error on receive of add'l data: " << ec.message();
+              LOG(WARNING) << "Error on receive of payload for log message: " << ec.message();
             }
 
           } else {
             // Drop the rest of the message
 
-            const size_t discardSz = _hdr.hdr.payloadSize;
+            const size_t discardSz = hdr.payloadSize();
             LOG(INFO) << "Trying to drain an additional " << discardSz << " bytes";
 
             if( discardSz > 0 ) {
-              std::vector<char> junkBuffer(_hdr.hdr.payloadSize);
+              std::vector<char> junkBuffer(hdr.payloadSize());
 
               boost::asio::async_read( _socket, boost::asio::buffer( junkBuffer, discardSz),
               [this](boost::system::error_code ec, std::size_t bytes_recvd)
@@ -232,14 +232,18 @@ namespace liboculus {
     }
   }
 
-  void DataRx::readSimplePingResult( const shared_ptr<SimplePingResult> &ping,
+  void DataRx::readSimplePingResult( const shared_ptr<MessageBuffer> &buffer,
                                       const boost::system::error_code& ec,
                                       std::size_t bytes_transferred )
     {
       if (!ec) {
         LOG(DEBUG) << "Got " << bytes_transferred << " bytes of SimplePingResult from sonar";
 
-        if( bytes_transferred == ping->hdr()->payloadSize ) {
+        MessageHeader hdr( buffer );
+
+        if( bytes_transferred == hdr.payloadSize() ) {
+
+          shared_ptr< SimplePingResult > ping( new SimplePingResult( buffer ) );
 
           if( ping->update() ) {
 
@@ -255,7 +259,7 @@ namespace liboculus {
 
 
         } else {
-          LOG(WARNING) << "Received short header of " << bytes_transferred << " expected " << ping->hdr()->payloadSize;
+          LOG(WARNING) << "Received short header of " << bytes_transferred << " expected " << hdr.payloadSize();
         }
 
       } else {

@@ -68,7 +68,7 @@ namespace liboculus {
   RawSonarPlayer::~RawSonarPlayer()
     {;}
 
-  char *RawSonarPlayer::nextPacket() {
+  std::shared_ptr<MessageBuffer> RawSonarPlayer::nextPacket() {
 
     // Advance to the next header byte (actually LSB of header since we're little-endian)
     while( _input.peek() != 0x53 ) {
@@ -78,26 +78,29 @@ namespace liboculus {
     }
 
     // Read header
-    MessageHeader header;
-    _input.read( (char *)&(header.hdr), sizeof(OculusMessageHeader) );
+    std::shared_ptr<MessageBuffer> buffer( new MessageBuffer() );
+    _input.read( buffer->ptr(), sizeof(OculusMessageHeader) );
 
+    MessageHeader header( buffer );
     if( !header.valid() ) {
       LOG(WARNING) << "Incoming header invalid";
       return nullptr;
     }
 
-    char *data = new char[sizeof(OculusMessageHeader) + header.hdr.payloadSize];
-    memcpy( data, (void *)&(header.hdr), sizeof(OculusMessageHeader) );
-    _input.read( (char *)(&data[sizeof(OculusMessageHeader)]), header.hdr.payloadSize);
+    buffer->expandForPayload();
 
-    return data;
+    // char *data = new char[sizeof(OculusMessageHeader) + header.hdr.payloadSize];
+    // memcpy( data, (void *)&(header.hdr), sizeof(OculusMessageHeader) );
+    _input.read( buffer->dataPtr(), buffer->payloadSize() );
+
+    return buffer;
   }
 
 
 
   std::shared_ptr<SimplePingResult> RawSonarPlayer::nextPing() {
-    char *data = nullptr;
-    while( (data = nextPacket()) != nullptr ) {
+    shared_ptr<MessageBuffer> data;
+    while( bool(data = nextPacket()) ) {
 
       MessageHeader header(data);
 
@@ -223,10 +226,11 @@ namespace liboculus {
     auto key = GPMF_Key( &_stream );
     if( key != STR2FOURCC("OCUS") ) return std::shared_ptr<SimplePingResult>(nullptr);
 
-    char *data = (char *)GPMF_RawData(&_stream);
-    CHECK(data != nullptr);
+    shared_ptr<MessageBuffer> buffer( new MessageBuffer((char *)GPMF_RawData(&_stream), GPMF_RawDataSize( &_stream )) );
+    // char *data = (char *)GPMF_RawData(&_stream);
+    // CHECK(data != nullptr);
 
-    MessageHeader header( data );
+    MessageHeader header( buffer );
     if( !header.valid() ) {
       LOG(INFO) << "Invalid header";
       return std::shared_ptr<SimplePingResult>(nullptr);
@@ -237,7 +241,7 @@ namespace liboculus {
       _valid = false;
     }
 
-    return std::shared_ptr<SimplePingResult>( new SimplePingResult( data ) );
+    return std::shared_ptr<SimplePingResult>( new SimplePingResult( buffer ) );
   }
 
 }

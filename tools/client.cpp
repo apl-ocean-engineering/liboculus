@@ -132,7 +132,8 @@ int main( int argc, char **argv ) {
       LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
 
       if( output.is_open() ) {
-        output.write( (const char *)ping->data(), ping->dataSize() );
+        auto const buffer( ping->buffer() );
+        output.write( (const char *)buffer->ptr(), buffer->size() );
       }
 
 
@@ -175,7 +176,8 @@ int playbackSonarFile( const std::string &filename, ofstream &output, int stopAf
     ping->valid();
 
     if( output.is_open() ) {
-      output.write( (const char *)ping->data(), ping->dataSize() );
+      auto const buffer( ping->buffer() );
+      output.write( (const char *)buffer->ptr(), buffer->size() );
     }
 
     count++;

@@ -36,7 +36,7 @@ namespace liboculus {
     RawSonarPlayer();
     virtual ~RawSonarPlayer();
 
-    char *nextPacket();
+    std::shared_ptr<MessageBuffer> nextPacket();
     virtual std::shared_ptr<SimplePingResult> nextPing();
 
   private:

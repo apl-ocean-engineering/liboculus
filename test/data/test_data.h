@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -18,11 +19,13 @@
 
 namespace Oculus_TestData {
 
-  inline std::string Load( const std::string &filename ) {
+  using std::vector;
+
+  inline vector<char> Load( const std::string &filename ) {
 
     std::ifstream inf( filename );
 
-    if( !inf.is_open() ) return std::string();
+    if( !inf.is_open() ) return vector<char>();
 
     // This feels a little ... wrong
     inf.seekg(0, std::ios::end);
@@ -31,10 +34,9 @@ namespace Oculus_TestData {
 
     std::string out( sz, '\0' );
     inf.seekg(0, std::ios::beg);
-
     inf.read( &out[0], sz );
 
-    return out;
+    return vector<char>(out.begin(), out.end());
   }
 
 

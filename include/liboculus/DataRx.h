@@ -75,8 +75,8 @@ private:
   void writeHandler(const boost::system::error_code& ec );
 
   void scheduleHeaderRead();
-  void readHeader(const boost::system::error_code& ec, std::size_t bytes_transferred );
-  void readSimplePingResult( const shared_ptr<SimplePingResult> &msg, const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void readHeader( const shared_ptr<MessageBuffer> &buffer, const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void readSimplePingResult( const shared_ptr<MessageBuffer> &buffer, const boost::system::error_code& ec, std::size_t bytes_transferred );
 
 
   boost::asio::io_service  &_ioService;
@@ -88,7 +88,7 @@ private:
   // Configuration data out to sonar
   SimpleFireMessage _fireMessage;
 
-  MessageHeader _hdr;
+  //MessageBuffer _buffer;
 
   Queue _queue;
 
