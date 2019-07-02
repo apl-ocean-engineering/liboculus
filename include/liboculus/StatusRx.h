@@ -60,8 +60,12 @@ public:
                 const std::shared_ptr<SonarStatus> &status = std::shared_ptr<SonarStatus>(new SonarStatus()) );
     ~StatusRx();
 
-    const SonarStatus &status() const { return *_status; }
+    const SonarStatus &status() const
+      { return *_status; }
 
+    typedef std::function< void( const std::shared_ptr<SonarStatus> & ) > SonarStatusCallback;
+    void setCallback( SonarStatusCallback callback )
+      { _sonarStatusCallback = callback; }
 
 
 private:
@@ -88,6 +92,9 @@ private:
 
   boost::asio::streambuf _inputBuffer;
   deadline_timer _deadline;
+
+  SonarStatusCallback _sonarStatusCallback;
+  void defaultSonarStatusCallback( const std::shared_ptr<SonarStatus> & ) {;}
 };
 
 }

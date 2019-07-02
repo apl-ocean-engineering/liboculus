@@ -46,7 +46,8 @@ namespace liboculus {
                 _ioService(context),
                 _socket(_ioService),
                 _inputBuffer( sizeof(OculusStatusMsg) ),
-                _deadline(_ioService)
+                _deadline(_ioService),
+                _sonarStatusCallback( std::bind( &StatusRx::defaultSonarStatusCallback, this, std::placeholders::_1 ))
     {
       // Create and setup a broadcast listening socket
       m_port     = 52102;   // fixed port for status messages
@@ -102,7 +103,10 @@ namespace liboculus {
           }
 
           LOG(DEBUG) << "Got status message.  Updating!";
-          if( _status ) _status->update( _osm );
+          if( _status ) {
+              _status->update( _osm );
+              _sonarStatusCallback( _status );
+          }
           m_valid++;
 
           // Schedule another read
