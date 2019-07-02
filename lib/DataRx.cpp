@@ -46,7 +46,7 @@ namespace liboculus {
       _socket(_ioService),
       _writeTimer(_ioService),
       _fireMessage(fire),
-      _queue()
+      _simplePingCallback( std::bind( &DataRx::defaultSimplePingCallback, this, std::placeholders::_1  ))
     {
       doConnect();
     }
@@ -57,7 +57,7 @@ namespace liboculus {
       _socket(_ioService),
       _writeTimer(_ioService),
       _fireMessage(fire),
-      _queue()
+      _simplePingCallback( std::bind( &DataRx::defaultSimplePingCallback, this, std::placeholders::_1  ))
   {
     doConnect();
   }
@@ -65,6 +65,11 @@ namespace liboculus {
   DataRx::~DataRx()
   {
   }
+
+  void DataRx::setCallback( SimplePingCallback callback ) {
+    _simplePingCallback = callback;
+  }
+
 
   void DataRx::doConnect()
   {
@@ -249,7 +254,7 @@ namespace liboculus {
 
             LOG(DEBUG) << "Data valid!";
 
-            _queue.push( ping );
+            _simplePingCallback( ping );
 
             // And return to the home state
             scheduleHeaderRead();
@@ -266,5 +271,32 @@ namespace liboculus {
         LOG(WARNING) << "Error on receive of header: " << ec.message();
       }
     }
+
+
+//=====================================================================
+
+  DataRxQueued:: DataRxQueued(boost::asio::io_service &context, uint32_t ip,
+              const SimpleFireMessage &fire )
+    : DataRx( context, ip, fire ),
+      _queue()
+    {
+      setCallback( std::bind( &DataRxQueued::enqueuePing, this, std::placeholders::_1 ));
+    }
+
+  DataRxQueued::DataRxQueued(boost::asio::io_service &context,
+              const boost::asio::ip::address &addr,
+              const SimpleFireMessage &fire )
+    : DataRx( context, addr, fire ),
+      _queue()
+    {
+      setCallback( std::bind( &DataRxQueued::enqueuePing, this, std::placeholders::_1 ));
+    }
+
+  DataRxQueued::~DataRxQueued()
+  {;}
+
+  void DataRxQueued::enqueuePing( const shared_ptr<SimplePingResult> &ping ) {
+    _queue.push( ping );
+  }
 
 }

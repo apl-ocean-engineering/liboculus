@@ -83,7 +83,7 @@ int main( int argc, char **argv ) {
     IoServiceThread ioSrv;
 
     std::unique_ptr<StatusRx> statusRx( new StatusRx( ioSrv.service() ) );
-    std::unique_ptr<DataRx> dataRx( nullptr );
+    std::unique_ptr<DataRxQueued> dataRx( nullptr );
 
     if( ipAddr != "auto" ) {
       LOG(INFO) << "Connecting to sonar with IP address " << ipAddr;
@@ -91,7 +91,7 @@ int main( int argc, char **argv ) {
 
       LOG_IF(FATAL,addr.is_unspecified()) << "Hm, couldn't parse IP address";
 
-      dataRx.reset( new DataRx( ioSrv.service(), addr ) );
+      dataRx.reset( new DataRxQueued( ioSrv.service(), addr ) );
     }
 
     ioSrv.fork();
@@ -111,7 +111,7 @@ int main( int argc, char **argv ) {
 
             if( verbosity > 0 ) statusRx->status().dump();
 
-            dataRx.reset( new DataRx( ioSrv.service(), addr ) );
+            dataRx.reset( new DataRxQueued( ioSrv.service(), addr ) );
 
           } else {
             LOG(DEBUG) << "   ... but it wasn't valid";

@@ -50,20 +50,19 @@ class DataRx
 {
 public:
 
-  typedef active_object::bounded_shared_queue< shared_ptr<SimplePingResult>, 20 > Queue;
-
   DataRx(boost::asio::io_service &context, uint32_t ip,
               const SimpleFireMessage &fire = SimpleFireMessage() );
 
   DataRx(boost::asio::io_service &context, const boost::asio::ip::address &addr,
               const SimpleFireMessage &fire = SimpleFireMessage() );
 
-  ~DataRx();
-
-  Queue &queue() { return _queue; }
+  virtual ~DataRx();
 
   SimpleFireMessage fireMessage() { return _fireMessage; }
   void updateFireMessage( const SimpleFireMessage &msg );
+
+  typedef std::function< void( const shared_ptr<SimplePingResult> & ) > SimplePingCallback;
+  void setCallback( SimplePingCallback callback );
 
 private:
 
@@ -88,10 +87,33 @@ private:
   // Configuration data out to sonar
   SimpleFireMessage _fireMessage;
 
-  //MessageBuffer _buffer;
+  SimplePingCallback _simplePingCallback;
+
+  void defaultSimplePingCallback(  const shared_ptr<SimplePingResult> & ) {;}
+
+};
+
+class DataRxQueued : public DataRx {
+public:
+  typedef active_object::bounded_shared_queue< shared_ptr<SimplePingResult>, 20 > Queue;
+
+  DataRxQueued(boost::asio::io_service &context, uint32_t ip,
+              const SimpleFireMessage &fire = SimpleFireMessage() );
+
+  DataRxQueued(boost::asio::io_service &context, const boost::asio::ip::address &addr,
+              const SimpleFireMessage &fire = SimpleFireMessage() );
+
+  virtual ~DataRxQueued();
+
+  Queue &queue() { return _queue; }
+
+  void enqueuePing( const shared_ptr<SimplePingResult> &ping );
+
+private:
 
   Queue _queue;
 
 };
+
 
 }
