@@ -146,8 +146,8 @@ private:
 
       LOG(DEBUG) << "Loaded " << _numRanges << " x " << _numBeams << " imaging data";
 
-       for(unsigned int i = 0; i < 10; ++i)
-          LOG(DEBUG) << i << " : " << std::hex << static_cast<uint16_t>(((uint8_t *)_ptr)[i]);
+       // for(unsigned int i = 0; i < 10; ++i)
+       //    LOG(DEBUG) << i << " : " << std::hex << static_cast<uint16_t>(((uint8_t *)_ptr)[i]);
     }
 
 private:
