@@ -50,6 +50,7 @@ class DataRx
 {
 public:
 
+  // n.b. takes IP in __NETWORK__ byte order
   DataRx(boost::asio::io_service &context, uint32_t ip,
               const SimpleFireMessage &fire = SimpleFireMessage() );
 

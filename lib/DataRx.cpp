@@ -42,7 +42,7 @@ namespace liboculus {
 
   DataRx::DataRx(boost::asio::io_service &context, uint32_t ip, const SimpleFireMessage &fire )
     : _ioService(context),
-      _ipAddress( boost::asio::ip::address_v4(ip) ),
+      _ipAddress( boost::asio::ip::address_v4( ip ) ),
       _socket(_ioService),
       _writeTimer(_ioService),
       _fireMessage(fire),
