@@ -76,6 +76,8 @@ namespace liboculus {
           _socket.bind(local);
 
           startReader();
+        } else {
+          LOG(WARNING) << "Unable to start reader";
         }
       }
 
