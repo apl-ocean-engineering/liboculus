@@ -84,10 +84,16 @@ namespace liboculus {
     _sfm.pingRate = newRate;
   }
 
+  void SimpleFireMessage::setMasterMode(uint8_t input)
+  {
+    if (input == 1 || input == 2) {
+      _sfm.masterMode = input;
+    }
+  }
+
   void SimpleFireMessage::serialize( boost::asio::streambuf &stream )
   {
     stream.sputn( (char *)&_sfm, sizeof(OculusSimpleFireMessage));
   }
-
 
 }

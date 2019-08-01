@@ -22,6 +22,8 @@ public:
 
   void setRange(uint8_t input);
 
+  void setMasterMode(uint8_t input);
+  
 private:
 
   OculusSimpleFireMessage _sfm;
