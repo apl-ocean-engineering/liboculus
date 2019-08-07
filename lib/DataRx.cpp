@@ -165,7 +165,7 @@ namespace liboculus {
             //shared_ptr<SimplePingResult> ping( new SimplePingResult( _hdr ) );
 
             // Read the ping hedaer
-            auto b = boost::asio::buffer( buffer->dataPtr(), buffer->payloadSize() );
+            auto b = boost::asio::buffer( buffer->payloadPtr(), buffer->payloadSize() );
             //LOG(DEBUG) << "Requesting balance of SimplePingResult header, " << ping->hdr()->payloadSize << " bytes";
 
             //_socket.async_read( b, boost::bind(&DataRx::readSimplePingResult, this, ping, _1, _2));
@@ -275,7 +275,7 @@ namespace liboculus {
 
 //=====================================================================
 
-  DataRxQueued:: DataRxQueued(boost::asio::io_service &context, uint32_t ip,
+  DataRxQueued::DataRxQueued(boost::asio::io_service &context, uint32_t ip,
               const SimpleFireMessage &fire )
     : DataRx( context, ip, fire ),
       _queue()

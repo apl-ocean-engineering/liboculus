@@ -26,9 +26,9 @@ namespace liboculus {
     ~MessageBuffer();
 
     char *ptr();
-    char *headerPtr() { return ptr(); }
 
-    char *dataPtr();
+    char *headerPtr() { return ptr(); }
+    char *payloadPtr();
 
     unsigned int size() const;
     unsigned int payloadSize() const;

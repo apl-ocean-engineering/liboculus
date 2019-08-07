@@ -24,7 +24,7 @@ namespace liboculus {
   char *MessageBuffer::ptr()
     { return _buf.data(); }
 
-  char *MessageBuffer::dataPtr()
+  char *MessageBuffer::payloadPtr()
     { return _buf.data() + sizeof(OculusMessageHeader); }
 
   unsigned int MessageBuffer::size() const
