@@ -116,16 +116,16 @@ int main( int argc, char **argv ) {
     }
 
 
-    statusRx->setCallback( [&]( const std::shared_ptr<SonarStatus> &status ) {
+    statusRx->setCallback( [&]( const SonarStatus &status ) {
       if( dataRx ) return;
 
       LOG(DEBUG) << "   ... got status message";
-      if( status->valid() ) {
-        auto addr( status->ipAddr() );
+      if( status.valid() ) {
+        auto addr( status.ipAddr() );
 
         LOG(INFO) << "Using detected sonar at IP address " << addr;
 
-        if( verbosity > 0 ) status->dump();
+        if( verbosity > 0 ) status.dump();
 
         dataRx.reset( new DataRx( ioSrv.service(), addr ) );
 

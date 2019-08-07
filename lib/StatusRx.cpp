@@ -41,8 +41,8 @@ namespace liboculus {
     // ----------------------------------------------------------------------------
     // StatusRx - a listening socket for oculus status messages
 
-    StatusRx::StatusRx(boost::asio::io_service &context, const std::shared_ptr<SonarStatus> &status )
-                : _status( status ),
+    StatusRx::StatusRx(boost::asio::io_service &context )
+                : _status(),
                 _ioService(context),
                 _socket(_ioService),
                 _inputBuffer( sizeof(OculusStatusMsg) ),
@@ -92,11 +92,7 @@ namespace liboculus {
 
       void StatusRx::handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred )
       {
-        // if (stopped_)
-        //   return;
-
-        if (!ec)
-        {
+        if (!ec) {
           // Extract the newline-delimited message from the buffer.
 
           if( bytes_transferred != sizeof(OculusStatusMsg)) {
@@ -105,10 +101,9 @@ namespace liboculus {
           }
 
           LOG(DEBUG) << "Got status message.  Updating!";
-          if( _status ) {
-              _status->update( _osm );
-              _sonarStatusCallback( _status );
-          }
+          _status.update( _osm );
+          _sonarStatusCallback( _status );
+          
           m_valid++;
 
           // Schedule another read
@@ -122,56 +117,5 @@ namespace liboculus {
         }
       }
 
-
-      // void StatusRx::doReceiveStatusMessage()
-      // {
-      //   boost::asio::async_read(_socket,
-      //       boost::asio::buffer(read_msg_.data(), sizeof(OculusStatusMsg)),
-      //       [this](boost::system::error_code ec, std::size_t /*length*/)
-      //       {
-      //
-      //         if (!ec) {
-      //           read
-      //         } else {
-      //           _socket.close();
-      //         }
-      //       });
-      // }
-
-      // ----------------------------------------------------------------------------
-      // Signalled when there is data available in the socket buffer
-      // Note that if the Oculus Viewer software is running on a PC with two network ports then it is
-      // possible that both these ports will receive the status message
-      // In this case we will see twice as many status messages as expected
-      // void StatusRx::ReadDatagrams()
-      // {
-      //   // Read through any available datagrams
-      //   while (m_listener->hasPendingDatagrams())
-      //   {
-      //     // Read the datagram out of the socket buffer
-      //     QByteArray datagram;
-      //
-      //     datagram.resize(m_listener->pendingDatagramSize());
-      //     m_listener->readDatagram(datagram.data(), datagram.size());
-      //
-      //     // If datagra is of correct size, cast and signal any observers
-      //     if (datagram.size() == sizeof(OculusStatusMsg))
-      //     {
-      //       OculusStatusMsg osm;
-      //       memcpy(&osm, datagram.data(), datagram.size());
-      //
-      //       if (osm.hdr.oculusId == OCULUS_CHECK_ID)
-      //       {
-      //         m_valid++;
-      //
-      //         emit NewStatusMsg(osm, m_valid, m_invalid);
-      //       }
-      //     }
-      //     else
-      //     {
-      //       m_invalid++;
-      //     }
-      //   }
-      // }
 
     }
