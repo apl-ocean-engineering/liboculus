@@ -64,6 +64,7 @@ public:
       { return *_status; }
 
     typedef std::function< void( const std::shared_ptr<SonarStatus> & ) > SonarStatusCallback;
+
     void setCallback( SonarStatusCallback callback )
       { _sonarStatusCallback = callback; }
 
