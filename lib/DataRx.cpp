@@ -40,26 +40,33 @@ namespace liboculus {
   // ----------------------------------------------------------------------------
   // DataRx - a listening socket for oculus status messages
 
-  DataRx::DataRx(boost::asio::io_service &context, uint32_t ip, const SimpleFireMessage &fire )
+  DataRx::DataRx(boost::asio::io_service &context, const SimpleFireMessage &fire )
     : _ioService(context),
-      _ipAddress( boost::asio::ip::address_v4( ip ) ),
       _socket(_ioService),
       _writeTimer(_ioService),
       _fireMessage(fire),
       _simplePingCallback( std::bind( &DataRx::defaultSimplePingCallback, this, std::placeholders::_1  ))
     {
-      doConnect();
+    }
+
+  DataRx::DataRx(boost::asio::io_service &context, uint32_t ip, const SimpleFireMessage &fire )
+    : _ioService(context),
+      _socket(_ioService),
+      _writeTimer(_ioService),
+      _fireMessage(fire),
+      _simplePingCallback( std::bind( &DataRx::defaultSimplePingCallback, this, std::placeholders::_1  ))
+    {
+      connect(boost::asio::ip::address_v4( ip ));
     }
 
   DataRx::DataRx(boost::asio::io_service &context, const boost::asio::ip::address &addr, const SimpleFireMessage &fire )
     : _ioService(context),
-      _ipAddress( addr ),
       _socket(_ioService),
       _writeTimer(_ioService),
       _fireMessage(fire),
       _simplePingCallback( std::bind( &DataRx::defaultSimplePingCallback, this, std::placeholders::_1  ))
   {
-    doConnect();
+    connect( addr );
   }
 
   DataRx::~DataRx()
@@ -70,12 +77,20 @@ namespace liboculus {
     _simplePingCallback = callback;
   }
 
-
-  void DataRx::doConnect()
+  void DataRx::connect( uint32_t ip )
   {
-    uint16_t _port = 52100;
+    connect(boost::asio::ip::address_v4( ip ));
+  }
 
-    boost::asio::ip::tcp::endpoint sonarEndpoint( _ipAddress, _port);
+  void DataRx::connect(const boost::asio::ip::address &addr)
+  {
+    //
+    if( connected() ) return;
+
+    uint16_t port = 52100;
+    boost::asio::ip::address ipAddress = addr;
+
+    boost::asio::ip::tcp::endpoint sonarEndpoint( ipAddress, port);
 
     LOG(DEBUG) << "Connecting to sonar at " << sonarEndpoint;
 

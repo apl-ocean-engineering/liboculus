@@ -88,36 +88,12 @@ int main( int argc, char **argv ) {
 
   try {
 
-    std::unique_ptr<StatusRx> statusRx( new StatusRx( ioSrv.service() ) );
-    std::unique_ptr<DataRx> dataRx( nullptr );
+    StatusRx statusRx( ioSrv.service() );
+    DataRx dataRx( ioSrv.service() );
 
-    if( ipAddr != "auto" ) {
-      LOG(WARNING) << "Connecting to sonar with IP address " << ipAddr;
-      auto addr( boost::asio::ip::address_v4::from_string( ipAddr ) );
-
-      LOG_IF(FATAL,addr.is_unspecified()) << "Hm, couldn't parse IP address";
-
-      dataRx.reset( new DataRxQueued( ioSrv.service(), addr ) );
-
-      // Setup callback
-      dataRx->setCallback( [&]( const shared_ptr<SimplePingResult> &ping ) {
-          // Do something
-        auto valid = ping->valid();
-        LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
-
-        if( output.is_open() ) {
-          auto const buffer( ping->buffer() );
-          output.write( (const char *)buffer->ptr(), buffer->size() );
-        }
-
-        count++;
-        if( (stopAfter>0) && (count >= stopAfter)) ioSrv.stop();
-      });
-    }
-
-
-    statusRx->setCallback( [&]( const SonarStatus &status ) {
-      if( dataRx ) return;
+    // Setup callbacks
+    statusRx.setCallback( [&]( const SonarStatus &status ) {
+      if( dataRx.connected() ) return;
 
       LOG(DEBUG) << "   ... got status message";
       if( status.valid() ) {
@@ -127,27 +103,25 @@ int main( int argc, char **argv ) {
 
         if( verbosity > 0 ) status.dump();
 
-        dataRx.reset( new DataRx( ioSrv.service(), addr ) );
+        dataRx.connect( addr );
 
-        // Whoops.  How's the DRY?
-        dataRx->setCallback( [&]( const shared_ptr<SimplePingResult> &ping ) {
-            // Do something
-          auto valid = ping->valid();
-          LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
-
-          if( output.is_open() ) {
-            auto const buffer( ping->buffer() );
-            output.write( (const char *)buffer->ptr(), buffer->size() );
-          }
-
-          count++;
-          if( (stopAfter>0) && (count >= stopAfter)) ioSrv.stop();
-
-        });
       } else {
         LOG(DEBUG) << "   ... but it wasn't valid";
       }
+    });
 
+    dataRx.setCallback( [&]( const shared_ptr<SimplePingResult> &ping ) {
+        // Do something
+      auto valid = ping->valid();
+      LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
+
+      if( output.is_open() ) {
+        auto const buffer( ping->buffer() );
+        output.write( (const char *)buffer->ptr(), buffer->size() );
+      }
+
+      count++;
+      if( (stopAfter>0) && (count >= stopAfter)) ioSrv.stop();
     });
 
     ioSrv.fork();
