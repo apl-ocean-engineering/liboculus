@@ -61,19 +61,7 @@ else()
     add_library(oculus_core ${oculus_SRCS})
 
     install(TARGETS oculus_core
-            DESTINATION lib)
-
-    if(catkin_FOUND)
-        project(liboculus)
-        find_package(catkin REQUIRED COMPONENTS
-	  cmake_modules
-	  active_object
-    	)
-       catkin_package(
-           CATKIN_DEPENDS active_object)
-    endif()
-    
-    
+            DESTINATION lib)   
 
 
     ## Install headers
