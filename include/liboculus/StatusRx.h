@@ -42,28 +42,18 @@ namespace liboculus {
 // ----------------------------------------------------------------------------
 // StatusRx - a listening socket for oculus status messages
 //
-// Operates in a kind of double-buffering mode.   As new packets comes in,
-// they are assembled in _osm.   Once received and validated, it gets
-// copied to _status->osm
-//
-// Two modes of operation:
-//    If the constructor is provided with a shared_ptr<SonarStatus>,
-//    will copy the latest status packet into that struct.
-//
-//    If not provided, it will make its own internally, which can be
-//    queried with status()
 //
 class StatusRx
 {
 public:
-    StatusRx(boost::asio::io_service &context,
-                const std::shared_ptr<SonarStatus> &status = std::shared_ptr<SonarStatus>(new SonarStatus()) );
+    StatusRx(boost::asio::io_service &context );
     ~StatusRx();
 
     const SonarStatus &status() const
-      { return *_status; }
+      { return _status; }
 
-    typedef std::function< void( const std::shared_ptr<SonarStatus> & ) > SonarStatusCallback;
+    typedef std::function< void( const SonarStatus & ) > SonarStatusCallback;
+
     void setCallback( SonarStatusCallback callback )
       { _sonarStatusCallback = callback; }
 
@@ -81,7 +71,7 @@ private:
   OculusStatusMsg _osm;
 
   // This is the "usable" status, based on the most recently received packet
-  std::shared_ptr<SonarStatus> _status;
+  SonarStatus _status;
 
   uint16_t     m_port;       // Port to listen on
   uint16_t     m_valid;      // Number of valid status messages
@@ -94,7 +84,7 @@ private:
   deadline_timer _deadline;
 
   SonarStatusCallback _sonarStatusCallback;
-  void defaultSonarStatusCallback( const std::shared_ptr<SonarStatus> & ) {;}
+  void defaultSonarStatusCallback( const SonarStatus & ) {;}
 };
 
 }

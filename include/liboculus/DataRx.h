@@ -51,6 +51,8 @@ class DataRx
 public:
 
   // n.b. takes IP in __NETWORK__ byte order
+  DataRx(boost::asio::io_service &context, const SimpleFireMessage &fire = SimpleFireMessage() );
+
   DataRx(boost::asio::io_service &context, uint32_t ip,
               const SimpleFireMessage &fire = SimpleFireMessage() );
 
@@ -58,6 +60,11 @@ public:
               const SimpleFireMessage &fire = SimpleFireMessage() );
 
   virtual ~DataRx();
+
+  void connect( uint32_t ip );
+  void connect( const boost::asio::ip::address &addr );
+
+  bool connected() const { return _socket.is_open(); }
 
   SimpleFireMessage fireMessage() { return _fireMessage; }
   void updateFireMessage( const SimpleFireMessage &msg );
@@ -67,7 +74,6 @@ public:
 
 private:
 
-  void doConnect();
 
   void onConnect(const boost::system::error_code& error);
 
@@ -80,7 +86,6 @@ private:
 
 
   boost::asio::io_service  &_ioService;
-  boost::asio::ip::address  _ipAddress;
   tcp::socket _socket;
 
   boost::asio::steady_timer _writeTimer;

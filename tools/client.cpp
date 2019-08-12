@@ -26,6 +26,12 @@ using std::ios_base;
 
 int playbackSonarFile( const std::string &filename, ofstream &output, int stopAfter = -1 );
 
+IoServiceThread ioSrv;
+
+// Catch signals
+void signalHandler( int signo ) {
+  ioSrv.stop();
+}
 
 int main( int argc, char **argv ) {
 
@@ -74,59 +80,37 @@ int main( int argc, char **argv ) {
      return 0;
    }
 
-  bool notDone = true;
+   signal(SIGHUP, signalHandler );
+
   int count = 0;
 
   LOG(DEBUG) << "Starting loop";
 
   try {
-    IoServiceThread ioSrv;
 
-    std::unique_ptr<StatusRx> statusRx( new StatusRx( ioSrv.service() ) );
-    std::unique_ptr<DataRxQueued> dataRx( nullptr );
+    StatusRx statusRx( ioSrv.service() );
+    DataRx dataRx( ioSrv.service() );
 
-    if( ipAddr != "auto" ) {
-      LOG(INFO) << "Connecting to sonar with IP address " << ipAddr;
-      auto addr( boost::asio::ip::address_v4::from_string( ipAddr ) );
+    // Setup callbacks
+    statusRx.setCallback( [&]( const SonarStatus &status ) {
+      if( dataRx.connected() ) return;
 
-      LOG_IF(FATAL,addr.is_unspecified()) << "Hm, couldn't parse IP address";
+      LOG(DEBUG) << "   ... got status message";
+      if( status.valid() ) {
+        auto addr( status.ipAddr() );
 
-      dataRx.reset( new DataRxQueued( ioSrv.service(), addr ) );
-    }
+        LOG(INFO) << "Using detected sonar at IP address " << addr;
 
-    ioSrv.fork();
+        if( verbosity > 0 ) status.dump();
 
-    while( notDone ) {
+        dataRx.connect( addr );
 
-      while( !dataRx ) {
-
-        LOG(DEBUG) << "Need to find the sonar.  Waiting for sonar...";
-        if( statusRx->status().wait_for(std::chrono::seconds(1)) ) {
-
-          LOG(DEBUG) << "   ... got status message";
-          if( statusRx->status().valid() ) {
-            auto addr( statusRx->status().ipAddr() );
-
-            LOG(INFO) << "Using detected sonar at IP address " << addr;
-
-            if( verbosity > 0 ) statusRx->status().dump();
-
-            dataRx.reset( new DataRxQueued( ioSrv.service(), addr ) );
-
-          } else {
-            LOG(DEBUG) << "   ... but it wasn't valid";
-          }
-
-        } else {
-          // Failed to get status, try again.
-        }
-
+      } else {
+        LOG(DEBUG) << "   ... but it wasn't valid";
       }
+    });
 
-      shared_ptr<SimplePingResult> ping;
-
-      dataRx->queue().wait_and_pop( ping );
-
+    dataRx.setCallback( [&]( const shared_ptr<SimplePingResult> &ping ) {
         // Do something
       auto valid = ping->valid();
       LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
@@ -136,14 +120,14 @@ int main( int argc, char **argv ) {
         output.write( (const char *)buffer->ptr(), buffer->size() );
       }
 
-
       count++;
-      if( (stopAfter>0) && (count >= stopAfter)) notDone = false;
+      if( (stopAfter>0) && (count >= stopAfter)) ioSrv.stop();
+    });
 
-    }
+    ioSrv.fork();
 
-    ioSrv.stop();
-
+    // just wait
+    ioSrv.join();
   }
   catch (std::exception& e)
   {

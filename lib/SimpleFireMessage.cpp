@@ -53,10 +53,47 @@ namespace liboculus {
     _sfm.salinity        = 0.0;  // ppt; Freshwater salinity;
   }
 
+  // need to integrate flags into dyanmic reconfig
+
+  void SimpleFireMessage::setRange(uint8_t input)
+  {
+    // 40 meters is the max range for the 1200d model
+    // may need to use a double instead of uint8_t (depends on flags)
+    if (input <= 40 && input > 0) {
+      _sfm.gammaCorrection = input;
+    }
+  }
+
+  void SimpleFireMessage::setGainPercent(uint8_t input)
+  {
+    if (input <= 100 && input > 0) {
+      _sfm.gainPercent = input;
+    }
+  }
+
+  void SimpleFireMessage::setGamma(uint8_t input)
+  {
+    if (input <= 127 && input > 0) {
+      _sfm.gammaCorrection = input;
+    }
+  }
+
+  void SimpleFireMessage::setPingRate(uint8_t input)
+  {
+    PingRateType newRate = PingRateType(input);
+    _sfm.pingRate = newRate;
+  }
+
+  void SimpleFireMessage::setMasterMode(uint8_t input)
+  {
+    if (input == 1 || input == 2) {
+      _sfm.masterMode = input;
+    }
+  }
+
   void SimpleFireMessage::serialize( boost::asio::streambuf &stream )
   {
     stream.sputn( (char *)&_sfm, sizeof(OculusSimpleFireMessage));
   }
-
 
 }

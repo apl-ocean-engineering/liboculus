@@ -78,7 +78,9 @@ else()
 
     file(GLOB oculus_SRCS
 	lib/*cpp
+        thirdparty/gpmf-parser/*.c
       ) 
+    
 
     add_library(liboculus_LIB ${oculus_SRCS})
     target_link_libraries(liboculus_LIB ${catkin_LIBRARIES})

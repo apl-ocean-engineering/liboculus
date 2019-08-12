@@ -28,7 +28,7 @@ public:
   char *headerPtr() { return ptr(); }
   char *payloadPtr();
 
-  // char *dataPtr();
+  char *dataPtr();
 
   unsigned int size() const;
   unsigned int payloadSize() const;
