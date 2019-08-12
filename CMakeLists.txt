@@ -63,7 +63,7 @@ else()
     install(TARGETS oculus_core
             DESTINATION lib)
 
-    if(catkin FOUND)
+    if(catkin_FOUND)
         find_package(catkin REQUIRED COMPONENTS
 	  cmake_modules
 	  active_object
