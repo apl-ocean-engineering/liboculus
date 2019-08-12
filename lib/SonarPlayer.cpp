@@ -7,6 +7,7 @@
 #include "g3log/g3log.hpp"
 
 #include "liboculus/DataTypes.h"
+#include "liboculus/GpmfSonarPlayer.h"
 #include "liboculus/SimplePingResult.h"
 #include "liboculus/SonarPlayer.h"
 

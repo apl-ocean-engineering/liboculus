@@ -24,9 +24,11 @@ public:
   ~MessageBuffer();
 
   char *ptr();
-  char *headerPtr() { return ptr(); }
 
-  char *dataPtr();
+  char *headerPtr() { return ptr(); }
+  char *payloadPtr();
+
+  // char *dataPtr();
 
   unsigned int size() const;
   unsigned int payloadSize() const;
