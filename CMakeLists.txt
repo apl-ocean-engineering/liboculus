@@ -64,6 +64,7 @@ else()
             DESTINATION lib)
 
     if(catkin_FOUND)
+        project(liboculus)
         find_package(catkin REQUIRED COMPONENTS
 	  cmake_modules
 	  active_object
