@@ -49,40 +49,54 @@ if (FIPS_IMPORT)
 	endif()
 
 else()
-        project(liboculus)
-	find_package(catkin REQUIRED COMPONENTS
-	    cmake_modules
-	    active_object REQUIRED
-            g3log_catkin
-	)
+    project(liboculus)
 
-	catkin_package(
-	    CATKIN_DEPENDS active_object g3log_catkin
-	)
+    find_package(catkin REQUIRED
+	#cmake_modules
+	active_object REQUIRED
+        g3log_catkin
+    )
+
+    catkin_package(
+	 #CATKIN_DEPENDS active_object g3log_catkin
+         INCLUDE_DIRS include thirdparty
+         LIBRARIES liboculus_LIB
+      )
+
+
+    ## C++ flags applied to all builds
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 
     include_directories(
         ${catkin_INCLUDE_DIRS}
-        include/
-         thirdparty/
-
-	#${CMAKE_CURRENT_SOURCE_DIR}/include
-	#${CMAKE_CURRENT_SOURCE_DIR}/thirdparty
+        include
+        thirdparty
       )
+    
+
 
     file(GLOB oculus_SRCS
 	lib/*cpp
-      )
+      ) 
 
-    add_library(oculus_core ${oculus_SRCS})
+    add_library(liboculus_LIB ${oculus_SRCS})
+    target_link_libraries(liboculus_LIB ${catkin_LIBRARIES})
+    
 
-    install(TARGETS oculus_core
-            DESTINATION lib)   
 
+    install(TARGETS liboculus_LIB
+          ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+          LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+          RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION})
 
     ## Install headers
-    install(DIRECTORY  include/ lib/ thirdparty/Oculus/
-        DESTINATION include
+    install(DIRECTORY  include/${PROJECT_NAME}/ thirdparty/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
         FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
         PATTERN ".git" EXCLUDE)
+    
+
+
+
 endif()
