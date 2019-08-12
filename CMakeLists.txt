@@ -49,19 +49,25 @@ if (FIPS_IMPORT)
 	endif()
 
 else()
+        project(liboculus)
 	find_package(catkin REQUIRED COMPONENTS
 	    cmake_modules
 	    active_object REQUIRED
+            g3log_catkin
 	)
 
 	catkin_package(
-	    CATKIN_DEPENDS active_object
+	    CATKIN_DEPENDS active_object g3log_catkin
 	)
 
 
     include_directories(
-	${CMAKE_CURRENT_SOURCE_DIR}/include
-	${CMAKE_CURRENT_SOURCE_DIR}/thirdparty
+        ${catkin_INCLUDE_DIRS}
+        include/
+         thirdparty/
+
+	#${CMAKE_CURRENT_SOURCE_DIR}/include
+	#${CMAKE_CURRENT_SOURCE_DIR}/thirdparty
       )
 
     file(GLOB oculus_SRCS
