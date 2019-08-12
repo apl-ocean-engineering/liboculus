@@ -19,24 +19,49 @@ find_package( Boost REQUIRED COMPONENTS system )
 # in thirdparty/Oculus
 #find_package( OculusSDK REQUIRED )
 
-## Set global include paths
-fips_include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty
- )
+if (FIPS_IMPORT)
+	## Set global include paths
+	fips_include_directories(
+	  ${CMAKE_CURRENT_SOURCE_DIR}/include
+	  ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty
+	 )
 
-## Verbose output about ASIO handlers
-#add_definitions( -DBOOST_ASIO_ENABLE_HANDLER_TRACKING )
+	## Verbose output about ASIO handlers
+	#add_definitions( -DBOOST_ASIO_ENABLE_HANDLER_TRACKING )
 
 
-fips_add_subdirectory("lib/")
+	fips_add_subdirectory("lib/")
 
-if( NOT FIPS_IMPORT )
-  add_subdirectory("tools/")
+	if( NOT FIPS_IMPORT )
+	  add_subdirectory("tools/")
 
-	if( FIPS_UNITTESTS )
-			add_subdirectory( test/ )
-  endif()
+		if( FIPS_UNITTESTS )
+				add_subdirectory( test/ )
+	  endif()
 
-  fips_finish()
+	  fips_finish()
+	endif()
+
+else()
+    include_directories(
+	${CMAKE_CURRENT_SOURCE_DIR}/include
+	${CMAKE_CURRENT_SOURCE_DIR}/thirdparty
+      )
+
+    file(GLOB oculus_SRCS
+	lib/*cpp
+      )
+
+    add_library(oculus_core ${oculus_SRCS})
+
+    install(TARGETS oculus_core
+            DESTINATION lib)
+    
+
+
+    ## Install headers
+    install(DIRECTORY  include/ lib/ thirdparty/Oculus/
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+        PATTERN ".git" EXCLUDE)
 endif()

@@ -2,87 +2,87 @@
 
 #include <fstream>
 
-#include "liboculus/SimplePingResult.h"
 #include "gpmf-parser/GPMF_parser.h"
-
+#include "liboculus/SimplePingResult.h"
 
 namespace liboculus {
 
-  class SonarPlayerBase {
-  public:
-    SonarPlayerBase();
-    virtual ~SonarPlayerBase();
+class SonarPlayerBase {
+public:
+  SonarPlayerBase();
+  virtual ~SonarPlayerBase();
 
-    virtual bool open( const std::string &filename );
-    virtual bool isOpen( ) const { return _input.is_open(); }
+  virtual bool open(const std::string &filename);
+  virtual bool isOpen() const { return _input.is_open(); }
 
-    virtual bool eof() const { return _input.eof(); }
-    virtual void rewind() { _input.seekg(0); }
+  virtual bool setStream(GPMF_stream *stream) {}
 
-    virtual std::shared_ptr<SimplePingResult> nextPing() = 0;
+  virtual bool eof() const { return _input.eof(); }
+  virtual void rewind() { _input.seekg(0); }
 
-    static std::shared_ptr<SonarPlayerBase> OpenFile( const std::string &filename );
+  virtual std::shared_ptr<SimplePingResult> nextPing() = 0;
 
-  protected:
+  static std::shared_ptr<SonarPlayerBase> OpenFile(const std::string &filename);
+  static std::shared_ptr<SonarPlayerBase> createGPMFSonarPlayer();
 
-    std::ifstream _input;
-  };
+protected:
+  std::ifstream _input;
+};
 
-  ///
-  ///
-  ///
-  class RawSonarPlayer : public SonarPlayerBase {
-  public:
-    RawSonarPlayer();
-    virtual ~RawSonarPlayer();
+///
+///
+///
+class RawSonarPlayer : public SonarPlayerBase {
+public:
+  RawSonarPlayer();
+  virtual ~RawSonarPlayer();
 
-    std::shared_ptr<MessageBuffer> nextPacket();
-    virtual std::shared_ptr<SimplePingResult> nextPing();
+  std::shared_ptr<MessageBuffer> nextPacket();
+  virtual std::shared_ptr<SimplePingResult> nextPing();
 
-  private:
-  };
+private:
+};
 
+///
+///
+///
+class OculusSonarPlayer : public SonarPlayerBase {
+public:
+  OculusSonarPlayer();
+  virtual ~OculusSonarPlayer();
 
-  ///
-  ///
-  ///
-  class OculusSonarPlayer : public SonarPlayerBase {
-  public:
-    OculusSonarPlayer();
-    virtual ~OculusSonarPlayer();
+  // char *nextPacket();
+  virtual std::shared_ptr<SimplePingResult> nextPing();
 
-    //char *nextPacket();
-    virtual std::shared_ptr<SimplePingResult> nextPing();
+private:
+};
 
-  private:
-  };
+///
+///
+///
+class GPMFSonarPlayer : public SonarPlayerBase {
+public:
+  GPMFSonarPlayer();
+  virtual ~GPMFSonarPlayer();
 
-  ///
-  ///
-  ///
-  class GPMFSonarPlayer : public SonarPlayerBase {
-  public:
-    GPMFSonarPlayer();
-    virtual ~GPMFSonarPlayer();
+  virtual bool open(const std::string &filename);
+  virtual bool setStream(GPMF_stream *stream);
+  virtual bool isOpen() const { return _valid; }
 
-    virtual bool open( const std::string &filename );
-    virtual bool isOpen( ) const { return _valid; }
+  void close();
 
-    void close();
+  virtual bool eof();
+  virtual void rewind();
 
-    virtual bool eof();
-    virtual void rewind();
+  // char *nextPacket();
+  virtual std::shared_ptr<SimplePingResult> nextPing();
 
-    //char *nextPacket();
-    virtual std::shared_ptr<SimplePingResult> nextPing();
+  void dumpGPMF(void);
 
-    void dumpGPMF( void );
+private:
+  GPMF_stream _stream;
+  bool _valid;
+  std::string _buffer;
+};
 
-  private:
-
-    GPMF_stream _stream;
-    bool _valid;
-    std::string _buffer;
-  };
-
-}
+} // namespace liboculus
