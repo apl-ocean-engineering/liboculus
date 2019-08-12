@@ -49,6 +49,16 @@ if (FIPS_IMPORT)
 	endif()
 
 else()
+	find_package(catkin REQUIRED COMPONENTS
+	    cmake_modules
+	    active_object REQUIRED
+	)
+
+	catkin_package(
+	    CATKIN_DEPENDS active_object
+	)
+
+
     include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 	${CMAKE_CURRENT_SOURCE_DIR}/thirdparty
