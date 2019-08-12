@@ -1,0 +1,3 @@
+[submodule "thirdparty/gpmf-parser"]
+	path = thirdparty/gpmf-parser
+	url = https://github.com/gopro/gpmf-parser
