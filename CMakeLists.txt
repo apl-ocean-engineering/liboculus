@@ -55,10 +55,12 @@ else()
 	#cmake_modules
 	active_object REQUIRED
         g3log_catkin
+        gpmf
     )
 
     catkin_package(
 	 #CATKIN_DEPENDS active_object g3log_catkin
+         CATKIN_DEPENDS gpmf
          INCLUDE_DIRS include thirdparty
          LIBRARIES liboculus_LIB
       )
@@ -78,7 +80,7 @@ else()
 
     file(GLOB oculus_SRCS
 	lib/*cpp
-        thirdparty/gpmf-parser/*.c
+        #thirdparty/gpmf-parser/*.c
       ) 
     
 
