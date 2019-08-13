@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.5)
 
-find_package(catkin QUIET)
-if( NOT FIPS_IMPORT)
-    if (NOT catkin_FOUND)
+if( FIPS_CONFIG AND NOT FIPS_IMPORT )
 	cmake_minimum_required(VERSION 3.5)
 
 	get_filename_component(FIPS_ROOT_DIR "../fips" ABSOLUTE)
 	include("${FIPS_ROOT_DIR}/cmake/fips.cmake")
 
 	fips_setup(PROJECT liboculus)
-    endif()
+
+else()
+  find_package(catkin QUIET)
 endif()
 
 
@@ -25,7 +25,7 @@ find_package( Boost REQUIRED COMPONENTS system )
 # in thirdparty/Oculus
 #find_package( OculusSDK REQUIRED )
 
-if (FIPS_IMPORT)
+if (FIPS_CONFIG)
 	## Set global include paths
 	fips_include_directories(
 	  ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -75,18 +75,18 @@ else()
         include
         thirdparty
       )
-    
+
 
 
     file(GLOB oculus_SRCS
 	lib/*cpp
         #thirdparty/gpmf-parser/*.c
-      ) 
-    
+      )
+
 
     add_library(liboculus_LIB ${oculus_SRCS})
     target_link_libraries(liboculus_LIB ${catkin_LIBRARIES})
-    
+
 
 
     install(TARGETS liboculus_LIB
@@ -99,7 +99,7 @@ else()
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
         FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
         PATTERN ".git" EXCLUDE)
-    
+
 
 
 
