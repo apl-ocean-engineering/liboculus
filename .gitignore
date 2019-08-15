@@ -1,3 +1,4 @@
 .fips-*
 *.dat
 doc/
+.DS_Store
