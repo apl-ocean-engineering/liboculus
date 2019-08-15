@@ -2,64 +2,87 @@
 
 #include <fstream>
 
+#include "gpmf-parser/GPMF_parser.h"
 #include "liboculus/SimplePingResult.h"
 
 namespace liboculus {
 
-  /// Abstract base class for all SonarPlayers (files containing of Sonar data)
-  class SonarPlayerBase {
-  public:
-    SonarPlayerBase();
-    virtual ~SonarPlayerBase();
+class SonarPlayerBase {
+public:
+  SonarPlayerBase();
+  virtual ~SonarPlayerBase();
 
-    virtual bool open( const std::string &filename );
-    virtual bool isOpen( ) const { return _input.is_open(); }
+  virtual bool open(const std::string &filename);
+  virtual bool isOpen() const { return _input.is_open(); }
 
-    virtual bool eof() const { return _input.eof(); }
-    virtual void rewind() { _input.seekg(0); }
+  virtual bool setStream(GPMF_stream *stream) {}
 
-    virtual std::shared_ptr<SimplePingResult> nextPing() = 0;
+  virtual bool eof() const { return _input.eof(); }
+  virtual void rewind() { _input.seekg(0); }
 
-    /// Static function will attempt to auto-detect the format of the
-    /// supplied file and return an appropriate RawSonarPlayer or
-    /// GpmfSonarPlayer object.   Will never return a OculusSonarPlayer
-    static std::shared_ptr<SonarPlayerBase> OpenFile( const std::string &filename );
+  virtual std::shared_ptr<SimplePingResult> nextPing() = 0;
 
-  protected:
+  static std::shared_ptr<SonarPlayerBase> OpenFile(const std::string &filename);
+  static std::shared_ptr<SonarPlayerBase> createGPMFSonarPlayer();
 
-    std::ifstream _input;
-  };
+protected:
+  std::ifstream _input;
+};
 
-  /// Reads files which contain raw bitstreams of sonar packets.
-  ///
-  ///
-  class RawSonarPlayer : public SonarPlayerBase {
-  public:
-    RawSonarPlayer();
-    virtual ~RawSonarPlayer();
+///
+///
+///
+class RawSonarPlayer : public SonarPlayerBase {
+public:
+  RawSonarPlayer();
+  virtual ~RawSonarPlayer();
 
-    std::shared_ptr<MessageBuffer> nextPacket();
-    virtual std::shared_ptr<SimplePingResult> nextPing();
+  std::shared_ptr<MessageBuffer> nextPacket();
+  virtual std::shared_ptr<SimplePingResult> nextPing();
 
-  private:
-  };
+private:
+};
 
+///
+///
+///
+class OculusSonarPlayer : public SonarPlayerBase {
+public:
+  OculusSonarPlayer();
+  virtual ~OculusSonarPlayer();
 
-  /// Reads sonar files recorded by Oculus Viewer provided by BlueprintSubsea
-  /// Does not actually work ... we don't have the format spec for the
-  /// messages found in the saved files.
-  ///
-  ///
-  class OculusSonarPlayer : public SonarPlayerBase {
-  public:
-    OculusSonarPlayer();
-    virtual ~OculusSonarPlayer();
+  // char *nextPacket();
+  virtual std::shared_ptr<SimplePingResult> nextPing();
 
-    //char *nextPacket();
-    virtual std::shared_ptr<SimplePingResult> nextPing();
+private:
+};
 
-  private:
-  };
+///
+///
+///
+class GPMFSonarPlayer : public SonarPlayerBase {
+public:
+  GPMFSonarPlayer();
+  virtual ~GPMFSonarPlayer();
 
+  virtual bool open(const std::string &filename);
+  virtual bool setStream(GPMF_stream *stream);
+  virtual bool isOpen() const { return _valid; }
 
-}
+  void close();
+
+  virtual bool eof();
+  virtual void rewind();
+
+  // char *nextPacket();
+  virtual std::shared_ptr<SimplePingResult> nextPing();
+
+  void dumpGPMF(void);
+
+private:
+  GPMF_stream _stream;
+  bool _valid;
+  std::string _buffer;
+};
+
+} // namespace liboculus
