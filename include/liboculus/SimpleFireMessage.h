@@ -14,16 +14,16 @@ public:
 
   void serialize( boost::asio::streambuf &buffer );
 
-  void setGamma(uint8_t input);
+  void setGamma(double input);
 
-  void setPingRate(uint8_t input);
+  void setPingRate(double input);
 
-  void setGainPercent(uint8_t input);
+  void setGainPercent(double input);
 
-  void setRange(uint8_t input);
+  void setRange(double input);
 
-  void setMasterMode(uint8_t input);
-  
+  void setMasterMode(double input);
+
 private:
 
   OculusSimpleFireMessage _sfm;
