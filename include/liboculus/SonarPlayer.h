@@ -15,7 +15,7 @@ public:
   virtual bool open(const std::string &filename);
   virtual bool isOpen() const { return _input.is_open(); }
 
-  virtual bool setStream(GPMF_stream *stream) {}
+  virtual bool setStream(GPMF_stream *stream) { return false; }
 
   virtual bool eof() const { return _input.eof(); }
   virtual void rewind() { _input.seekg(0); }
