@@ -31,7 +31,7 @@ namespace liboculus {
   protected:
 
     // Runs in thread
-    void run();
+    //void run();
 
   private:
 

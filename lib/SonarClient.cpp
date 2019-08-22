@@ -7,7 +7,6 @@ namespace liboculus {
 
   SonarClient::SonarClient( const std::string &ipAddr )
       : _ipAddr( ipAddr ),
-      _thread(),
       _ioSrv(),
       _statusRx( _ioSrv.service() ),
       _dataRx( _ioSrv.service() )
@@ -34,35 +33,36 @@ namespace liboculus {
   }
 
   void SonarClient::start() {
-    _thread = std::thread( [=] { run(); } );
+    _ioSrv.fork();
+    //_thread = std::thread( [=] { run(); } );
   }
 
   void SonarClient::join() {
-    if( _thread.joinable() ) {
-      _thread.join();
-    }
+    _ioSrv.join();
+    // if( _thread.joinable() ) {
+    //   _thread.join();
+    // }
   }
 
   void SonarClient::stop() {
     _ioSrv.stop();
-    join();
   }
 
 
-  // Runs in thread
-  void SonarClient::run() {
-    LOG(DEBUG) << "Starting SonarClient in thread";
-    try {
-      _ioSrv.fork();
-
-      _ioSrv.join();
-    }
-    catch (std::exception& e)
-    {
-      LOG(WARNING) << "Exception: " << e.what();
-    }
-
-  }
+  // // Runs in thread
+  // void SonarClient::run() {
+  //   LOG(DEBUG) << "Starting SonarClient in thread";
+  //   try {
+  //     _ioSrv.fork();
+  //
+  //     _ioSrv.join();
+  //   }
+  //   catch (std::exception& e)
+  //   {
+  //     LOG(WARNING) << "Exception: " << e.what();
+  //   }
+  //
+  // }
 
   void SonarClient::receiveStatus( const SonarStatus &status ) {
     if( _dataRx.connected() ) return;
