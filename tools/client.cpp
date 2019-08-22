@@ -13,9 +13,7 @@ using std::string;
 #include <CLI/CLI.hpp>
 
 
-#include "liboculus/StatusRx.h"
-#include "liboculus/DataRx.h"
-#include "liboculus/IoServiceThread.h"
+#include "liboculus/SonarClient.h"
 #include "liboculus/SonarPlayer.h"
 
 
@@ -26,11 +24,11 @@ using std::ios_base;
 
 int playbackSonarFile( const std::string &filename, ofstream &output, int stopAfter = -1 );
 
-IoServiceThread ioSrv;
+std::unique_ptr< SonarClient > _client;
 
 // Catch signals
 void signalHandler( int signo ) {
-  ioSrv.stop();
+  if( _client ) _client->stop();
 }
 
 int main( int argc, char **argv ) {
@@ -88,29 +86,9 @@ int main( int argc, char **argv ) {
 
   try {
 
-    StatusRx statusRx( ioSrv.service() );
-    DataRx dataRx( ioSrv.service() );
+    _client.reset( new SonarClient(ipAddr) );
 
-    // Setup callbacks
-    statusRx.setCallback( [&]( const SonarStatus &status ) {
-      if( dataRx.connected() ) return;
-
-      LOG(DEBUG) << "   ... got status message";
-      if( status.valid() ) {
-        auto addr( status.ipAddr() );
-
-        LOG(INFO) << "Using detected sonar at IP address " << addr;
-
-        if( verbosity > 0 ) status.dump();
-
-        dataRx.connect( addr );
-
-      } else {
-        LOG(DEBUG) << "   ... but it wasn't valid";
-      }
-    });
-
-    dataRx.setCallback( [&]( const shared_ptr<SimplePingResult> &ping ) {
+    _client->setDataRxCallback( [&]( const shared_ptr<SimplePingResult> &ping ) {
         // Do something
       auto valid = ping->valid();
       LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
@@ -121,13 +99,12 @@ int main( int argc, char **argv ) {
       }
 
       count++;
-      if( (stopAfter>0) && (count >= stopAfter)) ioSrv.stop();
+      if( (stopAfter>0) && (count >= stopAfter)) _client->stop();
     });
 
-    ioSrv.fork();
+    _client->start();
 
-    // just wait
-    ioSrv.join();
+    _client->join();
   }
   catch (std::exception& e)
   {
