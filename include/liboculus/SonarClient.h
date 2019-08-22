@@ -18,25 +18,20 @@ namespace liboculus {
     ~SonarClient();
 
     void start();
-
-    void receiveStatus( const SonarStatus & status );
+    void join();
+    void stop();
 
     // Simple passthrough
     void setDataRxCallback( DataRx::SimplePingCallback callback )
       { _dataRx.setCallback( callback ); }
 
-    void join();
-    void stop();
-
   protected:
 
-    // Runs in thread
-    //void run();
+    void receiveStatus( const SonarStatus & status );
 
   private:
 
     std::string _ipAddr;
-    std::thread _thread;
 
     IoServiceThread _ioSrv;
     StatusRx _statusRx;

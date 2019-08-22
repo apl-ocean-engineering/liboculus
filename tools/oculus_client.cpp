@@ -24,6 +24,7 @@ using std::ios_base;
 
 int playbackSonarFile( const std::string &filename, ofstream &output, int stopAfter = -1 );
 
+// Make this global so signal handler can access it
 std::unique_ptr< SonarClient > _client;
 
 // Catch signals
@@ -78,40 +79,38 @@ int main( int argc, char **argv ) {
      return 0;
    }
 
-   signal(SIGHUP, signalHandler );
+   //signal(SIGHUP, signalHandler );
 
   int count = 0;
 
   LOG(DEBUG) << "Starting loop";
 
-  try {
+  _client.reset( new SonarClient(ipAddr) );
 
-    _client.reset( new SonarClient(ipAddr) );
+  _client->setDataRxCallback( [&]( const shared_ptr<SimplePingResult> &ping ) {
+      // Do something
+    auto valid = ping->valid();
+    LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
 
-    _client->setDataRxCallback( [&]( const shared_ptr<SimplePingResult> &ping ) {
-        // Do something
-      auto valid = ping->valid();
-      LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
+    if( !valid ) return;
 
-      if( output.is_open() ) {
-        auto const buffer( ping->buffer() );
-        output.write( (const char *)buffer->ptr(), buffer->size() );
-      }
+    ping->dump();
 
-      count++;
-      if( (stopAfter>0) && (count >= stopAfter)) _client->stop();
-    });
+    if( output.is_open() ) {
+      auto const buffer( ping->buffer() );
+      output.write( (const char *)buffer->ptr(), buffer->size() );
+    }
 
-    _client->start();
+    count++;
+    if( (stopAfter>0) && (count >= stopAfter)) _client->stop();
+  });
 
-    _client->join();
-  }
-  catch (std::exception& e)
-  {
-    LOG(WARNING) << "Exception: " << e.what();
-  }
+  _client->start();
+  _client->join();
 
   if( output.is_open() ) output.close();
+
+  LOG(INFO) << "At exit";
 
   return 0;
 }

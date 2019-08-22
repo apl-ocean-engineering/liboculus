@@ -6,8 +6,7 @@ namespace liboculus {
 
 
   SonarClient::SonarClient( const std::string &ipAddr )
-      : _ipAddr( ipAddr ),
-      _ioSrv(),
+      : _ioSrv(),
       _statusRx( _ioSrv.service() ),
       _dataRx( _ioSrv.service() )
   {
@@ -15,11 +14,11 @@ namespace liboculus {
     _statusRx.setCallback( std::bind( &SonarClient::receiveStatus, this, std::placeholders::_1 ));
     //_dataRx.setCallback( std::bind( &SonarClient::receivePing, this, std::placeholders::_1 ) );
 
-    if( ! _ipAddr.empty() && _ipAddr != "auto" ) {
-      LOG(INFO) << "Connecting to sonar with IP address " << _ipAddr;
-      auto addr( boost::asio::ip::address_v4::from_string( _ipAddr ) );
+    if( ! ipAddr.empty() && ipAddr != "auto" ) {
+      LOG(INFO) << "Connecting to sonar with IP address " << ipAddr;
+      auto addr( boost::asio::ip::address_v4::from_string( ipAddr ) );
 
-      LOG_IF(FATAL,addr.is_unspecified()) << "Couldn't parse IP address" << _ipAddr;
+      LOG_IF(FATAL,addr.is_unspecified()) << "Couldn't parse IP address" << ipAddr;
 
       _dataRx.connect( addr );
     }
@@ -30,39 +29,20 @@ namespace liboculus {
   SonarClient::~SonarClient()
   {
     stop();
+    join();
   }
 
   void SonarClient::start() {
     _ioSrv.fork();
-    //_thread = std::thread( [=] { run(); } );
   }
 
   void SonarClient::join() {
     _ioSrv.join();
-    // if( _thread.joinable() ) {
-    //   _thread.join();
-    // }
   }
 
   void SonarClient::stop() {
     _ioSrv.stop();
   }
-
-
-  // // Runs in thread
-  // void SonarClient::run() {
-  //   LOG(DEBUG) << "Starting SonarClient in thread";
-  //   try {
-  //     _ioSrv.fork();
-  //
-  //     _ioSrv.join();
-  //   }
-  //   catch (std::exception& e)
-  //   {
-  //     LOG(WARNING) << "Exception: " << e.what();
-  //   }
-  //
-  // }
 
   void SonarClient::receiveStatus( const SonarStatus &status ) {
     if( _dataRx.connected() ) return;
