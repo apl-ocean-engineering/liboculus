@@ -125,7 +125,7 @@ public:
 
     // TODO range check
     const unsigned int index = range * _numBeams + bearing;
-    CHECK(index < (_numRanges * _numBeams));
+    CHECK(index < (unsigned int)(_numRanges * _numBeams));
 
     return ((uint8_t *)_ptr)[range * _numBeams + bearing];
   }
