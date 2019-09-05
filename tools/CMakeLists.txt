@@ -1,6 +1,6 @@
 fips_begin_app( oc_client cmdline )
   fips_files(
-    client.cpp
+    oculus_client.cpp
   )
 
   fips_deps( oculus activeobject  )

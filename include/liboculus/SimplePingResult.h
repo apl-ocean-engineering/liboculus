@@ -125,7 +125,7 @@ public:
 
     // TODO range check
     const unsigned int index = range * _numBeams + bearing;
-    CHECK(index < (_numRanges * _numBeams));
+    CHECK(index < (unsigned int)(_numRanges * _numBeams));
 
     return ((uint8_t *)_ptr)[range * _numBeams + bearing];
   }
@@ -194,27 +194,6 @@ public:
     if (!MessageHeader::valid())
       return false;
 
-    LOG(DEBUG) << "     Mode: " << fireMsg()->masterMode;
-    LOG(DEBUG) << "Ping rate: " << fireMsg()->pingRate;
-
-    LOG(DEBUG) << "  Ping ID: " << ping()->pingId;
-    LOG(DEBUG) << "   Status: " << ping()->status;
-    LOG(DEBUG) << "   Ping start time" << ping()->pingStartTime;
-
-    LOG(DEBUG) << "Frequency: " << ping()->frequency;
-    LOG(DEBUG) << "Temperature: " << ping()->temperature;
-    LOG(DEBUG) << " Pressure: " << ping()->pressure;
-    LOG(DEBUG) << "Spd of Sound: " << ping()->speedOfSoundUsed;
-    LOG(DEBUG) << "Range res: " << ping()->rangeResolution << " m";
-
-    LOG(DEBUG) << "Num range: " << ping()->nRanges;
-    LOG(DEBUG) << "Num beams: " << ping()->nBeams;
-
-    LOG(DEBUG) << "  Image size: " << ping()->imageSize;
-    LOG(DEBUG) << "Image offset: " << ping()->imageOffset;
-    LOG(DEBUG) << "   Data size: " << DataSizeToString(ping()->dataSize);
-    LOG(DEBUG) << "Message size: " << ping()->messageSize;
-
     size_t expectedImageSize =
         SizeOfDataSize(ping()->dataSize) * ping()->nRanges * ping()->nBeams;
 
@@ -233,6 +212,31 @@ public:
 
     CHECK(ping()->imageOffset > sizeof(OculusSimplePingResult));
     return true;
+  }
+
+  void dump() const {
+    LOG(DEBUG) << "--------------";
+    LOG(DEBUG) << "        Mode: " << fireMsg()->masterMode;
+    LOG(DEBUG) << "   Ping rate: " << fireMsg()->pingRate;
+
+    LOG(DEBUG) << "     Ping ID: " << ping()->pingId;
+    LOG(DEBUG) << "      Status: " << ping()->status;
+    LOG(DEBUG) << "   Ping start time: " << ping()->pingStartTime;
+
+    LOG(DEBUG) << "   Frequency: " << ping()->frequency;
+    LOG(DEBUG) << " Temperature: " << ping()->temperature;
+    LOG(DEBUG) << "    Pressure: " << ping()->pressure;
+    LOG(DEBUG) << "Spd of Sound: " << ping()->speedOfSoundUsed;
+    LOG(DEBUG) << "   Range res: " << ping()->rangeResolution << " m";
+
+    LOG(DEBUG) << "   Num range: " << ping()->nRanges;
+    LOG(DEBUG) << "   Num beams: " << ping()->nBeams;
+
+    LOG(DEBUG) << "  Image size: " << ping()->imageSize;
+    LOG(DEBUG) << "Image offset: " << ping()->imageOffset;
+    LOG(DEBUG) << "   Data size: " << DataSizeToString(ping()->dataSize);
+    LOG(DEBUG) << "Message size: " << ping()->messageSize;
+    LOG(DEBUG) << "--------------";
   }
 
 private:

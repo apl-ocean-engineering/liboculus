@@ -13,9 +13,7 @@ using std::string;
 #include <CLI/CLI.hpp>
 
 
-#include "liboculus/StatusRx.h"
-#include "liboculus/DataRx.h"
-#include "liboculus/IoServiceThread.h"
+#include "liboculus/SonarClient.h"
 #include "liboculus/SonarPlayer.h"
 
 
@@ -26,11 +24,12 @@ using std::ios_base;
 
 int playbackSonarFile( const std::string &filename, ofstream &output, int stopAfter = -1 );
 
-IoServiceThread ioSrv;
+// Make this global so signal handler can access it
+std::unique_ptr< SonarClient > _client;
 
 // Catch signals
 void signalHandler( int signo ) {
-  ioSrv.stop();
+  if( _client ) _client->stop();
 }
 
 int main( int argc, char **argv ) {
@@ -80,61 +79,38 @@ int main( int argc, char **argv ) {
      return 0;
    }
 
-   signal(SIGHUP, signalHandler );
+   //signal(SIGHUP, signalHandler );
 
   int count = 0;
 
   LOG(DEBUG) << "Starting loop";
 
-  try {
+  _client.reset( new SonarClient(ipAddr) );
 
-    StatusRx statusRx( ioSrv.service() );
-    DataRx dataRx( ioSrv.service() );
+  _client->setDataRxCallback( [&]( const shared_ptr<SimplePingResult> &ping ) {
+      // Do something
+    auto valid = ping->valid();
+    LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
 
-    // Setup callbacks
-    statusRx.setCallback( [&]( const SonarStatus &status ) {
-      if( dataRx.connected() ) return;
+    if( !valid ) return;
 
-      LOG(DEBUG) << "   ... got status message";
-      if( status.valid() ) {
-        auto addr( status.ipAddr() );
+    ping->dump();
 
-        LOG(INFO) << "Using detected sonar at IP address " << addr;
+    if( output.is_open() ) {
+      auto const buffer( ping->buffer() );
+      output.write( (const char *)buffer->ptr(), buffer->size() );
+    }
 
-        if( verbosity > 0 ) status.dump();
+    count++;
+    if( (stopAfter>0) && (count >= stopAfter)) _client->stop();
+  });
 
-        dataRx.connect( addr );
-
-      } else {
-        LOG(DEBUG) << "   ... but it wasn't valid";
-      }
-    });
-
-    dataRx.setCallback( [&]( const shared_ptr<SimplePingResult> &ping ) {
-        // Do something
-      auto valid = ping->valid();
-      LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
-
-      if( output.is_open() ) {
-        auto const buffer( ping->buffer() );
-        output.write( (const char *)buffer->ptr(), buffer->size() );
-      }
-
-      count++;
-      if( (stopAfter>0) && (count >= stopAfter)) ioSrv.stop();
-    });
-
-    ioSrv.fork();
-
-    // just wait
-    ioSrv.join();
-  }
-  catch (std::exception& e)
-  {
-    LOG(WARNING) << "Exception: " << e.what();
-  }
+  _client->start();
+  _client->join();
 
   if( output.is_open() ) output.close();
+
+  LOG(INFO) << "At exit";
 
   return 0;
 }
