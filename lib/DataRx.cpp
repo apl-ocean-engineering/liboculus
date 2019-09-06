@@ -170,6 +170,7 @@ namespace liboculus {
         LOG(DEBUG) << "Validating...";
         if( hdr.valid() ) {
 
+          LOG(DEBUG) << "Got message ID " << hdr.msgId();
           if( hdr.msgId() == messageSimplePingResult ) {
 
             if( !buffer->expandForPayload() ) {
@@ -210,9 +211,15 @@ namespace liboculus {
             // Drop the rest of the message
 
             const size_t discardSz = hdr.payloadSize();
-            LOG(INFO) << "Trying to drain an additional " << discardSz << " bytes";
 
-            if( discardSz > 0 ) {
+            if ( discardSz == 0 ) {
+              LOG(INFO) << "Unknown message ID " << hdr.msgId();
+              scheduleHeaderRead();
+            }
+            else
+            {
+              LOG(INFO) << "Unknown message ID " << hdr.msgId() << ", need to drain an additional " << discardSz << " bytes";
+
               std::vector<char> junkBuffer(hdr.payloadSize());
 
               boost::asio::async_read( _socket, boost::asio::buffer( junkBuffer, discardSz),
@@ -231,9 +238,6 @@ namespace liboculus {
                 //delete junkBuffer;
               });
 
-            } else {
-              // Otherwise, just schedule the next read
-              scheduleHeaderRead();
             }
 
             return;
