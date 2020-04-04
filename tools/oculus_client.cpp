@@ -12,7 +12,6 @@ using std::string;
 #include <libg3logger/g3logger.h>
 #include <CLI/CLI.hpp>
 
-
 #include "liboculus/SonarClient.h"
 #include "liboculus/SonarPlayer.h"
 

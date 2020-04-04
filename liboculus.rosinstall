@@ -1,3 +1,2 @@
 - git: {local-name: g3log_catkin, uri: "https://gitlab.com/apl-ocean-engineering/lsd-slam/g3log_catkin.git", version: master}
 - git: {local-name: active_object, uri: "https://github.com/apl-ocean-engineering/libactiveobject.git", version: ros}
-- git: {local-name: gpmf, uri: "https://github.com/apl-ocean-engineering/libgpmf-fips.git", version: master}

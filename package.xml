@@ -2,7 +2,7 @@
 <package format="2">
   <name>liboculus</name>
   <version>0.0.1</version>
-  <description>A ROS version of the Oculus sonar codebase </description>
+  <description>A ROS version of the Oculus sonar codebase</description>
 
   <maintainer email="mitchell.scott@uw.edu">igor</maintainer>
 
@@ -18,7 +18,7 @@
   <!-- The export tag contains other, unspecified, tags -->
   <depend>active_object</depend>
   <depend>g3log_catkin</depend>
-  <depend>gpmf</depend>
+
   <export>
     <!-- You can specify that this package is a metapackage here: -->
     <!-- <metapackage/> -->

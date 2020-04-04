@@ -7,7 +7,6 @@
 #include "g3log/g3log.hpp"
 
 #include "liboculus/DataTypes.h"
-//#include "liboculus/GpmfSonarPlayer.h"
 #include "liboculus/SimplePingResult.h"
 #include "liboculus/SonarPlayer.h"
 
@@ -15,10 +14,11 @@ namespace liboculus {
 
 using namespace std;
 
+#ifdef WITH_GPMF
 shared_ptr<SonarPlayerBase> SonarPlayerBase::createGPMFSonarPlayer() {
-
   return shared_ptr<SonarPlayerBase>(new GPMFSonarPlayer());
 }
+#endif
 
 /// Static function which automatically detects file type
 shared_ptr<SonarPlayerBase> SonarPlayerBase::OpenFile(const string &filename) {
@@ -35,8 +35,13 @@ shared_ptr<SonarPlayerBase> SonarPlayerBase::OpenFile(const string &filename) {
     f.get(d);
 
     if (d == 0x45) {
+#ifdef WITH_GPMF
       LOG(INFO) << "I think this is an GPMF file.";
       return shared_ptr<SonarPlayerBase>(new GPMFSonarPlayer());
+#else
+      LOG(WARNING) << "I think this is a GPMF file, but GPMF support is not compiled in.";
+      return nullptr;
+#endif
     }
 
     LOG(INFO) << "I think this is an Oculus client file.";
@@ -129,6 +134,8 @@ std::shared_ptr<SimplePingResult> OculusSonarPlayer::nextPing() {
 
   return std::shared_ptr<SimplePingResult>(nullptr);
 }
+
+#ifdef WITH_GPMF
 
 //--- GPMFSonarPlayer --
 
@@ -260,5 +267,7 @@ std::shared_ptr<SimplePingResult> GPMFSonarPlayer::nextPing() {
 
   return std::shared_ptr<SimplePingResult>(new SimplePingResult(buffer));
 }
+
+#endif
 
 } // namespace liboculus

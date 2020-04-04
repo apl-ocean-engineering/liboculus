@@ -2,7 +2,10 @@
 
 #include <fstream>
 
-#include "gpmf-parser/GPMF_parser.h"
+#ifdef WITH_GPMF
+  #include "gpmf-parser/GPMF_parser.h"
+#endif
+
 #include "liboculus/SimplePingResult.h"
 
 namespace liboculus {
@@ -15,15 +18,18 @@ public:
   virtual bool open(const std::string &filename);
   virtual bool isOpen() const { return _input.is_open(); }
 
-  virtual bool setStream(GPMF_stream *stream) { return false; }
-
   virtual bool eof() const { return _input.eof(); }
   virtual void rewind() { _input.seekg(0); }
 
   virtual std::shared_ptr<SimplePingResult> nextPing() = 0;
 
   static std::shared_ptr<SonarPlayerBase> OpenFile(const std::string &filename);
+
+#ifdef WITH_GPMF
+  virtual bool setStream(GPMF_stream *stream) { return false; }
+
   static std::shared_ptr<SonarPlayerBase> createGPMFSonarPlayer();
+#endif
 
 protected:
   std::ifstream _input;
@@ -57,6 +63,7 @@ public:
 private:
 };
 
+#ifdef WITH_GPMF
 ///
 ///
 ///
@@ -84,5 +91,6 @@ private:
   bool _valid;
   std::string _buffer;
 };
+#endif
 
 } // namespace liboculus
