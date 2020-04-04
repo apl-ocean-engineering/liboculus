@@ -1,6 +1,8 @@
 
 # liboculus
 
+[![Build Status](https://github.drone.camhd.science/api/badges/apl-ocean-engineering/liboculus/status.svg)](https://github.drone.camhd.science/apl-ocean-engineering/liboculus)
+
 (No, sadly, not that kind of [Oculus](https://www.oculus.com/))
 
 This library contains code for:
