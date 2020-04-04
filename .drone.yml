@@ -25,6 +25,6 @@ steps:
     server: https://gitlab.drone.camhd.science
     fork: true
     token:
-      from_secret: drone_token
+      from_secret: gitlab_drone_token
     repositories:
       - apl-ocean-engineering/oculus_sonar_ros
