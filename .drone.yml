@@ -19,7 +19,7 @@ steps:
   environment:
     ROS_PACKAGES_TO_INSTALL: cv-bridge image-transport opencv-apps
 
-- name: trigger
+- name: trigger-gitlab-downstream
   image: plugins/downstream
   settings:
     server: https://gitlab.drone.camhd.science
@@ -28,3 +28,13 @@ steps:
       from_secret: gitlab_drone_token
     repositories:
       - apl-ocean-engineering/oculus_sonar_ros
+
+- name: trigger-github-downstream
+  image: plugins/downstream
+  settings:
+    server: https://github.drone.camhd.science
+    fork: true
+    token:
+      from_secret: github_drone_token
+    repositories:
+      - apl-ocean-engineering/serdp_player
