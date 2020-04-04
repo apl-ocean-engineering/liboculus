@@ -1,0 +1,30 @@
+kind: pipeline
+type: docker
+name: build
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+- name: build-fips
+  image: amarburg/lsdslam-dev-host
+  commands:
+    - ./fips build
+
+- name: build-ros-melodic
+  image: amarburg/drone-ci-melodic-ros-base
+  commands:
+    - wget -O- https://gitlab.com/amarburg/ros_drone_ci/-/raw/master/bootstrap.sh | /bin/bash
+  environment:
+    ROS_PACKAGES_TO_INSTALL: cv-bridge image-transport opencv-apps
+
+- name: trigger
+  image: plugins/downstream
+  settings:
+    server: https://gitlab.drone.camhd.science
+    fork: true
+    token:
+      from_secret: drone_token
+    repositories:
+      - apl-ocean-engineering/oculus_sonar_ros
