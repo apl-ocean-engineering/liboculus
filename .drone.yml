@@ -45,3 +45,11 @@ steps:
       from_secret: github_drone_token
     repositories:
       - apl-ocean-engineering/serdp_player
+
+- name: slack
+  image: plugins/slack
+  settings:
+    webhook:
+      from_secret: slack_webhook
+  when:
+    status: [ success, failure ]
