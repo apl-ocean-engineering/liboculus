@@ -74,4 +74,4 @@ streams of sonar packets, and can be opened by `oc_client`.
 
 ## License
 
-This code is released under the [BSD 3-clause license](LICENSE.md).
+This code is released under the [BSD 3-clause license](LICENSE).
