@@ -20,7 +20,7 @@ steps:
     - ./fips build
 
 - name: build-ros-melodic
-  image: amarburg/drone-ci-melodic-ros-base
+  image: amarburg/drone-ci-ros:melodic
   commands:
     - wget -O- https://gitlab.com/amarburg/ros_drone_ci/-/raw/master/bootstrap.sh | /bin/bash
   environment:
