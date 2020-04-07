@@ -16,7 +16,7 @@ steps:
 - name: build-fips-release
   image: amarburg/lsdslam-dev-host
   commands:
-    - ./fips set config linux-make-release
+    - ./fips set config linux-make-release-unittest
     - ./fips build
 
 - name: build-ros-melodic
@@ -25,6 +25,7 @@ steps:
     - wget -O- https://gitlab.com/amarburg/ros_drone_ci/-/raw/master/bootstrap.sh | /bin/bash
   environment:
     ROS_PACKAGES_TO_INSTALL: cv-bridge image-transport opencv-apps
+    WSTOOL_RECURSIVE: true
 
 - name: trigger-gitlab-downstream
   image: plugins/downstream
