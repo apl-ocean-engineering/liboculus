@@ -10,7 +10,7 @@ else()
 	find_package(catkin QUIET)
 endif()
 
-# == Code common to all buils =======================================
+# == Code common to all builds =======================================
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -63,7 +63,6 @@ else()
 
 	catkin_package(
 		CATKIN_DEPENDS active_object g3log_catkin
-		#CATKIN_DEPENDS
 		INCLUDE_DIRS include thirdparty
 		LIBRARIES liboculus_LIB
 	)
@@ -97,5 +96,20 @@ else()
 		DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 		FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
 	  PATTERN ".git" EXCLUDE)
+
+	if (CATKIN_ENABLE_TESTING)
+		add_definitions(-DTEST_DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/test/data")
+		include_directories( test/data/ )
+
+		file(GLOB oculus_test_SRCS
+			test/unit/*cpp
+		)
+	  catkin_add_gtest(oculus_test ${oculus_test_SRCS})
+
+	  target_link_libraries(oculus_test ${catkin_LIBRARIES}
+							liboculus_LIB
+							Boost::system )
+	endif()
+
 
 endif()
