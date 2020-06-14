@@ -1,4 +1,33 @@
-#pragma once
+/*
+ * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of University of Washington nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+ #pragma once
 
 #include <memory>
 #include <string.h>
@@ -9,6 +38,8 @@
 #include "Oculus/Oculus.h"
 
 #include "DataTypes.h"
+#include "ImageData.h"
+#include "BearingData.h"
 
 namespace liboculus {
 
@@ -17,18 +48,23 @@ using std::vector;
 
 class MessageBuffer {
 public:
-  MessageBuffer();
+  /// Default constructor creates a buffer large enough for an OculusMessageHeader
+  MessageBuffer( int reserve = sizeof(OculusMessageHeader) );
+
+  /// Alternative constructors which initialize from existing data
+  /// These take a copy of the data.
   MessageBuffer(const char *data, size_t len);
   MessageBuffer(const std::vector<char> &vec);
 
   ~MessageBuffer();
 
-  char *ptr();
+  char *ptr() { return _buf.data(); }
 
-  char *headerPtr() { return ptr(); }
+  const char *ptr() const { return _buf.data(); }
+  const char *headerPtr() { return ptr(); }
+
   char *payloadPtr();
-
-  char *dataPtr();
+  const char *payloadPtr() const;
 
   unsigned int size() const;
   unsigned int payloadSize() const;
@@ -39,14 +75,18 @@ protected:
   std::vector<char> _buf;
 };
 
+
 class MessageHeader {
 public:
   MessageHeader() = delete;
   MessageHeader(const MessageHeader &) = delete;
 
-  MessageHeader(const shared_ptr<MessageBuffer> &buffer) : _buffer(buffer) { ; }
+  MessageHeader(const shared_ptr<MessageBuffer> &buffer)
+    : _buffer(buffer) {
+    ;
+  }
 
-  virtual ~MessageHeader() { ; }
+  ~MessageHeader() { ; }
 
   // Convenience accessors
   OculusMessageType msgId() const {
@@ -79,126 +119,64 @@ public:
 
 protected:
   const OculusMessageHeader *hdr() const {
-    return reinterpret_cast<OculusMessageHeader *>(_buffer->headerPtr());
+    return reinterpret_cast<const OculusMessageHeader *>(_buffer->headerPtr());
   }
+
   std::shared_ptr<MessageBuffer> _buffer;
+
 };
 
-class BearingData {
-public:
-  BearingData() : _set(false) {}
-
-  // Returns bearing in degrees
-  float at(unsigned int i) const {
-    CHECK(i < _numBeams) << "Requested beam " << i << " out of range";
-
-    return _ptr[i] / 100.0;
-  }
-
-  void set(void *ptr, uint16_t numBeams) {
-    _set = true;
-
-    _ptr = (short *)ptr;
-    _numBeams = numBeams;
-
-    LOG(DEBUG) << "Loaded " << _numBeams << " bearings";
-
-    // for(unsigned int i = 0; i < _numBeams; ++i)
-    //   LOG(DEBUG) << i << " : " << _ptr[i];
-  }
-
-private:
-  bool _set;
-  short *_ptr;
-  uint16_t _numBeams;
-};
-
-class ImageData {
-public:
-  ImageData() : _ptr(nullptr) {}
-
-  // TODO.  Deal with non-8-bit data somehow
-  uint8_t at(unsigned int bearing, unsigned int range) const {
-    CHECK(_dataSz == 1) << "Sorry, can only handle 8-bit data right now";
-    if (_ptr == nullptr)
-      return 0;
-
-    // TODO range check
-    const unsigned int index = range * _numBeams + bearing;
-    CHECK(index < (unsigned int)(_numRanges * _numBeams));
-
-    return ((uint8_t *)_ptr)[range * _numBeams + bearing];
-  }
-
-  void set(void *ptr, uint16_t numRanges, uint16_t numBeams,
-           DataSizeType bytesPerDatum) {
-    _ptr = ptr;
-    _numRanges = numRanges;
-    _numBeams = numBeams;
-    _dataSz = SizeOfDataSize(bytesPerDatum);
-
-    LOG(DEBUG) << "Loaded " << _numRanges << " x " << _numBeams
-               << " imaging data";
-
-    // for(unsigned int i = 0; i < 10; ++i)
-    //    LOG(DEBUG) << i << " : " << std::hex <<
-    //    static_cast<uint16_t>(((uint8_t *)_ptr)[i]);
-  }
-
-private:
-  void *_ptr;
-  uint16_t _numRanges, _numBeams;
-  uint8_t _dataSz;
-};
 
 // A single OculusSimplePingResult (msg) is actually three nested structs:
 //   OculusMessageHeader     (as msg.fireMessage.head)
 //   OculusSimpleFireMessage (as msg.fireMessage)
 //   then the rest of OculusSimplePingResult
-class SimplePingResult : public MessageHeader {
+class SimplePingResult {
   friend class DataRx;
 
 public:
   SimplePingResult() = delete;
   SimplePingResult(const SimplePingResult &) = delete;
 
-  SimplePingResult(const shared_ptr<MessageBuffer> &buffer)
-      : MessageHeader(buffer), _bearings(), _image() {
+  SimplePingResult(const shared_ptr<MessageHeader> &header)
+      : _header(header), _bearings(), _image() {
     // TODO, this could be done through a constructor
-    _bearings.set(_buffer->ptr() + sizeof(OculusSimplePingResult),
-                  ping()->nBeams);
-    _image.set(_buffer->ptr() + ping()->imageOffset, ping()->nRanges,
-               ping()->nBeams, ping()->dataSize);
+    _bearings.set(buffer()->ptr() + sizeof(OculusSimplePingResult),
+                  oculusPing()->nBeams);
+    _image.set(buffer()->ptr() + oculusPing()->imageOffset, oculusPing()->nRanges,
+               oculusPing()->nBeams, oculusPing()->dataSize);
   }
 
-  virtual ~SimplePingResult() {}
+  ~SimplePingResult() {}
 
-  OculusSimplePingResult *ping() {
-    return reinterpret_cast<OculusSimplePingResult *>(_buffer->ptr());
-  }
-  const OculusSimplePingResult *ping() const {
-    return reinterpret_cast<const OculusSimplePingResult *>(_buffer->ptr());
+  // Unpack the contents
+  const shared_ptr<MessageBuffer> buffer( void ) const { return header()->buffer(); }
+  const shared_ptr<MessageHeader> header( void ) const { return _header; }
+
+  /// Cast back to the original Oculus API message(s)
+  // OculusSimplePingResult *oculusPing() {
+  //   return reinterpret_cast<OculusSimplePingResult *>(_buffer->ptr());
+  // }
+  const OculusSimpleFireMessage *oculusFireMsg() const {
+    return reinterpret_cast<const OculusSimpleFireMessage *>(buffer()->ptr());
   }
 
-  OculusSimpleFireMessage *fireMsg() {
-    return reinterpret_cast<OculusSimpleFireMessage *>(_buffer->ptr());
-  }
-  const OculusSimpleFireMessage *fireMsg() const {
-    return reinterpret_cast<const OculusSimpleFireMessage *>(_buffer->ptr());
+  const OculusSimplePingResult *oculusPing() const {
+    return reinterpret_cast<const OculusSimplePingResult *>(buffer()->ptr());
   }
 
   const BearingData &bearings() const { return _bearings; }
   const ImageData &image() const { return _image; }
 
   virtual bool valid() const {
-    if (!MessageHeader::valid())
+    if (!_header->valid())
       return false;
 
     size_t expectedImageSize =
-        SizeOfDataSize(ping()->dataSize) * ping()->nRanges * ping()->nBeams;
+        SizeOfDataSize(oculusPing()->dataSize) * oculusPing()->nRanges * oculusPing()->nBeams;
 
-    if (ping()->imageSize != expectedImageSize) {
-      LOG(WARNING) << "ImageSize size in header " << ping()->imageSize
+    if (oculusPing()->imageSize != expectedImageSize) {
+      LOG(WARNING) << "ImageSize size in header " << oculusPing()->imageSize
                    << " does not match expected data size of "
                    << expectedImageSize;
       return false;
@@ -210,36 +188,38 @@ public:
     //   expected message size of " << totalSize; return _valid;
     // }
 
-    CHECK(ping()->imageOffset > sizeof(OculusSimplePingResult));
+    CHECK(oculusPing()->imageOffset > sizeof(OculusSimplePingResult));
     return true;
   }
 
   void dump() const {
     LOG(DEBUG) << "--------------";
-    LOG(DEBUG) << "        Mode: " << fireMsg()->masterMode;
-    LOG(DEBUG) << "   Ping rate: " << fireMsg()->pingRate;
+    LOG(DEBUG) << "        Mode: " << oculusFireMsg()->masterMode;
+    LOG(DEBUG) << "   Ping rate: " << oculusFireMsg()->pingRate;
 
-    LOG(DEBUG) << "     Ping ID: " << ping()->pingId;
-    LOG(DEBUG) << "      Status: " << ping()->status;
-    LOG(DEBUG) << "   Ping start time: " << ping()->pingStartTime;
+    LOG(DEBUG) << "     Ping ID: " << oculusPing()->pingId;
+    LOG(DEBUG) << "      Status: " << oculusPing()->status;
+    LOG(DEBUG) << "   Ping start time: " << oculusPing()->pingStartTime;
 
-    LOG(DEBUG) << "   Frequency: " << ping()->frequency;
-    LOG(DEBUG) << " Temperature: " << ping()->temperature;
-    LOG(DEBUG) << "    Pressure: " << ping()->pressure;
-    LOG(DEBUG) << "Spd of Sound: " << ping()->speedOfSoundUsed;
-    LOG(DEBUG) << "   Range res: " << ping()->rangeResolution << " m";
+    LOG(DEBUG) << "   Frequency: " << oculusPing()->frequency;
+    LOG(DEBUG) << " Temperature: " << oculusPing()->temperature;
+    LOG(DEBUG) << "    Pressure: " << oculusPing()->pressure;
+    LOG(DEBUG) << "Spd of Sound: " << oculusPing()->speedOfSoundUsed;
+    LOG(DEBUG) << "   Range res: " << oculusPing()->rangeResolution << " m";
 
-    LOG(DEBUG) << "   Num range: " << ping()->nRanges;
-    LOG(DEBUG) << "   Num beams: " << ping()->nBeams;
+    LOG(DEBUG) << "   Num range: " << oculusPing()->nRanges;
+    LOG(DEBUG) << "   Num beams: " << oculusPing()->nBeams;
 
-    LOG(DEBUG) << "  Image size: " << ping()->imageSize;
-    LOG(DEBUG) << "Image offset: " << ping()->imageOffset;
-    LOG(DEBUG) << "   Data size: " << DataSizeToString(ping()->dataSize);
-    LOG(DEBUG) << "Message size: " << ping()->messageSize;
+    LOG(DEBUG) << "  Image size: " << oculusPing()->imageSize;
+    LOG(DEBUG) << "Image offset: " << oculusPing()->imageOffset;
+    LOG(DEBUG) << "   Data size: " << DataSizeToString(oculusPing()->dataSize);
+    LOG(DEBUG) << "Message size: " << oculusPing()->messageSize;
     LOG(DEBUG) << "--------------";
   }
 
 private:
+  shared_ptr<MessageHeader> _header;
+
   // Objects which overlay _data for interpretation
   BearingData _bearings;
   ImageData _image;

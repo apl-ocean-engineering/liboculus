@@ -29,36 +29,36 @@
 
 #pragma once
 
-#include <boost/asio.hpp>
-
-#include "Oculus/Oculus.h"
 
 namespace liboculus {
 
+  class BearingData {
+  public:
+    BearingData() : _set(false) {}
 
-// OO wrapper around OculusSimpleFireMessage
-class SimpleFireMessage {
-public:
-  SimpleFireMessage();
+    // Returns bearing in degrees
+    float at(unsigned int i) const {
+      CHECK(i < _numBeams) << "Requested beam " << i << " out of range";
 
-  void serializeTo( boost::asio::streambuf &buffer );
+      return _ptr[i] / 100.0;
+    }
 
-  void setGamma(double input);
+    void set(void *ptr, uint16_t numBeams) {
+      _set = true;
 
-  void setPingRate(double input);
+      _ptr = (short *)ptr;
+      _numBeams = numBeams;
 
-  void setGainPercent(double input);
+      LOG(DEBUG) << "Loaded " << _numBeams << " bearings";
 
-  void setRange(double input);
+      // for(unsigned int i = 0; i < _numBeams; ++i)
+      //   LOG(DEBUG) << i << " : " << _ptr[i];
+    }
 
-  void setWaterTemperature( double degC );
-
-  void setMasterMode(double input);
-
-private:
-
-  OculusSimpleFireMessage _sfm;
-
-};
-
+  private:
+    bool _set;
+    short *_ptr;
+    uint16_t _numBeams;
+  };
+  
 }

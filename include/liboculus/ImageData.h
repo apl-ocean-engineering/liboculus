@@ -29,36 +29,45 @@
 
 #pragma once
 
-#include <boost/asio.hpp>
-
-#include "Oculus/Oculus.h"
 
 namespace liboculus {
 
+  class ImageData {
+  public:
+    ImageData() : _ptr(nullptr) {}
 
-// OO wrapper around OculusSimpleFireMessage
-class SimpleFireMessage {
-public:
-  SimpleFireMessage();
+    // TODO.  Deal with non-8-bit data somehow
+    uint8_t at(unsigned int bearing, unsigned int range) const {
+      CHECK(_dataSz == 1) << "Sorry, can only handle 8-bit data right now";
+      if (_ptr == nullptr)
+        return 0;
 
-  void serializeTo( boost::asio::streambuf &buffer );
+      // TODO range check
+      const unsigned int index = range * _numBeams + bearing;
+      CHECK(index < (unsigned int)(_numRanges * _numBeams));
 
-  void setGamma(double input);
+      return ((uint8_t *)_ptr)[range * _numBeams + bearing];
+    }
 
-  void setPingRate(double input);
+    void set(void *ptr, uint16_t numRanges, uint16_t numBeams,
+             DataSizeType bytesPerDatum) {
+      _ptr = ptr;
+      _numRanges = numRanges;
+      _numBeams = numBeams;
+      _dataSz = SizeOfDataSize(bytesPerDatum);
 
-  void setGainPercent(double input);
+      LOG(DEBUG) << "Loaded " << _numRanges << " x " << _numBeams
+                 << " imaging data";
 
-  void setRange(double input);
+      // for(unsigned int i = 0; i < 10; ++i)
+      //    LOG(DEBUG) << i << " : " << std::hex <<
+      //    static_cast<uint16_t>(((uint8_t *)_ptr)[i]);
+    }
 
-  void setWaterTemperature( double degC );
-
-  void setMasterMode(double input);
-
-private:
-
-  OculusSimpleFireMessage _sfm;
-
-};
+  private:
+    void *_ptr;
+    uint16_t _numRanges, _numBeams;
+    uint8_t _dataSz;
+  };
 
 }

@@ -1,3 +1,31 @@
+/*
+ * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of University of Washington nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #include <fstream>
 #include <iostream>
@@ -87,6 +115,7 @@ std::shared_ptr<MessageBuffer> RawSonarPlayer::nextPacket() {
   std::shared_ptr<MessageBuffer> buffer(new MessageBuffer());
   _input.read(buffer->ptr(), sizeof(OculusMessageHeader));
 
+  // Promote buffer to MessageHeader
   MessageHeader header(buffer);
   if (!header.valid()) {
     LOG(WARNING) << "Incoming header invalid";
@@ -98,7 +127,7 @@ std::shared_ptr<MessageBuffer> RawSonarPlayer::nextPacket() {
   // char *data = new char[sizeof(OculusMessageHeader) +
   // header.hdr.payloadSize]; memcpy( data, (void *)&(header.hdr),
   // sizeof(OculusMessageHeader) );
-  _input.read(buffer->dataPtr(), buffer->payloadSize());
+  _input.read(buffer->ptr(), buffer->payloadSize());
 
   return buffer;
 }
@@ -107,13 +136,13 @@ std::shared_ptr<SimplePingResult> RawSonarPlayer::nextPing() {
   shared_ptr<MessageBuffer> data;
   while (bool(data = nextPacket())) {
 
-    MessageHeader header(data);
+    std::shared_ptr<MessageHeader> header( new MessageHeader(data) );
 
-    if (header.msgId() == messageSimplePingResult) {
-      return std::shared_ptr<SimplePingResult>(new SimplePingResult(data));
+    if (header->msgId() == messageSimplePingResult) {
+      return std::shared_ptr<SimplePingResult>(new SimplePingResult(header));
     } else {
       LOG(DEBUG) << "Skipping message of type "
-                 << MessageTypeToString(header.msgId());
+                 << MessageTypeToString(header->msgId());
     }
   }
 
@@ -253,8 +282,8 @@ std::shared_ptr<SimplePingResult> GPMFSonarPlayer::nextPing() {
   // char *data = (char *)GPMF_RawData(&_stream);
   // CHECK(data != nullptr);
 
-  MessageHeader header(buffer);
-  if (!header.valid()) {
+  shared_ptr<MessageHeader> header( new MessageHeader(buffer) );
+  if (!header->valid()) {
     LOG(INFO) << "Invalid header";
     return std::shared_ptr<SimplePingResult>(nullptr);
   }
@@ -265,7 +294,7 @@ std::shared_ptr<SimplePingResult> GPMFSonarPlayer::nextPing() {
     _valid = false;
   }
 
-  return std::shared_ptr<SimplePingResult>(new SimplePingResult(buffer));
+  return std::shared_ptr<SimplePingResult>(new SimplePingResult(header));
 }
 
 #endif
