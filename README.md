@@ -7,7 +7,7 @@
 
 This library contains code for:
 
-  - Communicating with a [Blueprint Subsea Oculus](https://www.blueprintsubsea.com/oculus/index.php) multibeam sonar over
+  - Communicating with a [Blueprint Subsea Oculus](https://www.blueprintsubsea.com/oculus/index.php) imaging sonar over
     its ethernet interface.
 
   - Decoding and parsing fields from the resulting ping messages.
@@ -15,23 +15,30 @@ This library contains code for:
   - Loading and parsing sonar data stored as either:
     - Raw streams of binary packets.
     - Data encoded in the GPMF format by `serdp_recorder`
-    - (A scaffold exists for reading files saved by the Oculus client, but it receives sonar data in an undocumented ping format).
+    - (A scaffold exists for reading files saved by GUI provided by Oculus,
+      but it receives sonar data in an undocumented ping format).
 
 The library contains no special provisions for _saving_ sonar data,
 but it's straightforward to write packets as a raw binary stream
-(which the library can read).
+(which the library can read) -- see `tools/oculus_client.cpp` for an example.
 
-We use the [fips](http://floooh.github.io/fips/) C++
-dependency management tool, so this library is based on fips,
+This is a hybrid repository:
+
+* The native build mechanism is the
+[fips](http://floooh.github.io/fips/) C++
+dependency management tool,
 however we hope the code is still useful for others looking to
 talk to the Oculus.
+
+* This repo will also build in ROS / Catkin.  The `.rosinstall` file at the top
+level will work with `wstool` to install dependencies.
 
 The code has a few dependencies:
 
   - [libactiveobject](https://github.com/apl-ocean-engineering/libbinlogger) is our internal collection of thread synchronization classes.
   - [libg3logger](https://github.com/apl-ocean-engineering/libg3logger) is our version of [g3log](https://github.com/apl-ocean-engineering/libg3logger) which is used for async logging.
 
-Both of these dependencies are handled by fips.
+Both of these dependencies are handled by fips / wstool.
 
 The (optional) test suite also requires Googletest and the (also optional)
 binary `oc_client` requires [CLI11](https://github.com/CLIUtils/CLI11),
@@ -52,7 +59,7 @@ The repo contains one binary, `oc_client` which can read data either from a
 real Oculus sonar via ethernet, or from a file containing raw Ethernet
 data, or in our GPMF-based data format.   As above, it can't actually read
 files saved by the Oculus client as it saves a ping message format for which
-we don't have the data structure.
+we don't have the data format.
 
 Here's the help string for `oc_client`:
 
@@ -75,4 +82,3 @@ streams of sonar packets, and can be opened by `oc_client`.
 ## License
 
 This code is released under the [BSD 3-clause license](LICENSE).
-
