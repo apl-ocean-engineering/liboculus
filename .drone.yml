@@ -7,18 +7,22 @@ platform:
   arch: amd64
 
 steps:
+
+## Run the fips (debug) unittest endpoint
 - name: build-fips-unittest
   image: amarburg/lsdslam-dev-host
   commands:
     - ./fips set config linux-make-unittest
     - ./fips build
 
+## Run the release inittest endpoint
 - name: build-fips-release
   image: amarburg/lsdslam-dev-host
   commands:
     - ./fips set config linux-make-release-unittest
     - ./fips build
 
+## Build with ROS melodic
 - name: build-ros-melodic
   image: amarburg/drone-ci-ros:melodic
   commands:
@@ -27,6 +31,7 @@ steps:
     ROS_PACKAGES_TO_INSTALL: cv-bridge image-transport opencv-apps
     WSTOOL_RECURSIVE: true
 
+## On success, trigger a rebuild of oculus_sonar_ros
 - name: trigger-gitlab-downstream
   image: plugins/downstream
   settings:
@@ -37,6 +42,7 @@ steps:
     repositories:
       - apl-ocean-engineering/oculus_sonar_ros
 
+## _and_ serdp_player
 - name: trigger-github-downstream
   image: plugins/downstream
   settings:
