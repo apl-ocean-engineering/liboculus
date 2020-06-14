@@ -15,7 +15,7 @@ TEST(SimpleFireMessage, serialize) {
 
   boost::asio::streambuf b;
 
-  msg.serialize(b);
+  msg.serializeTo(b);
 
   ASSERT_EQ( b.size(), sizeof(OculusSimpleFireMessage) );
 

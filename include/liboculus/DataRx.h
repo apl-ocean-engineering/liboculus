@@ -44,8 +44,6 @@ namespace liboculus {
 // ----------------------------------------------------------------------------
 // DataRx - a state machine for receiving sonar data over the network
 
-// TODO.   Currently, the queue depth is fixed at 20.   Template?
-
 class DataRx
 {
 public:
@@ -99,27 +97,28 @@ private:
 
 };
 
-class DataRxQueued : public DataRx {
-public:
-  typedef active_object::bounded_shared_queue< shared_ptr<SimplePingResult>, 20 > Queue;
-
-  DataRxQueued(boost::asio::io_service &context, uint32_t ip,
-              const SimpleFireMessage &fire = SimpleFireMessage() );
-
-  DataRxQueued(boost::asio::io_service &context, const boost::asio::ip::address &addr,
-              const SimpleFireMessage &fire = SimpleFireMessage() );
-
-  virtual ~DataRxQueued();
-
-  Queue &queue() { return _queue; }
-
-  void enqueuePing( const shared_ptr<SimplePingResult> &ping );
-
-private:
-
-  Queue _queue;
-
-};
+// This is the old API which relied on a shared queue rather than a callback
+// class DataRxQueued : public DataRx {
+// public:
+//   typedef active_object::bounded_shared_queue< shared_ptr<SimplePingResult>, 20 > Queue;
+//
+//   DataRxQueued(boost::asio::io_service &context, uint32_t ip,
+//               const SimpleFireMessage &fire = SimpleFireMessage() );
+//
+//   DataRxQueued(boost::asio::io_service &context, const boost::asio::ip::address &addr,
+//               const SimpleFireMessage &fire = SimpleFireMessage() );
+//
+//   virtual ~DataRxQueued();
+//
+//   Queue &queue() { return _queue; }
+//
+//   void enqueuePing( const shared_ptr<SimplePingResult> &ping );
+//
+// private:
+//
+//   Queue _queue;
+//
+// };
 
 
 }

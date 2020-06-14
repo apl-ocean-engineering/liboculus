@@ -12,7 +12,7 @@ class SimpleFireMessage {
 public:
   SimpleFireMessage();
 
-  void serialize( boost::asio::streambuf &buffer );
+  void serializeTo( boost::asio::streambuf &buffer );
 
   void setGamma(double input);
 
@@ -21,6 +21,8 @@ public:
   void setGainPercent(double input);
 
   void setRange(double input);
+
+  void setWaterTemperature( double degC );
 
   void setMasterMode(double input);
 

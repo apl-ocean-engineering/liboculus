@@ -50,7 +50,7 @@ namespace liboculus {
     _sfm.flags          =  0x19; // Send simple return msg; range in meters
 
     _sfm.speedOfSound    = 0.0;  // m/s  0 for automatic calculation speedOfSound;
-    _sfm.salinity        = 0.0;  // ppt; Freshwater salinity;
+    _sfm.salinity        = 0.0;  // ppt; salinity;
   }
 
   // need to integrate flags into dyanmic reconfig
@@ -91,7 +91,7 @@ namespace liboculus {
     }
   }
 
-  void SimpleFireMessage::serialize( boost::asio::streambuf &stream )
+  void SimpleFireMessage::serializeTo( boost::asio::streambuf &stream )
   {
     stream.sputn( (char *)&_sfm, sizeof(OculusSimpleFireMessage));
   }

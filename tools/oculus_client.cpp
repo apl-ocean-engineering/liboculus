@@ -23,12 +23,14 @@ using std::ios_base;
 
 int playbackSonarFile( const std::string &filename, ofstream &output, int stopAfter = -1 );
 
-// Make this global so signal handler can access it
+// Make these global so signal handler can access it
 std::unique_ptr< SonarClient > _client;
+bool doStop = false;
 
 // Catch signals
 void signalHandler( int signo ) {
   if( _client ) _client->stop();
+  doStop = true;
 }
 
 int main( int argc, char **argv ) {
@@ -41,7 +43,7 @@ int main( int argc, char **argv ) {
   app.add_flag("-v,--verbose", verbosity, "Additional output (use -vv for even more!)");
 
   string ipAddr("auto");
-  app.add_option("--ip", ipAddr, "IP address of sonar or \"auto\" to automatically detect.");
+  app.add_option("ip", ipAddr, "IP address of sonar or \"auto\" to automatically detect.");
 
   string outputFilename("");
   app.add_option("-o,--output", outputFilename, "Saves raw sonar data to specified file.");
@@ -56,9 +58,9 @@ int main( int argc, char **argv ) {
   CLI11_PARSE(app, argc, argv);
 
   if( verbosity == 1 ) {
-    logger.stderrHandle->call( &ColorStderrSink::setThreshold, INFO );
+    logger.setLevel( INFO );
   } else if (verbosity > 1 ) {
-    logger.stderrHandle->call( &ColorStderrSink::setThreshold, DEBUG );
+    logger.setLevel( DEBUG );
   }
 
   ofstream output;
@@ -78,20 +80,23 @@ int main( int argc, char **argv ) {
      return 0;
    }
 
-   //signal(SIGHUP, signalHandler );
-
   int count = 0;
+
+  signal(SIGHUP, signalHandler );
 
   LOG(DEBUG) << "Starting loop";
 
   _client.reset( new SonarClient(ipAddr) );
 
   _client->setDataRxCallback( [&]( const shared_ptr<SimplePingResult> &ping ) {
-      // Do something
-    auto valid = ping->valid();
-    LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
 
-    if( !valid ) return;
+    auto valid = ping->valid();
+    //LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
+
+    if( !valid ) {
+      LOG(DEBUG) << "Got invalid ping";
+      return;
+    }
 
     ping->dump();
 
@@ -102,9 +107,22 @@ int main( int argc, char **argv ) {
 
     count++;
     if( (stopAfter>0) && (count >= stopAfter)) _client->stop();
+
   });
 
   _client->start();
+
+  // Imprecise statistic for now...
+  int lastCount = 0;
+  while( !doStop ) {
+    auto c = count;
+
+    LOG(INFO) << "Received pings at " << c-lastCount << " Hz";
+
+    lastCount = c;
+    sleep(1);
+  }
+
   _client->join();
 
   if( output.is_open() ) output.close();

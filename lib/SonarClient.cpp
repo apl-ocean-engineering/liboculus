@@ -47,7 +47,6 @@ namespace liboculus {
   void SonarClient::receiveStatus( const SonarStatus &status ) {
     if( _dataRx.connected() ) return;
 
-    /// Todo.  Change this to a callback...
     // Attempt auto detection
     if( status.valid() ) {
       auto addr( status.ipAddr() );
@@ -55,5 +54,6 @@ namespace liboculus {
       _dataRx.connect( addr );
     }
   }
+
 
 }

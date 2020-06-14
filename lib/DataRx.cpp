@@ -94,6 +94,7 @@ namespace liboculus {
 
     LOG(DEBUG) << "Connecting to sonar at " << sonarEndpoint;
 
+    // Schedule the first async_io connect task
     _socket.async_connect( sonarEndpoint, boost::bind(&DataRx::onConnect, this, _1) );
   }
 
@@ -126,7 +127,7 @@ namespace liboculus {
     if( !ec ) {
       boost::asio::streambuf msg;
 
-      _fireMessage.serialize(msg);
+      _fireMessage.serializeTo(msg);
 
       auto result = _socket.send( msg.data() );
       LOG(DEBUG) << "Sent " << result << " bytes to sonar";
@@ -141,8 +142,9 @@ namespace liboculus {
   void DataRx::updateFireMessage( const SimpleFireMessage &msg ) {
     _fireMessage = msg;
 
+    // Send it out immediately
     boost::asio::streambuf buf;
-    _fireMessage.serialize(buf);
+    _fireMessage.serializeTo(buf);
     auto result = _socket.send( buf.data() );
     LOG(DEBUG) << "Sent " << result << " bytes to sonar";
   }
@@ -294,28 +296,28 @@ namespace liboculus {
 
 //=====================================================================
 
-  DataRxQueued::DataRxQueued(boost::asio::io_service &context, uint32_t ip,
-              const SimpleFireMessage &fire )
-    : DataRx( context, ip, fire ),
-      _queue()
-    {
-      setCallback( std::bind( &DataRxQueued::enqueuePing, this, std::placeholders::_1 ));
-    }
-
-  DataRxQueued::DataRxQueued(boost::asio::io_service &context,
-              const boost::asio::ip::address &addr,
-              const SimpleFireMessage &fire )
-    : DataRx( context, addr, fire ),
-      _queue()
-    {
-      setCallback( std::bind( &DataRxQueued::enqueuePing, this, std::placeholders::_1 ));
-    }
-
-  DataRxQueued::~DataRxQueued()
-  {;}
-
-  void DataRxQueued::enqueuePing( const shared_ptr<SimplePingResult> &ping ) {
-    _queue.push( ping );
-  }
+  // DataRxQueued::DataRxQueued(boost::asio::io_service &context, uint32_t ip,
+  //             const SimpleFireMessage &fire )
+  //   : DataRx( context, ip, fire ),
+  //     _queue()
+  //   {
+  //     setCallback( std::bind( &DataRxQueued::enqueuePing, this, std::placeholders::_1 ));
+  //   }
+  //
+  // DataRxQueued::DataRxQueued(boost::asio::io_service &context,
+  //             const boost::asio::ip::address &addr,
+  //             const SimpleFireMessage &fire )
+  //   : DataRx( context, addr, fire ),
+  //     _queue()
+  //   {
+  //     setCallback( std::bind( &DataRxQueued::enqueuePing, this, std::placeholders::_1 ));
+  //   }
+  //
+  // DataRxQueued::~DataRxQueued()
+  // {;}
+  //
+  // void DataRxQueued::enqueuePing( const shared_ptr<SimplePingResult> &ping ) {
+  //   _queue.push( ping );
+  // }
 
 }
