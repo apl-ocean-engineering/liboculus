@@ -29,12 +29,14 @@
 
 #include <boost/asio.hpp>
 
-#include "liboculus/SimpleFireMessage.h"
+#include "liboculus/SonarConfiguration.h"
 
 
 namespace liboculus {
 
-  SimpleFireMessage::SimpleFireMessage()
+  SonarConfiguration::SonarConfiguration()
+    : _postponeCallback( false ),
+      _callback()
   {
     memset( &_sfm, 0, sizeof(OculusSimpleFireMessage));
 
@@ -59,7 +61,7 @@ namespace liboculus {
     // double speedOfSound;          // ms-1, if set to zero then internal calc will apply using salinity
     // double salinity;              // ppt, set to zero if we are in fresh water
 
-    _sfm.masterMode      = 2;
+    _sfm.masterMode      = OCULUS_HIGH_FREQ;
 
     _sfm.networkSpeed = 0xff;
 
@@ -77,48 +79,62 @@ namespace liboculus {
     _sfm.flags          =  0x19; // Send simple return msg; range in meters
 
     _sfm.speedOfSound    = 0.0;  // m/s  0 for automatic calculation speedOfSound;
-    _sfm.salinity        = 0.0;  // ppt; salinity;
+    _sfm.salinity        = 0.0;  // ppt; freshwater salinity;
+  }
+
+  void SonarConfiguration::postponeCallback( void ) {
+    _postponeCallback = true;
+  }
+
+  void SonarConfiguration::sendCallback( void ) {
+    _postponeCallback = false;
+    triggerCallback();
   }
 
   // need to integrate flags into dyanmic reconfig
 
-  void SimpleFireMessage::setRange(double input)
+  void SonarConfiguration::setRange(double input)
   {
     // 40 meters is the max range for the 1200d model
     // may need to use a double instead of uint8_t (depends on flags)
     if (input <= 40 && input > 0) {
       _sfm.range = input;
     }
+
+    triggerCallback();
   }
 
-  void SimpleFireMessage::setGainPercent(double input)
+  void SonarConfiguration::setGainPercent(double input)
   {
     if (input <= 100 && input > 0) {
       _sfm.gainPercent = input;
     }
+
+    triggerCallback();
   }
 
-  void SimpleFireMessage::setGamma(double input)
+  void SonarConfiguration::setGamma(double input)
   {
     if (input <= 127 && input > 0) {
       _sfm.gammaCorrection = input;
     }
+
+    triggerCallback();
   }
 
-  void SimpleFireMessage::setPingRate(double input)
+  void SonarConfiguration::setPingRate(PingRateType newRate)
   {
-    PingRateType newRate = PingRateType(input);
     _sfm.pingRate = newRate;
+    triggerCallback();
   }
 
-  void SimpleFireMessage::setMasterMode(double input)
+  void SonarConfiguration::setFreqMode(OculusFreqMode input)
   {
-    if (input == 1 || input == 2) {
-      _sfm.masterMode = input;
-    }
+    _sfm.masterMode = input;
+    triggerCallback();
   }
 
-  void SimpleFireMessage::serializeTo( boost::asio::streambuf &stream )
+  void SonarConfiguration::serializeTo( boost::asio::streambuf &stream ) const
   {
     stream.sputn( (char *)&_sfm, sizeof(OculusSimpleFireMessage));
   }

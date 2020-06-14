@@ -39,7 +39,7 @@
 #include "Oculus/Oculus.h"
 
 #include "SimplePingResult.h"
-#include "SimpleFireMessage.h"
+#include "SonarConfiguration.h"
 
 namespace liboculus {
 
@@ -49,82 +49,73 @@ namespace liboculus {
 // ----------------------------------------------------------------------------
 // DataRx - a state machine for receiving sonar data over the network
 
-class DataRx
-{
+class DataRx {
 public:
 
   // n.b. takes IP in __NETWORK__ byte order
-  DataRx(boost::asio::io_service &context, const SimpleFireMessage &fire = SimpleFireMessage() );
+  DataRx(boost::asio::io_service &context );
 
   DataRx(boost::asio::io_service &context, uint32_t ip,
-              const SimpleFireMessage &fire = SimpleFireMessage() );
+               SonarConfiguration &config );
 
   DataRx(boost::asio::io_service &context, const boost::asio::ip::address &addr,
-              const SimpleFireMessage &fire = SimpleFireMessage() );
+               SonarConfiguration &config );
 
   virtual ~DataRx();
 
-  void connect( uint32_t ip );
-  void connect( const boost::asio::ip::address &addr );
+  void connect( uint32_t ip,  SonarConfiguration &config );
+  void connect( const boost::asio::ip::address &addr,  SonarConfiguration &config );
 
   bool connected() const { return _socket.is_open(); }
 
-  SimpleFireMessage fireMessage() { return _fireMessage; }
-  void updateFireMessage( const SimpleFireMessage &msg );
-
   typedef std::function< void( const shared_ptr<SimplePingResult> & ) > SimplePingCallback;
   void setCallback( SimplePingCallback callback );
-
 private:
 
 
-  void onConnect(const boost::system::error_code& error);
+  void onConnect(const boost::system::error_code& error, SonarConfiguration &config);
 
-  void scheduleWrite();
-  void writeHandler(const boost::system::error_code& ec );
+  // void scheduleWrite();
+  // void writeHandler(const boost::system::error_code& ec );
 
   void scheduleHeaderRead();
   void readHeader( const shared_ptr<MessageBuffer> &buffer, const boost::system::error_code& ec, std::size_t bytes_transferred );
   void readSimplePingResult( const shared_ptr<MessageBuffer> &buffer, const boost::system::error_code& ec, std::size_t bytes_transferred );
 
+  void onSonarConfigurationChanged( const SonarConfiguration &config );
 
   boost::asio::io_service  &_ioService;
   tcp::socket _socket;
 
-  boost::asio::steady_timer _writeTimer;
-
-  // Configuration data out to sonar
-  SimpleFireMessage _fireMessage;
+//  boost::asio::steady_timer _writeTimer;
 
   SimplePingCallback _simplePingCallback;
-
-  void defaultSimplePingCallback(  const shared_ptr<SimplePingResult> & ) {;}
 
 };
 
 //===================================================================
 // This is the old API which relied on a shared queue rather than a callback
-class DataRxQueued : public DataRx {
-public:
-  typedef active_object::bounded_shared_queue< shared_ptr<SimplePingResult>, 20 > Queue;
-
-  DataRxQueued(boost::asio::io_service &context, uint32_t ip,
-              const SimpleFireMessage &fire = SimpleFireMessage() );
-
-  DataRxQueued(boost::asio::io_service &context, const boost::asio::ip::address &addr,
-              const SimpleFireMessage &fire = SimpleFireMessage() );
-
-  virtual ~DataRxQueued();
-
-  Queue &queue() { return _queue; }
-
-  void enqueuePing( const shared_ptr<SimplePingResult> &ping );
-
-private:
-
-  Queue _queue;
-
-};
+// class DataRxQueued : public DataRx {
+// public:
+//   typedef active_object::bounded_shared_queue< shared_ptr<SimplePingResult>, 20 > Queue;
+//
+//   DataRxQueued(boost::asio::io_service &context, uint32_t ip,
+//               const SonarConfiguration &fire = SonarConfiguration() );
+//
+//   DataRxQueued(boost::asio::io_service &context, const boost::asio::ip::address &addr,
+//               const SonarConfiguration &fire = SonarConfiguration() );
+//
+//   virtual ~DataRxQueued();
+//
+//   Queue &queue() { return _queue; }
+//
+//   void enqueuePing( const shared_ptr<SimplePingResult> &ping );
+//
+// private:
+//
+//   Queue _queue;
+//
+// };
 
 
 }

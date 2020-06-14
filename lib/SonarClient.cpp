@@ -32,10 +32,11 @@
 namespace liboculus {
 
 
-  SonarClient::SonarClient( const std::string &ipAddr )
+  SonarClient::SonarClient( SonarConfiguration &config, const std::string &ipAddr )
       : _ioSrv(),
       _statusRx( _ioSrv.service() ),
-      _dataRx( _ioSrv.service() )
+      _dataRx( _ioSrv.service() ),
+      _config( config )
   {
 
     _statusRx.setCallback( std::bind( &SonarClient::receiveStatus, this, std::placeholders::_1 ));
@@ -45,7 +46,7 @@ namespace liboculus {
       auto addr( boost::asio::ip::address_v4::from_string( ipAddr ) );
 
       LOG_IF(FATAL,addr.is_unspecified()) << "Couldn't parse IP address" << ipAddr;
-      _dataRx.connect( addr );
+      _dataRx.connect( addr, _config );
     }
 
   }
@@ -77,12 +78,8 @@ namespace liboculus {
     if( status.valid() ) {
       auto addr( status.ipAddr() );
       LOG(INFO) << "Using sonar detected at " << addr;
-      _dataRx.connect( addr );
+      _dataRx.connect( addr, _config );
     }
-  }
-
-  void SonarClient::updateFireMessage( const SimpleFireMessage &msg ) {
-      _dataRx.updateFireMessage( msg );
   }
 
 }

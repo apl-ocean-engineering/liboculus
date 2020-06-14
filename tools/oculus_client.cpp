@@ -75,6 +75,7 @@ int main( int argc, char **argv ) {
     }
   }
 
+  // If playing back an input file, run a different main loop ...
   if( !inputFilename.empty() ) {
      playbackSonarFile( inputFilename, output, stopAfter );
      return 0;
@@ -86,7 +87,9 @@ int main( int argc, char **argv ) {
 
   LOG(DEBUG) << "Starting loop";
 
-  _client.reset( new SonarClient(ipAddr) );
+  SonarConfiguration config;
+
+  _client.reset( new SonarClient(config, ipAddr) );
 
   _client->setDataRxCallback( [&]( const shared_ptr<SimplePingResult> &ping ) {
 

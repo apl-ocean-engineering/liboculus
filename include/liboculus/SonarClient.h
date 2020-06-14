@@ -40,7 +40,7 @@ namespace liboculus {
   class SonarClient {
   public:
 
-    SonarClient( const std::string &ipAddr = "" );
+    SonarClient( SonarConfiguration &config, const std::string &ipAddr = "" );
 
     ~SonarClient();
 
@@ -48,7 +48,8 @@ namespace liboculus {
     void join();
     void stop();
 
-    void updateFireMessage( const SimpleFireMessage &msg );
+    void updateConfiguration( const SonarConfiguration &msg );
+    const SonarConfiguration &configuration() const;
 
     // Simple passthrough
     void setDataRxCallback( DataRx::SimplePingCallback callback )
@@ -65,6 +66,9 @@ namespace liboculus {
     IoServiceThread _ioSrv;
     StatusRx _statusRx;
     DataRx _dataRx;
+
+    // unfortunately, need to have a copy when receiveStatus is called...
+    SonarConfiguration &_config;
 
   };
 

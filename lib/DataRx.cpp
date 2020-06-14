@@ -45,33 +45,28 @@ namespace liboculus {
   // ----------------------------------------------------------------------------
   // DataRx - a listening socket for oculus status messages
 
-  DataRx::DataRx(boost::asio::io_service &context, const SimpleFireMessage &fire )
+  DataRx::DataRx(boost::asio::io_service &context )
     : _ioService(context),
       _socket(_ioService),
-      _writeTimer(_ioService),
-      _fireMessage(fire),
-      _simplePingCallback( std::bind( &DataRx::defaultSimplePingCallback, this, std::placeholders::_1  ))
+      _simplePingCallback()
     {
+      ;
     }
 
-  DataRx::DataRx(boost::asio::io_service &context, uint32_t ip, const SimpleFireMessage &fire )
+  DataRx::DataRx(boost::asio::io_service &context, uint32_t ip,  SonarConfiguration &config )
     : _ioService(context),
       _socket(_ioService),
-      _writeTimer(_ioService),
-      _fireMessage(fire),
-      _simplePingCallback( std::bind( &DataRx::defaultSimplePingCallback, this, std::placeholders::_1  ))
+      _simplePingCallback()
     {
-      connect(boost::asio::ip::address_v4( ip ));
+      connect( boost::asio::ip::address_v4( ip ), config);
     }
 
-  DataRx::DataRx(boost::asio::io_service &context, const boost::asio::ip::address &addr, const SimpleFireMessage &fire )
+  DataRx::DataRx(boost::asio::io_service &context, const boost::asio::ip::address &addr,  SonarConfiguration &config )
     : _ioService(context),
       _socket(_ioService),
-      _writeTimer(_ioService),
-      _fireMessage(fire),
-      _simplePingCallback( std::bind( &DataRx::defaultSimplePingCallback, this, std::placeholders::_1  ))
+      _simplePingCallback()
   {
-    connect( addr );
+    connect( addr, config );
   }
 
   DataRx::~DataRx()
@@ -82,12 +77,11 @@ namespace liboculus {
     _simplePingCallback = callback;
   }
 
-  void DataRx::connect( uint32_t ip )
-  {
-    connect(boost::asio::ip::address_v4( ip ));
+  void DataRx::connect( uint32_t ip,  SonarConfiguration &config ) {
+    connect(boost::asio::ip::address_v4( ip ), config);
   }
 
-  void DataRx::connect(const boost::asio::ip::address &addr)
+  void DataRx::connect(const boost::asio::ip::address &addr,  SonarConfiguration &config)
   {
     //
     if( connected() ) return;
@@ -99,18 +93,22 @@ namespace liboculus {
 
     LOG(DEBUG) << "Connecting to sonar at " << sonarEndpoint;
 
+    config.setCallback( std::bind( &DataRx::onSonarConfigurationChanged, this, std::placeholders::_1 ));
+
     // Schedule the first async_io connect task
-    _socket.async_connect( sonarEndpoint, boost::bind(&DataRx::onConnect, this, _1) );
+    _socket.async_connect( sonarEndpoint, boost::bind(&DataRx::onConnect, this, _1, config ) );
   }
 
 
-  void DataRx::onConnect(const boost::system::error_code& ec)
-  {
+  void DataRx::onConnect(const boost::system::error_code& ec, SonarConfiguration &config ) {
     if (!ec) {
       scheduleHeaderRead();
 
-      // Send one SimpleFireMessage immediately.
-      writeHandler( ec );
+      // Send one SonarConfiguration immediately.
+      boost::asio::streambuf buf;
+      config.serializeTo( buf );
+      auto result = _socket.send( buf.data() );
+      LOG(DEBUG) << "Sent " << result << " bytes to sonar";
 
     } else {
       LOG(WARNING) << "Error on connect: " << ec.message();
@@ -120,43 +118,37 @@ namespace liboculus {
   //== Data writers
 
   // Schedule a writer in 500ms
-  void DataRx::scheduleWrite()
-  {
-    _writeTimer.expires_from_now(std::chrono::milliseconds(1000));
-    _writeTimer.async_wait(boost::bind(&DataRx::writeHandler, this, _1));
-  }
+  // void DataRx::scheduleWrite( const boost::asio::streambuf &buf )
+  // {
+  //   _writeTimer.expires_from_now(std::chrono::milliseconds(1000));
+  //   _writeTimer.async_wait(boost::bind(&DataRx::writeHandler, this, _1));
+  // }
+  //
+  // // Write _fireMessage
+  // void DataRx::writeHandler(const boost::asio::streambuf &msg, const boost::system::error_code& ec )
+  // {
+  //   if( !ec ) {
+  //     auto result = _socket.send( msg.data() );
+  //     LOG(DEBUG) << "Sent " << result << " bytes to sonar";
+  //   } else {
+  //     LOG(WARNING) << "Error on write: " << ec.message();
+  //   }
+  //
+  //   // Schedule the next write
+  //   //scheduleWrite();
+  // }
 
-  // Write _fireMessage
-  void DataRx::writeHandler(const boost::system::error_code& ec )
-  {
-    if( !ec ) {
-      boost::asio::streambuf msg;
-
-      _fireMessage.serializeTo(msg);
-
-      auto result = _socket.send( msg.data() );
-      LOG(DEBUG) << "Sent " << result << " bytes to sonar";
-    } else {
-      LOG(WARNING) << "Error on write: " << ec.message();
-    }
-
-    // Schedule the next write
-    //scheduleWrite();
-  }
-
-  void DataRx::updateFireMessage( const SimpleFireMessage &msg ) {
-    _fireMessage = msg;
-
+  void DataRx::onSonarConfigurationChanged( const SonarConfiguration &msg ) {
     // Send it out immediately
     boost::asio::streambuf buf;
-    _fireMessage.serializeTo(buf);
-    auto result = _socket.send( buf.data() );
+    msg.serializeTo( buf );
+
+    auto result = _socket.send(  buf.data() );
     LOG(DEBUG) << "Sent " << result << " bytes to sonar";
   }
 
   //=== Readers
-  void DataRx::scheduleHeaderRead()
-  {
+  void DataRx::scheduleHeaderRead() {
     std::shared_ptr<MessageBuffer> buffer( new MessageBuffer() );
 
     _socket.async_receive( boost::asio::buffer((void *)buffer->headerPtr(), sizeof(OculusMessageHeader)),
@@ -266,7 +258,7 @@ namespace liboculus {
   void DataRx::readSimplePingResult( const shared_ptr<MessageBuffer> &buffer,
                                       const boost::system::error_code& ec,
                                       std::size_t bytes_transferred )
-    {
+  {
       if (!ec) {
         LOG(DEBUG) << "Got " << bytes_transferred << " bytes of SimplePingResult from sonar";
 
@@ -301,28 +293,28 @@ namespace liboculus {
 
 //=====================================================================
 
-  DataRxQueued::DataRxQueued(boost::asio::io_service &context, uint32_t ip,
-              const SimpleFireMessage &fire )
-    : DataRx( context, ip, fire ),
-      _queue()
-    {
-      setCallback( std::bind( &DataRxQueued::enqueuePing, this, std::placeholders::_1 ));
-    }
-
-  DataRxQueued::DataRxQueued(boost::asio::io_service &context,
-              const boost::asio::ip::address &addr,
-              const SimpleFireMessage &fire )
-    : DataRx( context, addr, fire ),
-      _queue()
-    {
-      setCallback( std::bind( &DataRxQueued::enqueuePing, this, std::placeholders::_1 ));
-    }
-
-  DataRxQueued::~DataRxQueued()
-  {;}
-
-  void DataRxQueued::enqueuePing( const shared_ptr<SimplePingResult> &ping ) {
-    _queue.push( ping );
-  }
-
+//   DataRxQueued::DataRxQueued(boost::asio::io_service &context, uint32_t ip,
+//               const SonarConfiguration &fire )
+//     : DataRx( context, ip, fire ),
+//       _queue()
+//     {
+//       setCallback( std::bind( &DataRxQueued::enqueuePing, this, std::placeholders::_1 ));
+//     }
+//
+//   DataRxQueued::DataRxQueued(boost::asio::io_service &context,
+//               const boost::asio::ip::address &addr,
+//               const SonarConfiguration &fire )
+//     : DataRx( context, addr, fire ),
+//       _queue()
+//     {
+//       setCallback( std::bind( &DataRxQueued::enqueuePing, this, std::placeholders::_1 ));
+//     }
+//
+//   DataRxQueued::~DataRxQueued()
+//   {;}
+//
+//   void DataRxQueued::enqueuePing( const shared_ptr<SimplePingResult> &ping ) {
+//     _queue.push( ping );
+//   }
+//
 }

@@ -36,16 +36,26 @@
 namespace liboculus {
 
 
-// OO wrapper around OculusSimpleFireMessage
-class SimpleFireMessage {
+// OO wrapper around OculusSonarConfiguration
+class SonarConfiguration {
 public:
-  SimpleFireMessage();
 
-  void serializeTo( boost::asio::streambuf &buffer );
+  typedef std::function< void( const SonarConfiguration & ) > SonarConfigurationChangedCallback;
 
+  SonarConfiguration();
+
+  void serializeTo( boost::asio::streambuf &buffer ) const;
+
+  void setCallback( SonarConfigurationChangedCallback callback )
+    { _callback = callback; }
+
+  void postponeCallback();
+  void sendCallback();
+
+  // Setter functions
   void setGamma(double input);
 
-  void setPingRate(double input);
+  void setPingRate(PingRateType newRate);
 
   void setGainPercent(double input);
 
@@ -53,11 +63,23 @@ public:
 
   void setWaterTemperature( double degC );
 
-  void setMasterMode(double input);
+  typedef enum {
+    OCULUS_LOW_FREQ = 1,
+    OCULUS_HIGH_FREQ = 2
+  } OculusFreqMode;
+
+  void setFreqMode(OculusFreqMode input);
 
 private:
 
+  void triggerCallback()
+    { if( !_postponeCallback ) _callback( *this ); }
+
+  bool _postponeCallback;
+
   OculusSimpleFireMessage _sfm;
+
+  SonarConfigurationChangedCallback _callback;
 
 };
 

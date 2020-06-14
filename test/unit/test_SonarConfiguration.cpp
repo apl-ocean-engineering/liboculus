@@ -1,17 +1,19 @@
 #include <gtest/gtest.h>
 
-#include "liboculus/SimpleFireMessage.h"
+#include "liboculus/SonarConfiguration.h"
 
 using namespace liboculus;
 
 void validateOculusHeader( const OculusMessageHeader &head )
 {
   ASSERT_EQ( head.oculusId, 0x4f53 );
+
+  // \TODO  exapand validity testing
 }
 
 
-TEST(SimpleFireMessage, serialize) {
-  SimpleFireMessage msg;
+TEST(SonarConfiguration, serialize) {
+  SonarConfiguration msg;
 
   boost::asio::streambuf b;
 
