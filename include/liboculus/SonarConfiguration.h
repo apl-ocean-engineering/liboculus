@@ -72,8 +72,6 @@ public:
 
 private:
 
-  void triggerCallback()
-    { if( !_postponeCallback ) _callback( *this ); }
 
   bool _postponeCallback;
 

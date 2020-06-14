@@ -88,8 +88,9 @@ namespace liboculus {
 
   void SonarConfiguration::sendCallback( void ) {
     _postponeCallback = false;
-    triggerCallback();
-  }
+
+      { if( _callback && !_postponeCallback ) _callback( *this ); }
+    }
 
   // need to integrate flags into dyanmic reconfig
 
@@ -101,7 +102,7 @@ namespace liboculus {
       _sfm.range = input;
     }
 
-    triggerCallback();
+    sendCallback();
   }
 
   void SonarConfiguration::setGainPercent(double input)
@@ -110,7 +111,7 @@ namespace liboculus {
       _sfm.gainPercent = input;
     }
 
-    triggerCallback();
+    sendCallback();
   }
 
   void SonarConfiguration::setGamma(double input)
@@ -119,19 +120,19 @@ namespace liboculus {
       _sfm.gammaCorrection = input;
     }
 
-    triggerCallback();
+    sendCallback();
   }
 
   void SonarConfiguration::setPingRate(PingRateType newRate)
   {
     _sfm.pingRate = newRate;
-    triggerCallback();
+    sendCallback();
   }
 
   void SonarConfiguration::setFreqMode(OculusFreqMode input)
   {
     _sfm.masterMode = input;
-    triggerCallback();
+    sendCallback();
   }
 
   void SonarConfiguration::serializeTo( boost::asio::streambuf &stream ) const
