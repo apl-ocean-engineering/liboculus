@@ -296,28 +296,28 @@ namespace liboculus {
 
 //=====================================================================
 
-  // DataRxQueued::DataRxQueued(boost::asio::io_service &context, uint32_t ip,
-  //             const SimpleFireMessage &fire )
-  //   : DataRx( context, ip, fire ),
-  //     _queue()
-  //   {
-  //     setCallback( std::bind( &DataRxQueued::enqueuePing, this, std::placeholders::_1 ));
-  //   }
-  //
-  // DataRxQueued::DataRxQueued(boost::asio::io_service &context,
-  //             const boost::asio::ip::address &addr,
-  //             const SimpleFireMessage &fire )
-  //   : DataRx( context, addr, fire ),
-  //     _queue()
-  //   {
-  //     setCallback( std::bind( &DataRxQueued::enqueuePing, this, std::placeholders::_1 ));
-  //   }
-  //
-  // DataRxQueued::~DataRxQueued()
-  // {;}
-  //
-  // void DataRxQueued::enqueuePing( const shared_ptr<SimplePingResult> &ping ) {
-  //   _queue.push( ping );
-  // }
+  DataRxQueued::DataRxQueued(boost::asio::io_service &context, uint32_t ip,
+              const SimpleFireMessage &fire )
+    : DataRx( context, ip, fire ),
+      _queue()
+    {
+      setCallback( std::bind( &DataRxQueued::enqueuePing, this, std::placeholders::_1 ));
+    }
+
+  DataRxQueued::DataRxQueued(boost::asio::io_service &context,
+              const boost::asio::ip::address &addr,
+              const SimpleFireMessage &fire )
+    : DataRx( context, addr, fire ),
+      _queue()
+    {
+      setCallback( std::bind( &DataRxQueued::enqueuePing, this, std::placeholders::_1 ));
+    }
+
+  DataRxQueued::~DataRxQueued()
+  {;}
+
+  void DataRxQueued::enqueuePing( const shared_ptr<SimplePingResult> &ping ) {
+    _queue.push( ping );
+  }
 
 }
