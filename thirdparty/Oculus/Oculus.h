@@ -157,26 +157,26 @@ public:
 struct OculusSimplePingResult
 {
 public:
-    OculusSimpleFireMessage fireMessage;
-    uint32_t pingId; 			/* An incrementing number */
-    uint32_t status;
-    double frequency;				/* The acoustic frequency (Hz) */
-    double temperature;				/* The external temperature (deg C) */
-    double pressure;				/* The external pressure (bar) */
-    double speedOfSoundUsed;		/* The actual used speed of sound (m/s). May be different to the speed of sound set in the fire message */
-    uint32_t pingStartTime;
-    DataSizeType dataSize; 			/* The size of the individual data entries */
-    double rangeResolution;			/* The range in metres corresponding to a single range line */
-    uint16_t nRanges;			/* The number of range lines in the image*/
-    uint16_t nBeams;			/* The number of bearings in the image */
-    uint32_t imageOffset; 		/* The offset in bytes of the image data from the start of the network message */
-    uint32_t imageSize; 		/* The size in bytes of the image data */
-    uint32_t messageSize; 		/* The total size in bytes of the network message */
-    // *** NOT ADDITIONAL VARIABLES BEYOND THIS POINT ***
-    // There will be an array of bearings (shorts) found at the end of the message structure
-    // Allocated at run time
-    // short bearings[];
-    // The bearings to each of the beams in 0.01 degree resolution
+  OculusSimpleFireMessage fireMessage;
+  uint32_t pingId; 			/* An incrementing number */
+  uint32_t status;
+  double frequency;				/* The acoustic frequency (Hz) */
+  double temperature;				/* The external temperature (deg C) */
+  double pressure;				/* The external pressure (bar) */
+  double speedOfSoundUsed;		/* The actual used speed of sound (m/s). May be different to the speed of sound set in the fire message */
+  uint32_t pingStartTime;
+  DataSizeType dataSize; 			/* The size of the individual data entries */
+  double rangeResolution;			/* The range in metres corresponding to a single range line */
+  uint16_t nRanges;			/* The number of range lines in the image*/
+  uint16_t nBeams;			/* The number of bearings in the image */
+  uint32_t imageOffset; 		/* The offset in bytes of the image data from the start of the network message */
+  uint32_t imageSize; 		/* The size in bytes of the image data */
+  uint32_t messageSize; 		/* The total size in bytes of the network message */
+  // *** NOT ADDITIONAL VARIABLES BEYOND THIS POINT ***
+  // There will be an array of bearings (shorts) found at the end of the message structure
+  // Allocated at run time
+  // short bearings[];
+  // The bearings to each of the beams in 0.01 degree resolution
 };
 
 // -----------------------------------------------------------------------------

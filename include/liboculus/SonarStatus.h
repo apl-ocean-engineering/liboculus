@@ -42,9 +42,8 @@
 
 namespace liboculus {
 
-
-class SonarStatus
-{
+/// Thin wrapper around OculusStatusMsg
+class SonarStatus {
 public:
 
   typedef std::chrono::time_point<std::chrono::system_clock> sys_time_point;
@@ -53,20 +52,19 @@ public:
 
   OculusStatusMsg operator()( void ) const;
 
-  bool wait() const
-  {
-    std::unique_lock<std::mutex> lock(_statusMutex);
-    _statusUpdateCond.wait(lock);
-
-    return true;
-  }
-
-  template< class Rep, class Period = std::ratio<1> >
-  bool wait_for( const std::chrono::duration<Rep,Period> &timeout ) const
-  {
-    std::unique_lock<std::mutex> lock(_statusMutex);
-    return (_statusUpdateCond.wait_for( lock, timeout ) != std::cv_status::timeout);
-  }
+  // bool wait() const {
+  //   std::unique_lock<std::mutex> lock(_statusMutex);
+  //   _statusUpdateCond.wait(lock);
+  //
+  //   return true;
+  // }
+  //
+  // template< class Rep, class Period = std::ratio<1> >
+  // bool wait_for( const std::chrono::duration<Rep,Period> &timeout ) const
+  // {
+  //   std::unique_lock<std::mutex> lock(_statusMutex);
+  //   return (_statusUpdateCond.wait_for( lock, timeout ) != std::cv_status::timeout);
+  // }
 
   bool valid() const { return _valid; }
   void dump() const;
@@ -78,7 +76,7 @@ public:
 protected:
 
   mutable std::mutex       _statusMutex;
-  mutable std::condition_variable  _statusUpdateCond;
+  // mutable std::condition_variable  _statusUpdateCond;
 
 private:
 

@@ -78,9 +78,9 @@ private:
   // This is the "usable" status, based on the most recently received packet
   SonarStatus _status;
 
-  uint16_t     m_port;       // Port to listen on
-  uint16_t     m_valid;      // Number of valid status messages
-  uint16_t     m_invalid;    // Number of invalid status messages
+  uint16_t     _port;       // Port to listen on
+  uint16_t     _valid;      // Number of valid status messages
+  uint16_t     _invalid;    // Number of invalid status messages
 
   boost::asio::io_service& _ioService;
   udp::socket _socket;
@@ -89,7 +89,7 @@ private:
   deadline_timer _deadline;
 
   SonarStatusCallback _sonarStatusCallback;
-  void defaultSonarStatusCallback( const SonarStatus & ) {;}
+
 };
 
 }

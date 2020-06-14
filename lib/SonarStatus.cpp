@@ -40,7 +40,7 @@ namespace liboculus {
 
   SonarStatus::SonarStatus()
   : _statusMutex(),
-    _statusUpdateCond(),
+    //_statusUpdateCond(),
     _valid(false)
   {}
 
@@ -49,7 +49,7 @@ namespace liboculus {
   {
     std::lock_guard<std::mutex> lock( _statusMutex );
 
-    // Copy constructor?
+    // Copy?
     // OculusStatusMsg osm;
     // memcpy( (void *)&osm, (void *)&_osm, sizeof(OculusStatusMsg) );
 
@@ -70,7 +70,7 @@ namespace liboculus {
     _msgTime = msgTime;
 
     //LOG(DEBUG) << "Updating all listeners!";
-    _statusUpdateCond.notify_all();
+    //_statusUpdateCond.notify_all();
   }
 
   void SonarStatus::dump() const
