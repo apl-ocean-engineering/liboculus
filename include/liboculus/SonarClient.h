@@ -37,7 +37,6 @@
 
 namespace liboculus {
 
-
   class SonarClient {
   public:
 
@@ -48,6 +47,8 @@ namespace liboculus {
     void start();
     void join();
     void stop();
+
+    void updateFireMessage( const SimpleFireMessage &msg );
 
     // Simple passthrough
     void setDataRxCallback( DataRx::SimplePingCallback callback )
@@ -66,4 +67,5 @@ namespace liboculus {
     DataRx _dataRx;
 
   };
+
 }

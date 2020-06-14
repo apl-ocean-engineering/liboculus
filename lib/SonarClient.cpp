@@ -81,5 +81,8 @@ namespace liboculus {
     }
   }
 
+  void SonarClient::updateFireMessage( const SimpleFireMessage &msg ) {
+      _dataRx.updateFireMessage( msg );
+  }
 
 }
