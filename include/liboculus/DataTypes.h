@@ -63,7 +63,6 @@ namespace liboculus {
     return 0;
   }
 
-
   //=== Message types
 
   inline const char *MessageTypeToString( OculusMessageType t ) {
@@ -83,6 +82,35 @@ namespace liboculus {
     }
 
       return "(unknown)";
+  }
+
+  //=== Ping rate to string
+
+  inline unsigned int PingRateToHz( PingRateType p ) {
+    switch(p) {
+      case pingRateNormal:   return 10;
+      case pingRateHigh:     return 15;
+      case pingRateHighest:  return 40;
+      case pingRateLow:      return 5;
+      case pingRateLowest:   return 2;
+      case pingRateStandby:  return 0;
+    }
+
+    return 0;
+  }
+
+  inline unsigned int PingRateToHz( int p ) {
+    return PingRateToHz( static_cast<PingRateType>(p) );
+  }
+
+  inline const char *FreqModeToString( uint8_t mode  ) {
+    if( mode == 1 ) {
+      return "Low Freq";
+    } else if (mode == 2 ) {
+      return "High Freq";
+    }
+
+    return "(unknown)";
   }
 
 }
