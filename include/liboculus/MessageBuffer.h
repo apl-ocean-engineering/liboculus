@@ -73,9 +73,9 @@ public:
     return _buf.data() + sizeof(OculusMessageHeader);
   }
 
-  const char *payloadPtr() const  {
-    return _buf.data() + sizeof(OculusMessageHeader);
-  }
+  // const char *payloadPtr() const  {
+  //   return _buf.data() + sizeof(OculusMessageHeader);
+  // }
 
   unsigned int size() const {
     return _buf.size();

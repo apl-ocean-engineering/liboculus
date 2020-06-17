@@ -40,9 +40,9 @@ namespace liboculus {
 
   class BearingData {
   public:
-    BearingData( short *data, uint16_t nBeams )
-     : _ptr( data ),
-      _numBeams( nBeams )
+    BearingData( BearingDataLocator *data )
+     : _ptr( data->BearingData ),
+      _numBeams( data->ping.nBeams )
       {;}
 
     int size() const { return _numBeams; }

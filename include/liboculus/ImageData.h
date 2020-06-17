@@ -29,6 +29,7 @@
 
 #pragma once
 
+#include <iostream>
 #include "Oculus/Oculus.h"
 
 namespace liboculus {
@@ -36,11 +37,11 @@ namespace liboculus {
   class ImageData {
   public:
     ImageData( OculusSimplePingResult *ping )
-      : _ptr( ping + ping->imageOffset) ,
+      : _ptr( &(reinterpret_cast<uint8_t *>(ping)[ping->imageOffset]) ),
         _numRanges( ping->nRanges ),
         _numBeams( ping->nBeams ),
         _dataSz( SizeOfDataSize(ping->dataSize) )
-    {}
+    {;}
 
     // TODO.  Deal with non-8-bit data somehow
     uint8_t at(unsigned int bearing, unsigned int range) const {
@@ -56,7 +57,7 @@ namespace liboculus {
     }
 
   private:
-    void *_ptr;
+    uint8_t *_ptr;
     uint16_t _numRanges, _numBeams;
     uint8_t _dataSz;
   };

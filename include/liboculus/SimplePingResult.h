@@ -52,12 +52,14 @@ using std::vector;
 class MessageHeader {
 public:
   MessageHeader() = delete;
-  MessageHeader(const MessageHeader &) = delete;
+
+  MessageHeader(const MessageHeader &other)
+    : _buffer( other.buffer() )
+  {;}
 
   MessageHeader(const shared_ptr<MessageBuffer> &buffer)
-    : _buffer(buffer) {
-    ;
-  }
+    : _buffer(buffer)
+  {;}
 
   ~MessageHeader() { ; }
 
@@ -118,18 +120,16 @@ public:
   SimplePingResult(const SimplePingResult &) = delete;
 
   SimplePingResult( const MessageHeader &header )
-    : MessageHeader( header.buffer() ),
-      _bearings( (short *)((void *)header.ptr() + sizeof(OculusSimplePingResult)),
-                 reinterpret_cast< OculusSimplePingResult *>(header.ptr())->nBeams ),
+    : MessageHeader( header ),
+      _bearings( reinterpret_cast< BearingDataLocator *>(header.ptr()) ),
       _image( reinterpret_cast< OculusSimplePingResult *>(header.ptr()) )  {
 
       ;
   }
 
   SimplePingResult( const shared_ptr<MessageHeader> &header )
-      : MessageHeader( header->buffer() ),
-      _bearings( (short *)((void *)header->ptr() + sizeof(OculusSimplePingResult)),
-                 reinterpret_cast< OculusSimplePingResult *>(header->ptr())->nBeams ),
+      : MessageHeader( *header ),
+      _bearings( reinterpret_cast< BearingDataLocator *>(header->ptr()) ),
       _image( reinterpret_cast< OculusSimplePingResult *>(header->ptr()) ) {
 ;
   }
