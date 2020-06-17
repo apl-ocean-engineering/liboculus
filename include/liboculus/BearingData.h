@@ -33,11 +33,16 @@
 
 namespace liboculus {
 
+  struct BearingDataLocator {
+    OculusSimplePingResult ping;
+    short BearingData[];
+  };
+
   class BearingData {
   public:
-    BearingData( OculusSimplePingResult *ping )
-     : _ptr( (short *)ping + sizeof(OculusSimplePingResult) ),
-      _numBeams( ping->nBeams )
+    BearingData( short *data, uint16_t nBeams )
+     : _ptr( data ),
+      _numBeams( nBeams )
       {;}
 
     int size() const { return _numBeams; }

@@ -65,10 +65,10 @@ public:
   OculusMessageType msgId() const {
     return static_cast<OculusMessageType>(hdr()->msgId);
   }
-  uint16_t oculusId() const { return hdr()->oculusId; }
+  uint16_t oculusId() const    { return hdr()->oculusId; }
   uint16_t srcDeviceId() const { return hdr()->srcDeviceId; }
   uint16_t dstDeviceId() const { return hdr()->dstDeviceId; }
-  uint16_t msgVersion() const { return hdr()->msgVersion; }
+  uint16_t msgVersion() const  { return hdr()->msgVersion; }
   uint32_t payloadSize() const { return hdr()->payloadSize; }
 
   virtual bool valid() const {
@@ -80,6 +80,8 @@ public:
 
   std::shared_ptr<MessageBuffer> buffer() { return _buffer; }
   const std::shared_ptr<MessageBuffer> &buffer() const { return _buffer; }
+
+  void *ptr() const { return _buffer->ptr(); }
 
   void dump() const {
     LOG(DEBUG) << "   Oculus Id: 0x" << std::hex << oculusId();
@@ -117,17 +119,18 @@ public:
 
   SimplePingResult( const MessageHeader &header )
     : MessageHeader( header.buffer() ),
-      _bearings( oculusPing() ),
-      _image( oculusPing() )  {
+      _bearings( (short *)((void *)header.ptr() + sizeof(OculusSimplePingResult)),
+                 reinterpret_cast< OculusSimplePingResult *>(header.ptr())->nBeams ),
+      _image( reinterpret_cast< OculusSimplePingResult *>(header.ptr()) )  {
 
       ;
   }
 
   SimplePingResult( const shared_ptr<MessageHeader> &header )
       : MessageHeader( header->buffer() ),
-      _bearings( oculusPing() ),
-      _image( oculusPing() )  {
-
+      _bearings( (short *)((void *)header->ptr() + sizeof(OculusSimplePingResult)),
+                 reinterpret_cast< OculusSimplePingResult *>(header->ptr())->nBeams ),
+      _image( reinterpret_cast< OculusSimplePingResult *>(header->ptr()) ) {
 ;
   }
 
@@ -136,19 +139,19 @@ public:
 
   // Because the message consists of nested structs, these are trivial
   OculusSimpleFireMessage *oculusFireMsg()  {
-    return reinterpret_cast< OculusSimpleFireMessage *>(hdr());
+    return reinterpret_cast< OculusSimpleFireMessage *>(buffer()->ptr());
   }
 
   const OculusSimpleFireMessage *oculusFireMsg() const {
-      return reinterpret_cast<const OculusSimpleFireMessage *>(hdr());
+      return reinterpret_cast<const OculusSimpleFireMessage *>(buffer()->ptr());
   }
 
   OculusSimplePingResult *oculusPing()  {
-    return reinterpret_cast< OculusSimplePingResult *>(hdr());
+    return reinterpret_cast< OculusSimplePingResult *>(buffer()->ptr());
   }
 
   const OculusSimplePingResult *oculusPing() const  {
-    return reinterpret_cast<const OculusSimplePingResult *>(hdr());
+    return reinterpret_cast<const OculusSimplePingResult *>(buffer()->ptr());
   }
 
   const BearingData &bearings() const { return _bearings; }
