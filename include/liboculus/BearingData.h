@@ -36,6 +36,8 @@ namespace liboculus {
   public:
     BearingData() : _set(false) {}
 
+    int size() const { return _numBeams; }
+
     // Returns bearing in degrees
     float at(unsigned int i) const {
       CHECK(i < _numBeams) << "Requested beam " << i << " out of range";
@@ -60,5 +62,5 @@ namespace liboculus {
     short *_ptr;
     uint16_t _numBeams;
   };
-  
+
 }
