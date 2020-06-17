@@ -41,39 +41,12 @@
 #include "ImageData.h"
 #include "BearingData.h"
 
+#include "MessageBuffer.h"
+
 namespace liboculus {
 
 using std::shared_ptr;
 using std::vector;
-
-class MessageBuffer {
-public:
-  /// Default constructor creates a buffer large enough for an OculusMessageHeader
-  MessageBuffer( int reserve = sizeof(OculusMessageHeader) );
-
-  /// Alternative constructors which initialize from existing data
-  /// These take a copy of the data.
-  MessageBuffer(const char *data, size_t len);
-  MessageBuffer(const std::vector<char> &vec);
-
-  ~MessageBuffer();
-
-  char *ptr() { return _buf.data(); }
-
-  const char *ptr() const { return _buf.data(); }
-  const char *headerPtr() { return ptr(); }
-
-  char *payloadPtr();
-  const char *payloadPtr() const;
-
-  unsigned int size() const;
-  unsigned int payloadSize() const;
-
-  bool expandForPayload();
-
-protected:
-  std::vector<char> _buf;
-};
 
 
 class MessageHeader {
@@ -118,8 +91,12 @@ public:
   }
 
 protected:
+  OculusMessageHeader *hdr() {
+    return reinterpret_cast<OculusMessageHeader *>(_buffer->ptr());
+  }
+
   const OculusMessageHeader *hdr() const {
-    return reinterpret_cast<const OculusMessageHeader *>(_buffer->headerPtr());
+    return reinterpret_cast<const OculusMessageHeader *>(_buffer->ptr());
   }
 
   std::shared_ptr<MessageBuffer> _buffer;
@@ -131,45 +108,54 @@ protected:
 //   OculusMessageHeader     (as msg.fireMessage.head)
 //   OculusSimpleFireMessage (as msg.fireMessage)
 //   then the rest of OculusSimplePingResult
-class SimplePingResult {
+class SimplePingResult : public MessageHeader {
   friend class DataRx;
 
 public:
   SimplePingResult() = delete;
   SimplePingResult(const SimplePingResult &) = delete;
 
-  SimplePingResult(const shared_ptr<MessageHeader> &header)
-      : _header(header), _bearings(), _image() {
-    // TODO, this could be done through a constructor
-    _bearings.set(buffer()->ptr() + sizeof(OculusSimplePingResult),
-                  oculusPing()->nBeams);
-    _image.set(buffer()->ptr() + oculusPing()->imageOffset, oculusPing()->nRanges,
-               oculusPing()->nBeams, oculusPing()->dataSize);
+  SimplePingResult( const MessageHeader &header )
+    : MessageHeader( header.buffer() ),
+      _bearings( oculusPing() ),
+      _image( oculusPing() )  {
+
+      ;
   }
 
-  ~SimplePingResult() {}
+  SimplePingResult( const shared_ptr<MessageHeader> &header )
+      : MessageHeader( header->buffer() ),
+      _bearings( oculusPing() ),
+      _image( oculusPing() )  {
 
-  // Unpack the contents
-  const shared_ptr<MessageBuffer> buffer( void ) const { return header()->buffer(); }
-  const shared_ptr<MessageHeader> header( void ) const { return _header; }
+;
+  }
 
-  /// Cast back to the original Oculus API message(s)
-  // OculusSimplePingResult *oculusPing() {
-  //   return reinterpret_cast<OculusSimplePingResult *>(_buffer->ptr());
-  // }
+  ~SimplePingResult()
+    { ; }
+
+  // Because the message consists of nested structs, these are trivial
+  OculusSimpleFireMessage *oculusFireMsg()  {
+    return reinterpret_cast< OculusSimpleFireMessage *>(hdr());
+  }
+
   const OculusSimpleFireMessage *oculusFireMsg() const {
-    return reinterpret_cast<const OculusSimpleFireMessage *>(buffer()->ptr());
+      return reinterpret_cast<const OculusSimpleFireMessage *>(hdr());
   }
 
-  const OculusSimplePingResult *oculusPing() const {
-    return reinterpret_cast<const OculusSimplePingResult *>(buffer()->ptr());
+  OculusSimplePingResult *oculusPing()  {
+    return reinterpret_cast< OculusSimplePingResult *>(hdr());
+  }
+
+  const OculusSimplePingResult *oculusPing() const  {
+    return reinterpret_cast<const OculusSimplePingResult *>(hdr());
   }
 
   const BearingData &bearings() const { return _bearings; }
   const ImageData &image() const { return _image; }
 
   virtual bool valid() const {
-    if (!_header->valid())
+    if (!MessageHeader::valid())
       return false;
 
     size_t expectedImageSize =
@@ -218,9 +204,8 @@ public:
   }
 
 private:
-  shared_ptr<MessageHeader> _header;
 
-  // Objects which overlay _data for interpretation
+  // Objects which overlay _data for easier interpretation
   BearingData _bearings;
   ImageData _image;
 };

@@ -151,7 +151,7 @@ namespace liboculus {
   void DataRx::scheduleHeaderRead() {
     std::shared_ptr<MessageBuffer> buffer( new MessageBuffer() );
 
-    _socket.async_receive( boost::asio::buffer((void *)buffer->headerPtr(), sizeof(OculusMessageHeader)),
+    _socket.async_receive( boost::asio::buffer((void *)buffer->ptr(), sizeof(OculusMessageHeader)),
                            boost::bind(&DataRx::readHeader, this, buffer, _1, _2));
   }
 
@@ -181,9 +181,6 @@ namespace liboculus {
 
             // Read the ping hedaer
             auto b = boost::asio::buffer( buffer->payloadPtr(), buffer->payloadSize() );
-            //LOG(DEBUG) << "Requesting balance of SimplePingResult header, " << ping->hdr()->payloadSize << " bytes";
-
-            //_socket.async_read( b, boost::bind(&DataRx::readSimplePingResult, this, ping, _1, _2));
             boost::asio::async_read( _socket, b, boost::bind(&DataRx::readSimplePingResult, this, buffer, _1, _2));
 
           } else if ( hdr.msgId() == messageLogs && hdr.payloadSize() > 0 ) {
@@ -225,12 +222,9 @@ namespace liboculus {
               [this](boost::system::error_code ec, std::size_t bytes_recvd)
               {
                 LOG(DEBUG) << "Read and discarded " << bytes_recvd;
-                if (!ec && bytes_recvd > 0)
-                {
+                if (!ec && bytes_recvd > 0) {
                   scheduleHeaderRead();
-                }
-                else
-                {
+                } else {
                   LOG(WARNING) << "Error on receive of add'l data: " << ec.message();
                 }
 
@@ -262,9 +256,9 @@ namespace liboculus {
       if (!ec) {
         LOG(DEBUG) << "Got " << bytes_transferred << " bytes of SimplePingResult from sonar";
 
-        shared_ptr<MessageHeader> hdr( new MessageHeader(buffer) );
+        MessageHeader hdr(buffer);
 
-        if( bytes_transferred == hdr->payloadSize() ) {
+        if( bytes_transferred == hdr.payloadSize() ) {
 
           shared_ptr< SimplePingResult > ping( new SimplePingResult( hdr ) );
 
@@ -282,7 +276,7 @@ namespace liboculus {
 
 
         } else {
-          LOG(WARNING) << "Received short header of " << bytes_transferred << " expected " << hdr->payloadSize();
+          LOG(WARNING) << "Received short header of " << bytes_transferred << " expected " << hdr.payloadSize();
         }
 
       } else {
@@ -291,30 +285,4 @@ namespace liboculus {
     }
 
 
-//=====================================================================
-
-//   DataRxQueued::DataRxQueued(boost::asio::io_service &context, uint32_t ip,
-//               const SonarConfiguration &fire )
-//     : DataRx( context, ip, fire ),
-//       _queue()
-//     {
-//       setCallback( std::bind( &DataRxQueued::enqueuePing, this, std::placeholders::_1 ));
-//     }
-//
-//   DataRxQueued::DataRxQueued(boost::asio::io_service &context,
-//               const boost::asio::ip::address &addr,
-//               const SonarConfiguration &fire )
-//     : DataRx( context, addr, fire ),
-//       _queue()
-//     {
-//       setCallback( std::bind( &DataRxQueued::enqueuePing, this, std::placeholders::_1 ));
-//     }
-//
-//   DataRxQueued::~DataRxQueued()
-//   {;}
-//
-//   void DataRxQueued::enqueuePing( const shared_ptr<SimplePingResult> &ping ) {
-//     _queue.push( ping );
-//   }
-//
 }

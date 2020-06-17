@@ -27,32 +27,80 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+ #pragma once
+
+#include <memory>
+#include <string.h>
+#include <vector>
+
+#include <g3log/g3log.hpp>
 
 #include "Oculus/Oculus.h"
 
+#include "DataTypes.h"
+#include "ImageData.h"
+#include "BearingData.h"
+
 namespace liboculus {
 
-  class BearingData {
-  public:
-    BearingData( OculusSimplePingResult *ping )
-     : _ptr( (short *)ping + sizeof(OculusSimplePingResult) ),
-      _numBeams( ping->nBeams )
-      {;}
+using std::shared_ptr;
+using std::vector;
 
-    int size() const { return _numBeams; }
+class MessageBuffer {
+public:
+  /// Default constructor creates a buffer large enough for an OculusMessageHeader
+  MessageBuffer( int reserve = sizeof(OculusMessageHeader) )
+    : _buf( reserve, 0)
+  { ; }
 
-    // Returns bearing in degrees
-    float at(unsigned int i) const {
-      CHECK(i < _numBeams) << "Requested beam " << i << " out of range";
+  MessageBuffer(const char *data, size_t len)
+    : _buf(len)
+  { memcpy(_buf.data(), data, len); }
 
-      return _ptr[i] / 100.0;
-    }
+  MessageBuffer(const std::vector<char> &vec)
+    : _buf(vec)
+  { ; }
 
+  ~MessageBuffer()
+  { ; }
 
-  private:
-    short *_ptr;
-    uint16_t _numBeams;
-  };
+  char *ptr() { return _buf.data(); }
+  const char *ptr() const { return _buf.data(); }
+
+//  const char *headerPtr() { return ptr(); }
+
+  char *payloadPtr() {
+    return _buf.data() + sizeof(OculusMessageHeader);
+  }
+
+  const char *payloadPtr() const  {
+    return _buf.data() + sizeof(OculusMessageHeader);
+  }
+
+  unsigned int size() const {
+    return _buf.size();
+  }
+
+  unsigned int payloadSize() const {
+    return _buf.size() - sizeof(OculusMessageHeader);
+  }
+
+  bool expandForPayload() {
+    OculusMessageHeader *hdr =
+        reinterpret_cast<OculusMessageHeader *>(_buf.data());
+    if (hdr->oculusId != 0x4f53)
+      return false;
+
+    // alloc a 4-byte aligned buffer
+    const size_t dataSize = sizeof(OculusMessageHeader) + hdr->payloadSize;
+    const size_t alignSize = ((dataSize + 3) >> 2) << 2;
+    _buf.resize(alignSize);
+
+    return true;
+  }
+
+protected:
+  std::vector<char> _buf;
+};
 
 }
