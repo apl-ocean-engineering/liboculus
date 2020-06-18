@@ -51,6 +51,7 @@ steps:
     token:
       from_secret: github_drone_token
     repositories:
+      - apl-ocean-engineering/serdp_recorder
       - apl-ocean-engineering/serdp_player
       - apl-ocean-engineering/serdp_common
 
