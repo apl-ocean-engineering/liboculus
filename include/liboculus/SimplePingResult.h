@@ -41,8 +41,6 @@
 #include "ImageData.h"
 #include "BearingData.h"
 
-#include "MessageBuffer.h"
-
 namespace liboculus {
 
 using std::shared_ptr;
@@ -51,17 +49,39 @@ using std::vector;
 
 class MessageHeader {
 public:
-  MessageHeader() = delete;
+
+  typedef std::vector<uint8_t> ByteVector;
+
+  MessageHeader()
+   : _buffer( new ByteVector(sizeof(OculusMessageHeader), 0) )
+  {;}
+
+  MessageHeader( const char *data, size_t len )
+    : _buffer( new ByteVector(len) )
+  {
+    memcpy(_buffer->data(), data, len);
+  }
 
   MessageHeader(const MessageHeader &other)
     : _buffer( other.buffer() )
   {;}
 
-  MessageHeader(const shared_ptr<MessageBuffer> &buffer)
-    : _buffer(buffer)
-  {;}
-
   ~MessageHeader() { ; }
+
+  void reset() {
+    _buffer.reset( new ByteVector(sizeof(OculusMessageHeader), 0) );
+  }
+
+  bool expandForPayload() {
+    if( !valid() ) return false;
+
+    // alloc a 4-byte aligned buffer
+    const size_t dataSize = sizeof(OculusMessageHeader) + payloadSize();
+    const size_t alignSize = ((dataSize + 3) >> 2) << 2;
+    _buffer->resize(alignSize);
+
+    return true;
+  }
 
   // Convenience accessors
   OculusMessageType msgId() const {
@@ -80,15 +100,21 @@ public:
     return true;
   }
 
-  std::shared_ptr<MessageBuffer> buffer() { return _buffer; }
-  const std::shared_ptr<MessageBuffer> &buffer() const { return _buffer; }
+  std::shared_ptr<ByteVector> buffer() { return _buffer; }
+  const std::shared_ptr<ByteVector> &buffer() const { return _buffer; }
 
-  void *ptr() const { return _buffer->ptr(); }
+  void *ptr() const         { return _buffer->data(); }
+  unsigned int size() const { return _buffer->size(); }
+
+  void *payloadPtr()        { return _buffer->data() + sizeof(OculusMessageHeader); }
+  // Data size is OculusSimplePingResult::payloadSize after it has been
+  // 4-byte aligned (in expandForPayload)
+  unsigned int alignedPayloadSize() const { return size() - sizeof(OculusMessageHeader); }
+
 
   void dump() const {
     LOG(DEBUG) << "   Oculus Id: 0x" << std::hex << oculusId();
-    LOG(DEBUG) << "      Msg id: 0x" << std::hex
-               << static_cast<uint16_t>(msgId());
+    LOG(DEBUG) << "      Msg id: 0x" << std::hex << static_cast<uint16_t>(msgId());
     LOG(DEBUG) << "      Dst ID: " << std::hex << dstDeviceId();
     LOG(DEBUG) << "      Src ID: " << std::hex << srcDeviceId();
     LOG(DEBUG) << "Payload size: " << payloadSize() << " bytes";
@@ -96,15 +122,14 @@ public:
 
 protected:
   OculusMessageHeader *hdr() {
-    return reinterpret_cast<OculusMessageHeader *>(_buffer->ptr());
+    return reinterpret_cast<OculusMessageHeader *>(_buffer->data());
   }
 
   const OculusMessageHeader *hdr() const {
-    return reinterpret_cast<const OculusMessageHeader *>(_buffer->ptr());
+    return reinterpret_cast<const OculusMessageHeader *>(_buffer->data());
   }
 
-  std::shared_ptr<MessageBuffer> _buffer;
-
+  std::shared_ptr< ByteVector > _buffer;
 };
 
 
@@ -117,21 +142,18 @@ class SimplePingResult : public MessageHeader {
 
 public:
   SimplePingResult() = delete;
-  SimplePingResult(const SimplePingResult &) = delete;
+
+  SimplePingResult(const SimplePingResult &other )
+  : MessageHeader( other ),
+    _bearings( reinterpret_cast< BearingDataLocator *>(other.ptr()) ),
+    _image( reinterpret_cast< OculusSimplePingResult *>(other.ptr()) )
+  {;};
 
   SimplePingResult( const MessageHeader &header )
     : MessageHeader( header ),
       _bearings( reinterpret_cast< BearingDataLocator *>(header.ptr()) ),
       _image( reinterpret_cast< OculusSimplePingResult *>(header.ptr()) )  {
-
       ;
-  }
-
-  SimplePingResult( const shared_ptr<MessageHeader> &header )
-      : MessageHeader( *header ),
-      _bearings( reinterpret_cast< BearingDataLocator *>(header->ptr()) ),
-      _image( reinterpret_cast< OculusSimplePingResult *>(header->ptr()) ) {
-;
   }
 
   ~SimplePingResult()
@@ -139,23 +161,23 @@ public:
 
   // Because the message consists of nested structs, these are trivial
   OculusSimpleFireMessage *oculusFireMsg()  {
-    return reinterpret_cast< OculusSimpleFireMessage *>(buffer()->ptr());
+    return reinterpret_cast< OculusSimpleFireMessage *>(ptr());
   }
 
   const OculusSimpleFireMessage *oculusFireMsg() const {
-      return reinterpret_cast<const OculusSimpleFireMessage *>(buffer()->ptr());
+      return reinterpret_cast<const OculusSimpleFireMessage *>(ptr());
   }
 
   OculusSimplePingResult *oculusPing()  {
-    return reinterpret_cast< OculusSimplePingResult *>(buffer()->ptr());
+    return reinterpret_cast< OculusSimplePingResult *>(ptr());
   }
 
   const OculusSimplePingResult *oculusPing() const  {
-    return reinterpret_cast<const OculusSimplePingResult *>(buffer()->ptr());
+    return reinterpret_cast<const OculusSimplePingResult *>(ptr());
   }
 
   const BearingData &bearings() const { return _bearings; }
-  const ImageData &image() const { return _image; }
+  const ImageData &image() const      { return _image; }
 
   virtual bool valid() const {
     if (!MessageHeader::valid())
@@ -181,30 +203,7 @@ public:
     return true;
   }
 
-  void dump() const {
-    LOG(DEBUG) << "--------------";
-    LOG(DEBUG) << "        Mode: " << oculusFireMsg()->masterMode;
-    LOG(DEBUG) << "   Ping rate: " << oculusFireMsg()->pingRate;
-
-    LOG(DEBUG) << "     Ping ID: " << oculusPing()->pingId;
-    LOG(DEBUG) << "      Status: " << oculusPing()->status;
-    LOG(DEBUG) << "   Ping start time: " << oculusPing()->pingStartTime;
-
-    LOG(DEBUG) << "   Frequency: " << oculusPing()->frequency;
-    LOG(DEBUG) << " Temperature: " << oculusPing()->temperature;
-    LOG(DEBUG) << "    Pressure: " << oculusPing()->pressure;
-    LOG(DEBUG) << "Spd of Sound: " << oculusPing()->speedOfSoundUsed;
-    LOG(DEBUG) << "   Range res: " << oculusPing()->rangeResolution << " m";
-
-    LOG(DEBUG) << "   Num range: " << oculusPing()->nRanges;
-    LOG(DEBUG) << "   Num beams: " << oculusPing()->nBeams;
-
-    LOG(DEBUG) << "  Image size: " << oculusPing()->imageSize;
-    LOG(DEBUG) << "Image offset: " << oculusPing()->imageOffset;
-    LOG(DEBUG) << "   Data size: " << DataSizeToString(oculusPing()->dataSize);
-    LOG(DEBUG) << "Message size: " << oculusPing()->messageSize;
-    LOG(DEBUG) << "--------------";
-  }
+  void dump() const;
 
 private:
 

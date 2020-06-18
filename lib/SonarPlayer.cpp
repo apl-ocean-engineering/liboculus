@@ -100,7 +100,7 @@ RawSonarPlayer::RawSonarPlayer() : SonarPlayerBase() { ; }
 
 RawSonarPlayer::~RawSonarPlayer() { ; }
 
-std::shared_ptr<MessageBuffer> RawSonarPlayer::nextPacket() {
+bool RawSonarPlayer::nextPacket( MessageHeader &header ) {
 
   // Advance to the next header byte (actually LSB of header since we're
   // little-endian)
@@ -108,45 +108,38 @@ std::shared_ptr<MessageBuffer> RawSonarPlayer::nextPacket() {
     char c;
     _input.get(c);
     if (_input.eof())
-      return nullptr;
+      return false;
   }
 
   // Read header
-  std::shared_ptr<MessageBuffer> buffer(new MessageBuffer());
-  _input.read(buffer->ptr(), sizeof(OculusMessageHeader));
+  header.reset();
+  _input.read( (char *)header.ptr(), sizeof(OculusMessageHeader));
 
-  // Promote buffer to MessageHeader
-  MessageHeader header(buffer);
   if (!header.valid()) {
     LOG(WARNING) << "Incoming header invalid";
-    return nullptr;
+    return false;
   }
 
-  buffer->expandForPayload();
+  header.expandForPayload();
+  _input.read( (char *)header.payloadPtr(), header.alignedPayloadSize() );
 
-  // char *data = new char[sizeof(OculusMessageHeader) +
-  // header.hdr.payloadSize]; memcpy( data, (void *)&(header.hdr),
-  // sizeof(OculusMessageHeader) );
-  _input.read(buffer->ptr(), buffer->payloadSize());
-
-  return buffer;
+  return true;
 }
 
-std::shared_ptr<SimplePingResult> RawSonarPlayer::nextPing() {
-  shared_ptr<MessageBuffer> data;
-  while (bool(data = nextPacket())) {
+bool RawSonarPlayer::nextPing( SimplePingResult &ping ) {
 
-    std::shared_ptr<MessageHeader> header( new MessageHeader(data) );
+  MessageHeader header;
+  while (bool(nextPacket(header))) {
 
-    if (header->msgId() == messageSimplePingResult) {
-      return std::shared_ptr<SimplePingResult>(new SimplePingResult(header));
+    if (header.msgId() == messageSimplePingResult) {
+      ping = SimplePingResult(header);
+      return true;
     } else {
-      LOG(DEBUG) << "Skipping message of type "
-                 << MessageTypeToString(header->msgId());
+      LOG(DEBUG) << "Skipping message of type " << MessageTypeToString(header.msgId());
     }
   }
 
-  return std::shared_ptr<SimplePingResult>(nullptr);
+  return false;
 }
 
 //--- OculusSonarPlayer --
@@ -155,13 +148,13 @@ OculusSonarPlayer::OculusSonarPlayer() : SonarPlayerBase() { ; }
 
 OculusSonarPlayer::~OculusSonarPlayer() { ; }
 
-std::shared_ptr<SimplePingResult> OculusSonarPlayer::nextPing() {
+bool OculusSonarPlayer::nextPing( SimplePingResult &ping) {
   //
-  // Ended up not needing to implement.  Oculus client records
+  // Ended up not being able to implement.  Oculus client records
   // messagePingResult, which we don't have the format for ...
   //
 
-  return std::shared_ptr<SimplePingResult>(nullptr);
+  return false;
 }
 
 #ifdef WITH_GPMF
@@ -269,32 +262,30 @@ void GPMFSonarPlayer::dumpGPMF() {
   LOG(INFO) << "Current raw data size " << GPMF_RawDataSize(&_stream);
 }
 
-std::shared_ptr<SimplePingResult> GPMFSonarPlayer::nextPing() {
+bool GPMFSonarPlayer::nextPing( SimplePingResult &ping ) {
   //
   // Ended up not needing to implement.  Oculus client records
   // messagePingResult, which we don't have the format for ...
   auto key = GPMF_Key(&_stream);
   if (key != STR2FOURCC("OCUS"))
-    return std::shared_ptr<SimplePingResult>(nullptr);
+    return false;
 
-  shared_ptr<MessageBuffer> buffer(new MessageBuffer(
-      (char *)GPMF_RawData(&_stream), GPMF_RawDataSize(&_stream)));
+  MessageHeader header( (char *)GPMF_RawData(&_stream), GPMF_RawDataSize(&_stream) );
   // char *data = (char *)GPMF_RawData(&_stream);
   // CHECK(data != nullptr);
 
-  shared_ptr<MessageHeader> header( new MessageHeader(buffer) );
-  if (!header->valid()) {
+  if (!header.valid()) {
     LOG(INFO) << "Invalid header";
-    return std::shared_ptr<SimplePingResult>(nullptr);
+    return false;
   }
 
-  auto retval =
-      GPMF_FindNext(&_stream, STR2FOURCC("OCUS"), GPMF_RECURSE_LEVELS);
+  auto retval = GPMF_FindNext(&_stream, STR2FOURCC("OCUS"), GPMF_RECURSE_LEVELS);
   if (retval != GPMF_OK) {
     _valid = false;
   }
 
-  return std::shared_ptr<SimplePingResult>(new SimplePingResult(header));
+  ping = SimplePingResult( header );
+  return true;
 }
 
 #endif

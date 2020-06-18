@@ -68,7 +68,7 @@ public:
 
   bool connected() const { return _socket.is_open(); }
 
-  typedef std::function< void( const shared_ptr<SimplePingResult> & ) > SimplePingCallback;
+  typedef std::function< void( const SimplePingResult & ) > SimplePingCallback;
   void setCallback( SimplePingCallback callback );
 private:
 
@@ -79,8 +79,8 @@ private:
   // void writeHandler(const boost::system::error_code& ec );
 
   void scheduleHeaderRead();
-  void readHeader( const shared_ptr<MessageBuffer> &buffer, const boost::system::error_code& ec, std::size_t bytes_transferred );
-  void readSimplePingResult( const shared_ptr<MessageBuffer> &buffer, const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void readHeader( MessageHeader hdr, const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void readSimplePingResult( MessageHeader hdr, const boost::system::error_code& ec, std::size_t bytes_transferred );
 
   void onSonarConfigurationChanged( const SonarConfiguration &config );
 

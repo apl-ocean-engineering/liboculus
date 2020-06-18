@@ -117,27 +117,6 @@ namespace liboculus {
 
   //== Data writers
 
-  // Schedule a writer in 500ms
-  // void DataRx::scheduleWrite( const boost::asio::streambuf &buf )
-  // {
-  //   _writeTimer.expires_from_now(std::chrono::milliseconds(1000));
-  //   _writeTimer.async_wait(boost::bind(&DataRx::writeHandler, this, _1));
-  // }
-  //
-  // // Write _fireMessage
-  // void DataRx::writeHandler(const boost::asio::streambuf &msg, const boost::system::error_code& ec )
-  // {
-  //   if( !ec ) {
-  //     auto result = _socket.send( msg.data() );
-  //     LOG(DEBUG) << "Sent " << result << " bytes to sonar";
-  //   } else {
-  //     LOG(WARNING) << "Error on write: " << ec.message();
-  //   }
-  //
-  //   // Schedule the next write
-  //   //scheduleWrite();
-  // }
-
   void DataRx::onSonarConfigurationChanged( const SonarConfiguration &msg ) {
     // Send it out immediately
     boost::asio::streambuf buf;
@@ -149,14 +128,14 @@ namespace liboculus {
 
   //=== Readers
   void DataRx::scheduleHeaderRead() {
-    std::shared_ptr<MessageBuffer> buffer( new MessageBuffer() );
+    MessageHeader header;
 
-    _socket.async_receive( boost::asio::buffer((void *)buffer->ptr(), sizeof(OculusMessageHeader)),
-                           boost::bind(&DataRx::readHeader, this, buffer, _1, _2));
+    _socket.async_receive( boost::asio::buffer((void *)header.ptr(), sizeof(OculusMessageHeader)),
+                           boost::bind(&DataRx::readHeader, this, header, _1, _2));
   }
 
 
-  void DataRx::readHeader(const shared_ptr<MessageBuffer> &buffer, const boost::system::error_code& ec, std::size_t bytes_transferred )
+  void DataRx::readHeader( MessageHeader hdr, const boost::system::error_code& ec, std::size_t bytes_transferred )
   {
     if (!ec) {
 
@@ -164,30 +143,28 @@ namespace liboculus {
 
       if( bytes_transferred == sizeof(OculusMessageHeader) ) {
 
-        MessageHeader hdr( buffer );
-
         LOG(DEBUG) << "Validating...";
         if( hdr.valid() ) {
 
           LOG(DEBUG) << "Got message ID " << hdr.msgId();
           if( hdr.msgId() == messageSimplePingResult ) {
 
-            if( !buffer->expandForPayload() ) {
+            if( !hdr.expandForPayload() ) {
               LOG(WARNING) << "Unable to expand for payload";
             }
 
             // Rely on ref-counting of shared_ptr to clean up any dropped packets
             //shared_ptr<SimplePingResult> ping( new SimplePingResult( _hdr ) );
 
-            // Read the ping hedaer
-            auto b = boost::asio::buffer( buffer->payloadPtr(), buffer->payloadSize() );
-            boost::asio::async_read( _socket, b, boost::bind(&DataRx::readSimplePingResult, this, buffer, _1, _2));
+            // Read the remainder of the packet
+            auto b = boost::asio::buffer( hdr.payloadPtr(), hdr.alignedPayloadSize() );
+            boost::asio::async_read( _socket, b, boost::bind(&DataRx::readSimplePingResult, this, hdr, _1, _2));
 
           } else if ( hdr.msgId() == messageLogs && hdr.payloadSize() > 0 ) {
 
             LOG(DEBUG) << "Requesting balance of Log message";
 
-            boost::asio::streambuf junkBuffer( hdr.payloadSize() );
+            boost::asio::streambuf junkBuffer( hdr.alignedPayloadSize() );
             auto bytes_recvd = boost::asio::read( _socket, junkBuffer );
 
             LOG(DEBUG) << "Read " << bytes_recvd << " of logging info";
@@ -206,7 +183,7 @@ namespace liboculus {
           } else {
             // Drop the rest of the message
 
-            const size_t discardSz = hdr.payloadSize();
+            const size_t discardSz = hdr.alignedPayloadSize();
 
             if ( discardSz == 0 ) {
               LOG(INFO) << "Unknown message ID " << hdr.msgId();
@@ -216,20 +193,20 @@ namespace liboculus {
             {
               LOG(INFO) << "Unknown message ID " << hdr.msgId() << ", need to drain an additional " << discardSz << " bytes";
 
-              std::vector<char> junkBuffer(hdr.payloadSize());
+              std::vector<char> junkBuffer(discardSz);
 
               boost::asio::async_read( _socket, boost::asio::buffer( junkBuffer, discardSz),
-              [this](boost::system::error_code ec, std::size_t bytes_recvd)
-              {
-                LOG(DEBUG) << "Read and discarded " << bytes_recvd;
-                if (!ec && bytes_recvd > 0) {
-                  scheduleHeaderRead();
-                } else {
-                  LOG(WARNING) << "Error on receive of add'l data: " << ec.message();
-                }
+                  [this](boost::system::error_code ec, std::size_t bytes_recvd)
+                  {
+                    LOG(DEBUG) << "Read and discarded " << bytes_recvd;
+                    if (!ec && bytes_recvd > 0) {
+                      scheduleHeaderRead();
+                    } else {
+                      LOG(WARNING) << "Error on receive of add'l data: " << ec.message();
+                    }
 
-                //delete junkBuffer;
-              });
+                    //delete junkBuffer;
+                  });
 
             }
 
@@ -249,20 +226,18 @@ namespace liboculus {
     }
   }
 
-  void DataRx::readSimplePingResult( const shared_ptr<MessageBuffer> &buffer,
+  void DataRx::readSimplePingResult(  MessageHeader hdr,
                                       const boost::system::error_code& ec,
                                       std::size_t bytes_transferred )
   {
       if (!ec) {
         LOG(DEBUG) << "Got " << bytes_transferred << " bytes of SimplePingResult from sonar";
 
-        MessageHeader hdr(buffer);
+        if( bytes_transferred == hdr.alignedPayloadSize() ) {
 
-        if( bytes_transferred == hdr.payloadSize() ) {
+          SimplePingResult ping( hdr );
 
-          shared_ptr< SimplePingResult > ping( new SimplePingResult( hdr ) );
-
-          if( ping->valid() ) {
+          if( ping.valid() ) {
 
             LOG(DEBUG) << "Data valid!";
 
