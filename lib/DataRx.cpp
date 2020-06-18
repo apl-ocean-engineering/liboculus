@@ -164,7 +164,7 @@ namespace liboculus {
 
             LOG(DEBUG) << "Requesting balance of Log message";
 
-            boost::asio::streambuf junkBuffer( hdr.alignedPayloadSize() );
+            boost::asio::streambuf junkBuffer( hdr.payloadSize() );
             auto bytes_recvd = boost::asio::read( _socket, junkBuffer );
 
             LOG(DEBUG) << "Read " << bytes_recvd << " of logging info";
