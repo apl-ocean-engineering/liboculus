@@ -62,6 +62,10 @@ public:
     memcpy(_buffer->data(), data, len);
   }
 
+  MessageHeader(const ByteVector &other)
+    : _buffer( new ByteVector(other) )
+  {;}
+
   MessageHeader(const MessageHeader &other)
     : _buffer( other.buffer() )
   {;}
@@ -141,7 +145,11 @@ class SimplePingResult : public MessageHeader {
   friend class DataRx;
 
 public:
-  SimplePingResult() = delete;
+  // TODO.  Don't like having this here.  Only needed to handle cases in SonarClient
+  // which need to be able either return a ping or a failure
+  SimplePingResult()
+    : MessageHeader()
+    {;}
 
   SimplePingResult(const SimplePingResult &other )
   : MessageHeader( other ),

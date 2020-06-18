@@ -36,6 +36,11 @@ namespace liboculus {
 
   class ImageData {
   public:
+    // \TODO get rid of this when the base constructor for SimplePingResult goes away
+    ImageData()
+      : _ptr(nullptr), _numRanges(0), _numBeams(0), _dataSz(0)
+      {;}
+
     ImageData( OculusSimplePingResult *ping )
       : _ptr( &(reinterpret_cast<uint8_t *>(ping)[ping->imageOffset]) ),
         _numRanges( ping->nRanges ),
