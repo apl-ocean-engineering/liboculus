@@ -107,8 +107,10 @@ bool RawSonarPlayer::nextPacket( MessageHeader &header ) {
   while (_input.peek() != 0x53) {
     char c;
     _input.get(c);
-    if (_input.eof())
+    if (_input.eof()) {
+      LOG(DEBUG) << "No packets before the end of the file";
       return false;
+    }
   }
 
   // Read header
@@ -116,7 +118,7 @@ bool RawSonarPlayer::nextPacket( MessageHeader &header ) {
   _input.read( (char *)header.ptr(), sizeof(OculusMessageHeader));
 
   if (!header.valid()) {
-    LOG(WARNING) << "Incoming header invalid";
+    LOG(WARNING) << "Read invalid header";
     return false;
   }
 
@@ -129,17 +131,17 @@ bool RawSonarPlayer::nextPacket( MessageHeader &header ) {
 bool RawSonarPlayer::nextPing( SimplePingResult &ping ) {
 
   MessageHeader header;
-  while (bool(nextPacket(header))) {
+  if(!nextPacket(header) ) return false;
 
-    if (header.msgId() == messageSimplePingResult) {
-      ping = SimplePingResult(header);
-      return true;
-    } else {
-      LOG(DEBUG) << "Skipping message of type " << MessageTypeToString(header.msgId());
-    }
+  if (header.msgId() != messageSimplePingResult) {
+    LOG(DEBUG) << "Skipping message of type " << MessageTypeToString(header.msgId());
+    return false;
   }
 
-  return false;
+  ping = SimplePingResult(header);
+  return true;
+
+
 }
 
 //--- OculusSonarPlayer --

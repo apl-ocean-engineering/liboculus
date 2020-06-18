@@ -158,6 +158,8 @@ int playbackSonarFile( const std::string &filename, ofstream &output, int stopAf
       continue;
     }
 
+    ping.dump();
+
     if( output.is_open() ) {
       output.write( (const char *)ping.ptr(), ping.size() );
     }

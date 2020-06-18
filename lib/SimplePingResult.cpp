@@ -34,8 +34,14 @@ namespace liboculus {
 
   void SimplePingResult::dump() const {
     LOG(DEBUG) << "--------------";
-    LOG(DEBUG) << "        Mode: " << oculusFireMsg()->masterMode;
-    LOG(DEBUG) << "   Ping rate: " << oculusFireMsg()->pingRate;
+    LOG(DEBUG) << "        Mode: " << FreqModeToString(oculusFireMsg()->masterMode);
+
+    const int pingRate = PingRateToHz(oculusFireMsg()->pingRate);
+    if( pingRate >= 0 ) {
+      LOG(DEBUG) << "   Ping rate: " << pingRate;
+    } else {
+      LOG(DEBUG) << "   Ping rate: (unknown) " << static_cast<int>(oculusFireMsg()->pingRate);
+    }
 
     LOG(DEBUG) << "     Ping ID: " << oculusPing()->pingId;
     LOG(DEBUG) << "      Status: " << oculusPing()->status;

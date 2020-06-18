@@ -96,14 +96,14 @@ namespace liboculus {
       case pingRateStandby:  return 0;
     }
 
-    return 0;
+    return -1;
   }
 
   inline unsigned int PingRateToHz( int p ) {
     return PingRateToHz( static_cast<PingRateType>(p) );
   }
 
-  inline const char *FreqModeToString( uint8_t mode  ) {
+  inline std::string FreqModeToString( uint8_t mode  ) {
     if( mode == 1 ) {
       return "Low Freq";
     } else if (mode == 2 ) {
