@@ -88,6 +88,7 @@ int main( int argc, char **argv ) {
   LOG(DEBUG) << "Starting loop";
 
   SonarConfiguration config;
+  config.setPingRate( pingRateNormal );
 
   _client.reset( new SonarClient(config, ipAddr) );
 

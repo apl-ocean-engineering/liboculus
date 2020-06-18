@@ -67,7 +67,7 @@ namespace liboculus {
 
     // Initial values
     _sfm.gammaCorrection = 127; //gamma;
-    _sfm.pingRate        = pingRateLowest;
+    _sfm.pingRate        = pingRateNormal;
     _sfm.range           = 2; // Meters
     _sfm.gainPercent     = 50; // gain;
 
