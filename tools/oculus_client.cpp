@@ -92,9 +92,9 @@ int main( int argc, char **argv ) {
 
   _client.reset( new SonarClient(config, ipAddr) );
 
-  _client->setDataRxCallback( [&]( const shared_ptr<SimplePingResult> &ping ) {
+  _client->setDataRxCallback( [&]( const SimplePingResult &ping ) {
 
-    auto valid = ping->valid();
+    auto valid = ping.valid();
     //LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
 
     if( !valid ) {
@@ -102,11 +102,10 @@ int main( int argc, char **argv ) {
       return;
     }
 
-    ping->dump();
+    ping.dump();
 
     if( output.is_open() ) {
-      auto const buffer( ping->buffer() );
-      output.write( (const char *)buffer->ptr(), buffer->size() );
+      output.write( (const char *)ping.ptr(), ping.size() );
     }
 
     count++;
@@ -151,20 +150,20 @@ int playbackSonarFile( const std::string &filename, ofstream &output, int stopAf
   }
 
   int count = 0;
-  std::shared_ptr<SimplePingResult> ping( player->nextPing() );
-  while( ping && !player->eof() ) {
+  SimplePingResult ping;
+  while( player->nextPing(ping) && !player->eof() ) {
 
-    ping->valid();
+    if( !ping.valid() ) {
+      LOG(WARNING) << "Invalid ping";
+      continue;
+    }
 
     if( output.is_open() ) {
-      auto const buffer( ping->buffer() );
-      output.write( (const char *)buffer->ptr(), buffer->size() );
+      output.write( (const char *)ping.ptr(), ping.size() );
     }
 
     count++;
     if( (stopAfter > 0) && (count >= stopAfter) ) break;
-
-    ping = player->nextPing();
   }
 
   LOG(INFO) << count << " sonar packets decoded";

@@ -50,7 +50,7 @@ public:
   virtual bool eof() const { return _input.eof(); }
   virtual void rewind() { _input.seekg(0); }
 
-  virtual std::shared_ptr<SimplePingResult> nextPing() = 0;
+  virtual bool nextPing( SimplePingResult &ping ) = 0;
 
   static std::shared_ptr<SonarPlayerBase> OpenFile(const std::string &filename);
 
@@ -72,8 +72,8 @@ public:
   RawSonarPlayer();
   virtual ~RawSonarPlayer();
 
-  std::shared_ptr<MessageBuffer> nextPacket();
-  virtual std::shared_ptr<SimplePingResult> nextPing();
+  bool nextPacket( MessageHeader &header );
+  virtual bool nextPing( SimplePingResult &ping );
 
 private:
 };
@@ -87,7 +87,7 @@ public:
   virtual ~OculusSonarPlayer();
 
   // char *nextPacket();
-  virtual std::shared_ptr<SimplePingResult> nextPing();
+  virtual bool nextPing( SimplePingResult &ping );
 
 private:
 };
@@ -111,7 +111,7 @@ public:
   virtual void rewind();
 
   // char *nextPacket();
-  virtual std::shared_ptr<SimplePingResult> nextPing();
+  virtual bool nextPing( SimplePingResult &ping );
 
   void dumpGPMF(void);
 

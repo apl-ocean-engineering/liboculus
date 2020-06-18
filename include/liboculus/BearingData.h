@@ -40,6 +40,12 @@ namespace liboculus {
 
   class BearingData {
   public:
+    // \TODO get rid of this when the base constructor for SimplePingResult goes away
+    BearingData()
+      : _ptr(nullptr), _numBeams(0)
+    {;}
+
+
     BearingData( BearingDataLocator *data )
      : _ptr( data->BearingData ),
       _numBeams( data->ping.nBeams )

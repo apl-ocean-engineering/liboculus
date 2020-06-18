@@ -32,5 +32,30 @@
 namespace liboculus {
 
 
+  void SimplePingResult::dump() const {
+    LOG(DEBUG) << "--------------";
+    LOG(DEBUG) << "        Mode: " << oculusFireMsg()->masterMode;
+    LOG(DEBUG) << "   Ping rate: " << oculusFireMsg()->pingRate;
+
+    LOG(DEBUG) << "     Ping ID: " << oculusPing()->pingId;
+    LOG(DEBUG) << "      Status: " << oculusPing()->status;
+    LOG(DEBUG) << "   Ping start time: " << oculusPing()->pingStartTime;
+
+    LOG(DEBUG) << "   Frequency: " << oculusPing()->frequency;
+    LOG(DEBUG) << " Temperature: " << oculusPing()->temperature;
+    LOG(DEBUG) << "    Pressure: " << oculusPing()->pressure;
+    LOG(DEBUG) << "Spd of Sound: " << oculusPing()->speedOfSoundUsed;
+    LOG(DEBUG) << "   Range res: " << oculusPing()->rangeResolution << " m";
+
+    LOG(DEBUG) << "   Num range: " << oculusPing()->nRanges;
+    LOG(DEBUG) << "   Num beams: " << oculusPing()->nBeams;
+
+    LOG(DEBUG) << "  Image size: " << oculusPing()->imageSize;
+    LOG(DEBUG) << "Image offset: " << oculusPing()->imageOffset;
+    LOG(DEBUG) << "   Data size: " << DataSizeToString(oculusPing()->dataSize);
+    LOG(DEBUG) << "Message size: " << oculusPing()->messageSize;
+    LOG(DEBUG) << "--------------";
+  }
+
 
 } // namespace liboculus

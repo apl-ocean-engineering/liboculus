@@ -17,9 +17,7 @@ void ValidateOneRawPingHeader( const MessageHeader &hdr ) {
 }
 
 TEST( MessageHeader, ConstructorFromBuffer ) {
-  std::shared_ptr<MessageBuffer> buffer( Oculus_TestData::LoadMessageBuffer( ONE_RAW_PING ) );
-
-  MessageHeader header( buffer );
+  MessageHeader header( Oculus_TestData::LoadMessageBuffer( ONE_RAW_PING ) );
   ValidateOneRawPingHeader( header );
 
 }
