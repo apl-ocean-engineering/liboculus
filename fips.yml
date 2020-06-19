@@ -6,8 +6,6 @@ imports:
         git: https://github.com/apl-ocean-engineering/libactive_object.git
     libg3logger:
         git: https://github.com/apl-ocean-engineering/libg3logger.git
-    libgpmf:
-        git: https://github.com/apl-ocean-engineering/libgpmf.git
     CLI11-fips:
         git: https://github.com/apl-ocean-engineering/CLI11-fips.git
         cond: "NOT FIPS_IMPORT"    ## Only needed if building tools/
