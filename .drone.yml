@@ -24,7 +24,7 @@ steps:
 
 ## Build with ROS melodic
 - name: build-ros-melodic
-  image: amarburg/drone-ci-ros:melodic
+  image: amarburg/drone-ci-ros-melodic:latest
   commands:
     - wget -O- https://gitlab.com/amarburg/ros_drone_ci/-/raw/master/bootstrap.sh | /bin/bash
   environment:
