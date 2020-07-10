@@ -67,6 +67,7 @@ shared_ptr<SonarPlayerBase> SonarPlayerBase::OpenFile(const string &filename) {
     return shared_ptr<SonarPlayerBase>(new RawSonarPlayer());
   }
 
+  LOG(INFO) << "Unable to figure out what file this is...";
   return nullptr;
 }
 
