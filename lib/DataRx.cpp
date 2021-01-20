@@ -186,11 +186,13 @@ namespace liboculus {
             const size_t discardSz = hdr.alignedPayloadSize();
 
             if ( discardSz == 0 ) {
-              LOG(INFO) << "Unknown message ID " << hdr.msgId();
+              if (hdr.msgId() == messageDummy ) {
+                LOG(DEBUG) << "Ignoring dummy message";
+              } else {
+                LOG(INFO) << "Unknown message ID " << hdr.msgId();
+              }
               scheduleHeaderRead();
-            }
-            else
-            {
+            } else {
               LOG(INFO) << "Unknown message ID " << hdr.msgId() << ", need to drain an additional " << discardSz << " bytes";
 
               std::vector<char> junkBuffer(discardSz);
