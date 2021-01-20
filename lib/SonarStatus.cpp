@@ -63,11 +63,16 @@ namespace liboculus {
 
   void SonarStatus::update( const OculusStatusMsg &msg,  sys_time_point msgTime )
   {
-    std::lock_guard<std::mutex> lock( _statusMutex );
+    {
+      std::lock_guard<std::mutex> lock( _statusMutex );
+      memcpy( (void *)&_osm, (void *)&msg, sizeof(OculusStatusMsg) );
 
-    memcpy( (void *)&_osm, (void *)&msg, sizeof(OculusStatusMsg) );
-    _valid = true;  // TODO:  Should validate
-    _msgTime = msgTime;
+      _valid = true;  // TODO:  Should actually validate contents
+      _msgTime = msgTime;
+    }
+
+    // Dump must be outside of the lock_guard or you get a race condition
+    //dump();
 
     //LOG(DEBUG) << "Updating all listeners!";
     //_statusUpdateCond.notify_all();

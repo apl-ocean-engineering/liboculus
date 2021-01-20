@@ -27,7 +27,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
- #pragma once
+#pragma once
 
 #include <thread>
 #include <chrono>
@@ -70,6 +70,7 @@ public:
   void dump() const;
 
   boost::asio::ip::address ipAddr() const;
+  uint32_t status() const { return _osm.status; }
 
   void update( const OculusStatusMsg &msg, sys_time_point msgTime = std::chrono::system_clock::now() );
 
