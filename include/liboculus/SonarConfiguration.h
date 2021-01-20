@@ -50,7 +50,8 @@ public:
     { _callback = callback; }
 
   void postponeCallback();
-  void sendCallback();
+  void enableCallback();
+  void sendCallback( );
 
   // Setter functions
   void setGamma(double input);

@@ -42,8 +42,9 @@ namespace liboculus {
 
     _sfm.head.oculusId    = 0x4f53;
     _sfm.head.msgId       = messageSimpleFire;
+    _sfm.head.msgVersion  = 0;
     _sfm.head.srcDeviceId = 0;
-    _sfm.head.dstDeviceId = 0;
+    _sfm.head.dstDeviceId = 7892;
     _sfm.head.payloadSize = sizeof(OculusSimpleFireMessage) - sizeof(OculusMessageHeader);
 
     // OculusMessageHeader head;     // The standard message header
@@ -76,6 +77,8 @@ namespace liboculus {
     //                               // bit 2: 0 = wont send gain, 1 = send gain
     //                               // bit 3: 0 = send full return message, 1 = send simple return message
 
+    // bit 4: "gain assistance"?
+
     _sfm.flags          =  0x19; // Send simple return msg; range in meters
 
     _sfm.speedOfSound    = 0.0;  // m/s  0 for automatic calculation speedOfSound;
@@ -86,11 +89,14 @@ namespace liboculus {
     _postponeCallback = true;
   }
 
-  void SonarConfiguration::sendCallback( void ) {
+  void SonarConfiguration::enableCallback( void ) {
     _postponeCallback = false;
+    sendCallback();
+  }
 
-      { if( _callback && !_postponeCallback ) _callback( *this ); }
-    }
+  void SonarConfiguration::sendCallback( ) {
+    if( _callback && !_postponeCallback ) _callback( *this );
+  }
 
   // need to integrate flags into dyanmic reconfig
 
@@ -137,7 +143,7 @@ namespace liboculus {
 
   void SonarConfiguration::serializeTo( boost::asio::streambuf &stream ) const
   {
-    stream.sputn( (char *)&_sfm, sizeof(OculusSimpleFireMessage));
+    stream.sputn( reinterpret_cast<const char*>(&_sfm), sizeof(OculusSimpleFireMessage) );
   }
 
 }
