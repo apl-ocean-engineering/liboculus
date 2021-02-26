@@ -62,7 +62,9 @@ public:
 
   void setRange(double input);
 
-  void setWaterTemperature( double degC );
+  void setFlags(uint8_t flags);
+
+  void setWaterTemperature(double degC);
 
   typedef enum {
     OCULUS_LOW_FREQ = 1,

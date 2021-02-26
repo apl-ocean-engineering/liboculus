@@ -103,6 +103,11 @@ namespace liboculus {
   }
 
   // need to integrate flags into dyanmic reconfig
+  void SonarConfiguration::setFlags(uint8_t flags)
+  {
+    _sfm.flags = flags;
+    sendCallback();
+  }
 
   void SonarConfiguration::setRange(double input)
   {
