@@ -49,9 +49,11 @@ namespace liboculus {
 
     // OculusMessageHeader head;     // The standard message header
     //
-    // uint8_t masterMode;           // mode 0 is flexi mode, needs full fire message (not available for third party developers)
-    //                               // mode 1 - Low Frequency Mode (wide aperture, navigation)
-    //                               // mode 2 - High Frequency Mode (narrow aperture, target identification)
+    // uint8_t masterMode;
+    // * mode 0 is flexi mode, needs full fire message (not available for third party developers)
+    // * mode 1 - Low Frequency Mode (wide aperture, navigation)
+    // * mode 2 - High Frequency Mode (narrow aperture, target identification)
+    //
     // PingRateType pingRate;        // Sets the maximum ping rate.
     // uint8_t networkSpeed;         // Used to reduce the network comms speed (useful for high latency shared links)
     // uint8_t gammaCorrection;      // 0 and 0xff = gamma correction = 1.0
@@ -67,19 +69,19 @@ namespace liboculus {
     _sfm.networkSpeed = 0xff;
 
     // Initial values
-    _sfm.gammaCorrection = 127; //gamma;
+    _sfm.gammaCorrection = 127;  //gamma;
     _sfm.pingRate        = pingRateNormal;
-    _sfm.range           = 2; // Meters
-    _sfm.gainPercent     = 50; // gain;
+    _sfm.range           = 2;  // Meters
+    _sfm.gainPercent     = 50;  // gain;
 
-    // uint8_t flags;                // bit 0: 0 = interpret range as percent, 1 = interpret range as meters
-    //                               // bit 1: 0 = 8 bit data, 1 = 16 bit data
-    //                               // bit 2: 0 = wont send gain, 1 = send gain
-    //                               // bit 3: 0 = send full return message, 1 = send simple return message
-
+    // uint8_t flags;
+    // bit 0: 0 = interpret range as percent, 1 = interpret range as meters
+    // bit 1: 0 = 8 bit data, 1 = 16 bit data
+    // bit 2: 0 = wont send gain, 1 = send gain
+    // bit 3: 0 = send full return message, 1 = send simple return message
     // bit 4: "gain assistance"?
 
-    _sfm.flags          =  0x19; // Send simple return msg; range in meters
+    _sfm.flags = 0x19;  // 0x19 = 0b11001. Send simple return msg; range in meters
 
     _sfm.speedOfSound    = 0.0;  // m/s  0 for automatic calculation speedOfSound;
     _sfm.salinity        = 0.0;  // ppt; freshwater salinity;
@@ -95,7 +97,9 @@ namespace liboculus {
   }
 
   void SonarConfiguration::sendCallback( ) {
-    if( _callback && !_postponeCallback ) _callback( *this );
+    if( _callback && !_postponeCallback ) {
+       _callback( *this );
+    }
   }
 
   // need to integrate flags into dyanmic reconfig
@@ -122,7 +126,7 @@ namespace liboculus {
 
   void SonarConfiguration::setGamma(double input)
   {
-    if (input <= 127 && input > 0) {
+    if (input <= 255 && input > 0) {
       _sfm.gammaCorrection = input;
     }
 
