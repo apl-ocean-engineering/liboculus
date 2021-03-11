@@ -28,25 +28,24 @@ if (FIPS_CONFIG)
 
   ## Set global include paths
   fips_include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty
   )
 
   ## Verbose output about ASIO handlers
   #add_definitions( -DBOOST_ASIO_ENABLE_HANDLER_TRACKING )
 
-
   fips_add_subdirectory("lib/")
 
   if( NOT FIPS_IMPORT )
-  add_subdirectory("tools/")
+    add_subdirectory("tools/")
+  endif()
 
   if( FIPS_UNITTESTS )
-  add_subdirectory( test/ )
+    add_subdirectory( test/ )
   endif()
 
   fips_finish()
-  endif()
 
 else()
   # == ROS / Catkin-specific section =================================
@@ -95,7 +94,7 @@ else()
 
     file(GLOB oculus_test_SRCS
               test/unit/*cpp )
-              
+
     catkin_add_gtest(oculus_test ${oculus_test_SRCS})
 
     target_link_libraries(oculus_test ${catkin_LIBRARIES}
