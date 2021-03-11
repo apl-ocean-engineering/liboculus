@@ -15,7 +15,7 @@ This library contains code for:
   - Loading and parsing sonar data stored as either:
     - Raw streams of binary packets.
     - Data encoded in the GPMF format by `serdp_recorder`
-    - (A scaffold exists for reading files saved by GUI provided by Oculus,
+    - (A scaffold exists for reading files saved by in GUI provided by Oculus,
       but it receives sonar data in an undocumented ping format).
 
 The library contains no special provisions for _saving_ sonar data,
