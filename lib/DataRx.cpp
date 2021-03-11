@@ -146,7 +146,7 @@ namespace liboculus {
         LOG(DEBUG) << "Validating...";
         if( hdr.valid() ) {
 
-          LOG(DEBUG) << "Got message ID " << hdr.msgId();
+          LOG(DEBUG) << "Got message ID " << static_cast<int>(hdr.msgId());
           if( hdr.msgId() == messageSimplePingResult ) {
 
             if( !hdr.expandForPayload() ) {
@@ -189,11 +189,11 @@ namespace liboculus {
               if (hdr.msgId() == messageDummy ) {
                 LOG(DEBUG) << "Ignoring dummy message";
               } else {
-                LOG(INFO) << "Unknown message ID " << hdr.msgId();
+                LOG(INFO) << "Unknown message ID " << static_cast<int>(hdr.msgId());
               }
               scheduleHeaderRead();
             } else {
-              LOG(INFO) << "Unknown message ID " << hdr.msgId() << ", need to drain an additional " << discardSz << " bytes";
+              LOG(INFO) << "Unknown message ID " << static_cast<int>(hdr.msgId()) << ", need to drain an additional " << discardSz << " bytes";
 
               std::vector<char> junkBuffer(discardSz);
 
