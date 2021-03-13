@@ -8,14 +8,14 @@ platform:
 
 steps:
 
-## Run the fips (debug) unittest endpoint
+## Run the fips "debug unittest" config
 - name: build-fips-unittest
   image: amarburg/lsdslam-dev-host
   commands:
     - ./fips set config linux-make-unittest
     - ./fips build
 
-## Run the release inittest endpoint
+## Run the fips "release unittest" config
 - name: build-fips-release
   image: amarburg/lsdslam-dev-host
   commands:
@@ -31,7 +31,16 @@ steps:
     ROS_PACKAGES_TO_INSTALL: cv-bridge image-transport opencv-apps
     WSTOOL_RECURSIVE: true
 
-## On success, trigger a rebuild of oculus_sonar_ros
+## Build with ROS noetic
+- name: build-ros-noetic
+  image: amarburg/drone-ci-ros-noetic:latest
+  commands:
+    - wget -O- https://gitlab.com/amarburg/ros_drone_ci/-/raw/master/bootstrap.sh | /bin/bash
+  environment:
+    ROS_PACKAGES_TO_INSTALL: cv-bridge image-transport opencv-apps
+    WSTOOL_RECURSIVE: true
+
+## On success, trigger a rebuild of oculus_sonar_ros at gitlab
 - name: trigger-gitlab-downstream
   image: plugins/downstream
   settings:
@@ -42,7 +51,7 @@ steps:
     repositories:
       - apl-ocean-engineering/oculus_sonar_ros
 
-## _and_ serdp_player
+## ... and all of the serdp_* packages at github
 - name: trigger-github-downstream
   image: plugins/downstream
   settings:
