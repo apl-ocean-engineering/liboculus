@@ -49,7 +49,7 @@ steps:
     token:
       from_secret: gitlab_drone_token
     repositories:
-      - apl-ocean-engineering/oculus_sonar_ros
+      - apl-ocean-engineering/oculus_sonar_driver
 
 ## ... and all of the serdp_* packages at github
 - name: trigger-github-downstream
