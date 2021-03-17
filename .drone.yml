@@ -50,6 +50,10 @@ steps:
       from_secret: gitlab_drone_token
     repositories:
       - apl-ocean-engineering/oculus_sonar_driver
+  when:
+    event:
+      exclude:
+        - pull_request
 
 ## ... and all of the serdp_* packages at github
 - name: trigger-github-downstream
@@ -63,6 +67,10 @@ steps:
       - apl-ocean-engineering/serdp_recorder
       - apl-ocean-engineering/serdp_player
       - apl-ocean-engineering/serdp_common
+  when:
+    event:
+      exclude:
+        - pull_request
 
 - name: slack
   image: plugins/slack
@@ -71,3 +79,6 @@ steps:
       from_secret: slack_webhook
   when:
     status: [ success, failure ]
+    event:
+      exclude:
+        - pull_request
