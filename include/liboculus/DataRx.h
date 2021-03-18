@@ -80,7 +80,8 @@ private:
   void readHeader( MessageHeader hdr, const boost::system::error_code& ec, std::size_t bytes_transferred );
   void readSimplePingResult( MessageHeader hdr, const boost::system::error_code& ec, std::size_t bytes_transferred );
 
-  void onSonarConfigurationChanged( const SonarConfiguration &config );
+  // Immediately send configuration update to the sonar
+  void sendConfiguration( const SonarConfiguration &config );
 
   boost::asio::io_service  &_ioService;
   tcp::socket _socket;

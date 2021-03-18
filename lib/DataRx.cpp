@@ -83,7 +83,6 @@ namespace liboculus {
 
   void DataRx::connect(const boost::asio::ip::address &addr,  SonarConfiguration &config)
   {
-    //
     if( connected() ) return;
 
     uint16_t port = 52100;
@@ -93,7 +92,7 @@ namespace liboculus {
 
     LOG(DEBUG) << "Connecting to sonar at " << sonarEndpoint;
 
-    config.setCallback( std::bind( &DataRx::onSonarConfigurationChanged, this, std::placeholders::_1 ));
+    config.setCallback( std::bind( &DataRx::sendConfiguration, this, std::placeholders::_1 ));
 
     // Schedule the first async_io connect task
     _socket.async_connect( sonarEndpoint, boost::bind(&DataRx::onConnect, this, _1, config ) );
@@ -105,10 +104,7 @@ namespace liboculus {
       scheduleHeaderRead();
 
       // Send one SonarConfiguration immediately.
-      boost::asio::streambuf buf;
-      config.serializeTo( buf );
-      auto result = _socket.send( buf.data() );
-      LOG(DEBUG) << "Sent " << result << " bytes to sonar";
+      sendConfiguration(config);
 
     } else {
       LOG(WARNING) << "Error on connect: " << ec.message();
@@ -117,7 +113,7 @@ namespace liboculus {
 
   //== Data writers
 
-  void DataRx::onSonarConfigurationChanged( const SonarConfiguration &msg ) {
+  void DataRx::sendConfiguration( const SonarConfiguration &msg ) {
     // Send it out immediately
     boost::asio::streambuf buf;
     msg.serializeTo( buf );
