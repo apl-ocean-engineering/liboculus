@@ -61,15 +61,15 @@ public:
 
   virtual ~DataRx();
 
-  void connect( uint32_t ip,  SonarConfiguration &config );
-  void connect( const boost::asio::ip::address &addr,  SonarConfiguration &config );
+  void connect( uint32_t ip, SonarConfiguration &config );
+  void connect( const boost::asio::ip::address &addr, SonarConfiguration &config );
 
   bool connected() const { return _socket.is_open(); }
 
   typedef std::function< void( const SimplePingResult & ) > SimplePingCallback;
   void setCallback( SimplePingCallback callback );
-private:
 
+private:
 
   void onConnect(const boost::system::error_code& error, SonarConfiguration &config);
 
@@ -77,8 +77,8 @@ private:
   // void writeHandler(const boost::system::error_code& ec );
 
   void scheduleHeaderRead();
-  void readHeader( MessageHeader hdr, const boost::system::error_code& ec, std::size_t bytes_transferred );
-  void readSimplePingResult( MessageHeader hdr, const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void readHeader(MessageHeader hdr, const boost::system::error_code& ec, std::size_t bytes_transferred);
+  void readSimplePingResult(MessageHeader hdr, const boost::system::error_code& ec, std::size_t bytes_transferred);
 
   // Immediately send configuration update to the sonar
   void sendConfiguration( const SonarConfiguration &config );
