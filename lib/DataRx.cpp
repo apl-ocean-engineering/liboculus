@@ -153,7 +153,7 @@ namespace liboculus {
             //shared_ptr<SimplePingResult> ping( new SimplePingResult( _hdr ) );
 
             // Read the remainder of the packet
-            auto b = boost::asio::buffer( hdr.payloadPtr(), hdr.alignedPayloadSize() );
+            auto b = boost::asio::buffer( hdr.payloadPtr(), hdr.payloadSize() );
             boost::asio::async_read( _socket, b, boost::bind(&DataRx::readSimplePingResult, this, hdr, _1, _2));
 
           } else if ( hdr.msgId() == messageLogs && hdr.payloadSize() > 0 ) {
@@ -179,7 +179,7 @@ namespace liboculus {
           } else {
             // Drop the rest of the message
 
-            const size_t discardSz = hdr.alignedPayloadSize();
+            const size_t discardSz = hdr.payloadSize();
 
             if ( discardSz == 0 ) {
               if (hdr.msgId() == messageDummy ) {
@@ -231,7 +231,7 @@ namespace liboculus {
       if (!ec) {
         LOG(DEBUG) << "Got " << bytes_transferred << " bytes of SimplePingResult from sonar";
 
-        if( bytes_transferred == hdr.alignedPayloadSize() ) {
+        if( bytes_transferred == hdr.payloadSize() ) {
 
           SimplePingResult ping( hdr );
 

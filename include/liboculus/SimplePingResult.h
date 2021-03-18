@@ -79,10 +79,8 @@ public:
   bool expandForPayload() {
     if( !valid() ) return false;
 
-    // alloc a 4-byte aligned buffer
     const size_t dataSize = sizeof(OculusMessageHeader) + payloadSize();
-    const size_t alignSize = ((dataSize + 3) >> 2) << 2;
-    _buffer->resize(alignSize);
+    _buffer->resize(dataSize);
 
     return true;
   }
@@ -111,10 +109,6 @@ public:
   unsigned int size() const { return _buffer->size(); }
 
   void *payloadPtr()        { return _buffer->data() + sizeof(OculusMessageHeader); }
-  // Data size is OculusSimplePingResult::payloadSize after it has been
-  // 4-byte aligned (in expandForPayload)
-  unsigned int alignedPayloadSize() const { return size() - sizeof(OculusMessageHeader); }
-
 
   void dump() const {
     LOG(DEBUG) << "   Oculus Id: 0x" << std::hex << oculusId();

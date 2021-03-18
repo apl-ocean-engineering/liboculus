@@ -108,7 +108,7 @@ bool RawSonarPlayer::nextPacket( MessageHeader &header ) {
   }
 
   header.expandForPayload();
-  _input.read( (char *)header.payloadPtr(), header.alignedPayloadSize() );
+  _input.read( (char *)header.payloadPtr(), header.payloadSize() );
 
   return true;
 }
