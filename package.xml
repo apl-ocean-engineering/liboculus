@@ -16,7 +16,6 @@
 
 
   <!-- The export tag contains other, unspecified, tags -->
-  <depend>active_object</depend>
   <depend>g3log_catkin</depend>
 
   <export>

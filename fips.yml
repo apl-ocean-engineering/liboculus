@@ -2,8 +2,6 @@ imports:
     fips-googletest:
         git: https://github.com/amarburg/fips-googletest.git
         cond: "FIPS_UNITTESTS"
-    libactiveobject:
-        git: https://github.com/apl-ocean-engineering/libactive_object.git
     libg3logger:
         git: https://github.com/apl-ocean-engineering/libg3logger.git
     CLI11-fips:

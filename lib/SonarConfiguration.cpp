@@ -125,7 +125,6 @@ namespace liboculus {
     if (input <= 100 && input > 0) {
       _sfm.gainPercent = input;
     }
-
     sendCallback();
   }
 
@@ -134,7 +133,6 @@ namespace liboculus {
     if (input <= 255 && input > 0) {
       _sfm.gammaCorrection = input;
     }
-
     sendCallback();
   }
 

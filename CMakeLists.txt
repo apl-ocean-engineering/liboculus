@@ -53,11 +53,10 @@ else()
 
   find_package(catkin REQUIRED
           #cmake_modules
-          active_object REQUIRED
           g3log_catkin )
 
   catkin_package(
-            CATKIN_DEPENDS active_object g3log_catkin
+            CATKIN_DEPENDS g3log_catkin
             INCLUDE_DIRS include thirdparty
             LIBRARIES liboculus_LIB )
 

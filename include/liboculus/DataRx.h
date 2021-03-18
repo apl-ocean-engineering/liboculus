@@ -34,8 +34,6 @@
 #include <boost/asio.hpp>
 #include <boost/asio/steady_timer.hpp>
 
-#include "active_object/bounded_shared_queue.h"
-
 #include "Oculus/Oculus.h"
 
 #include "SimplePingResult.h"
@@ -92,30 +90,5 @@ private:
   SimplePingCallback _simplePingCallback;
 
 };
-
-//===================================================================
-// This is the old API which relied on a shared queue rather than a callback
-// class DataRxQueued : public DataRx {
-// public:
-//   typedef active_object::bounded_shared_queue< shared_ptr<SimplePingResult>, 20 > Queue;
-//
-//   DataRxQueued(boost::asio::io_service &context, uint32_t ip,
-//               const SonarConfiguration &fire = SonarConfiguration() );
-//
-//   DataRxQueued(boost::asio::io_service &context, const boost::asio::ip::address &addr,
-//               const SonarConfiguration &fire = SonarConfiguration() );
-//
-//   virtual ~DataRxQueued();
-//
-//   Queue &queue() { return _queue; }
-//
-//   void enqueuePing( const shared_ptr<SimplePingResult> &ping );
-//
-// private:
-//
-//   Queue _queue;
-//
-// };
-
 
 }
