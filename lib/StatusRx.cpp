@@ -78,41 +78,41 @@ namespace liboculus {
     }
   }
 
-  void StatusRx::startReader()
-  {
+  void StatusRx::startReader() {
     // Set a deadline for the read operation.
     //deadline_.expires_from_now(boost::posix_time::seconds(30));
 
     // Start an asynchronous receive
-    _socket.async_receive( boost::asio::buffer((void *)&_osm, sizeof(OculusStatusMsg)), boost::bind(&StatusRx::handleRead, this, _1, _2));
+    _socket.async_receive(boost::asio::buffer((void *)&_osm, sizeof(OculusStatusMsg)),
+                          boost::bind(&StatusRx::handleRead, this, _1, _2));
   }
 
-  void StatusRx::handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred )
-  {
+  void StatusRx::handleRead(const boost::system::error_code& ec,
+                            std::size_t bytes_transferred) {
     if (!ec) {
       // Extract the newline-delimited message from the buffer.
 
-      if( bytes_transferred != sizeof(OculusStatusMsg)) {
-        LOG(WARNING) << "Got " << bytes_transferred << " bytes, expected OculusStatusMsg of size " << sizeof(OculusStatusMsg);
+      if (bytes_transferred != sizeof(OculusStatusMsg)) {
+        LOG(WARNING) << "Got " << bytes_transferred
+                     << " bytes, expected OculusStatusMsg of size "
+                     << sizeof(OculusStatusMsg);
         return;
       }
 
       LOG(DEBUG) << "Got status message.  Updating!";
-      _status.update( _osm );
-      if( _sonarStatusCallback ) _sonarStatusCallback( _status );
+      _status.update(_osm);
+      if(_sonarStatusCallback) {
+        _sonarStatusCallback(_status);
+      }
 
       _valid++;
 
       // Schedule another read
       startReader();
-    }
-    else
-    {
+    } else {
       LOG(WARNING) << "Error on receive: " << ec.message();
-
       //stop();
     }
   }
 
-
-}
+}  // namespace liboculus
