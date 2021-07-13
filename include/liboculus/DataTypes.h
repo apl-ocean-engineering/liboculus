@@ -38,84 +38,84 @@
 
 namespace liboculus {
 
-  inline const char *DataSizeToString( DataSizeType d ) {
-    switch(d) {
-      case dataSize8Bit:
-        return "8-bit";
-      case dataSize16Bit:
-        return "16-bit";
-      case dataSize24Bit:
-        return "24-bit";
-      case dataSize32Bit:
-        return "32-bit";
-    }
-
-    return "unknown";
+inline const char *DataSizeToString( DataSizeType d ) {
+  switch(d) {
+    case dataSize8Bit:
+      return "8-bit";
+    case dataSize16Bit:
+      return "16-bit";
+    case dataSize24Bit:
+      return "24-bit";
+    case dataSize32Bit:
+      return "32-bit";
   }
 
-  inline size_t SizeOfDataSize( DataSizeType d ) {
-    switch(d) {
-      case dataSize8Bit:
-        return 1;
-      case dataSize16Bit:
-        return 2;
-      case dataSize24Bit:
-        return 3;
-      case dataSize32Bit:
-        return 4;
-    }
+  return "unknown";
+}
 
-    return 0;
+inline size_t SizeOfDataSize( DataSizeType d ) {
+  switch(d) {
+    case dataSize8Bit:
+      return 1;
+    case dataSize16Bit:
+      return 2;
+    case dataSize24Bit:
+      return 3;
+    case dataSize32Bit:
+      return 4;
   }
 
-  //=== Message types
+  return 0;
+}
 
-  inline const char *MessageTypeToString( OculusMessageType t ) {
-    switch(t) {
-      case messageSimpleFire:
-          return "messageSimpleFire";
-      case messagePingResult:
-          return "messagePingResult";
-      case messageSimplePingResult:
-          return "messageSimplePingResult";
-      case messageUserConfig:
-          return "messageUserConfig";
-      case messageLogs:
-          return "messageLogs";
-      case messageDummy:
-          return "messageDummy";
-    }
+//=== Message types
 
-      return "(unknown)";
+inline const char *MessageTypeToString( OculusMessageType t ) {
+  switch(t) {
+    case messageSimpleFire:
+        return "messageSimpleFire";
+    case messagePingResult:
+        return "messagePingResult";
+    case messageSimplePingResult:
+        return "messageSimplePingResult";
+    case messageUserConfig:
+        return "messageUserConfig";
+    case messageLogs:
+        return "messageLogs";
+    case messageDummy:
+        return "messageDummy";
   }
-
-  //=== Ping rate to string
-
-  inline unsigned int PingRateToHz( PingRateType p ) {
-    switch(p) {
-      case pingRateNormal:   return 10;
-      case pingRateHigh:     return 15;
-      case pingRateHighest:  return 40;
-      case pingRateLow:      return 5;
-      case pingRateLowest:   return 2;
-      case pingRateStandby:  return 0;
-    }
-
-    return -1;
-  }
-
-  inline unsigned int PingRateToHz( int p ) {
-    return PingRateToHz( static_cast<PingRateType>(p) );
-  }
-
-  inline std::string FreqModeToString( uint8_t mode  ) {
-    if( mode == 1 ) {
-      return "Low Freq";
-    } else if (mode == 2 ) {
-      return "High Freq";
-    }
 
     return "(unknown)";
+}
+
+//=== Ping rate to string
+
+inline unsigned int PingRateToHz( PingRateType p ) {
+  switch(p) {
+    case pingRateNormal:   return 10;
+    case pingRateHigh:     return 15;
+    case pingRateHighest:  return 40;
+    case pingRateLow:      return 5;
+    case pingRateLowest:   return 2;
+    case pingRateStandby:  return 0;
   }
+
+  return -1;
+}
+
+inline unsigned int PingRateToHz( int p ) {
+  return PingRateToHz( static_cast<PingRateType>(p) );
+}
+
+inline std::string FreqModeToString( uint8_t mode  ) {
+  if( mode == 1 ) {
+    return "Low Freq";
+  } else if (mode == 2 ) {
+    return "High Freq";
+  }
+
+  return "(unknown)";
+}
 
 }

@@ -35,37 +35,33 @@
 
 namespace liboculus {
 
-  struct BearingDataLocator {
-    OculusSimplePingResult ping;
-    short BearingData[];
-  };
+struct BearingDataLocator {
+  OculusSimplePingResult ping;
+  short BearingData[];
+};
 
-  class BearingData {
-  public:
-    // \TODO get rid of this when the base constructor for SimplePingResult goes away
-    BearingData()
-      : _ptr(nullptr), _numBeams(0)
-    {;}
+class BearingData {
+ public:
+  // \TODO get rid of this when the base constructor for SimplePingResult goes away
+  BearingData() : _ptr(nullptr), _numBeams(0) {}
 
+  BearingData( BearingDataLocator *data )
+      : _ptr( data->BearingData ),
+        _numBeams( data->ping.nBeams ) {}
 
-    BearingData( BearingDataLocator *data )
-     : _ptr( data->BearingData ),
-      _numBeams( data->ping.nBeams )
-      {;}
+  int size() const { return _numBeams; }
 
-    int size() const { return _numBeams; }
+  // Returns bearing in degrees
+  float at(unsigned int i) const {
+    CHECK(i < _numBeams) << "Requested beam " << i << " out of range";
 
-    // Returns bearing in degrees
-    float at(unsigned int i) const {
-      CHECK(i < _numBeams) << "Requested beam " << i << " out of range";
-
-      return _ptr[i] / 100.0;
-    }
+    return _ptr[i] / 100.0;
+  }
 
 
-  private:
-    short *_ptr;
-    uint16_t _numBeams;
-  };
+ private:
+  short *_ptr;
+  uint16_t _numBeams;
+};
 
 }  // namespace liboculus
