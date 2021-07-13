@@ -27,9 +27,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Utility conversions for data types defined in Oculus.h
+
 #pragma once
 
 #include "Oculus/Oculus.h"
+
+#include <cstddef>  // for size_t
+#include <string>
 
 namespace liboculus {
 
