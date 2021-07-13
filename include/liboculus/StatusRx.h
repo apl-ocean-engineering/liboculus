@@ -41,30 +41,27 @@
 
 namespace liboculus {
 
-  using boost::asio::ip::udp;
-  using boost::asio::deadline_timer;
+using boost::asio::ip::udp;
+using boost::asio::deadline_timer;
 
 // ----------------------------------------------------------------------------
 // StatusRx - a listening socket for oculus status messages
 //
 //
-class StatusRx
-{
-public:
-    StatusRx(boost::asio::io_service &context );
-    ~StatusRx();
+class StatusRx {
+ public:
+  StatusRx(boost::asio::io_service &context);
+  ~StatusRx() {}
 
-    const SonarStatus &status() const
-      { return _status; }
+  const SonarStatus &status() const
+    { return _status; }
 
-    typedef std::function< void( const SonarStatus & ) > SonarStatusCallback;
+  typedef std::function< void( const SonarStatus & ) > SonarStatusCallback;
 
-    void setCallback( SonarStatusCallback callback )
-      { _sonarStatusCallback = callback; }
+  void setCallback( SonarStatusCallback callback )
+    { _sonarStatusCallback = callback; }
 
-
-private:
-
+ private:
   void doConnect();
 
   void startReader();
@@ -89,7 +86,6 @@ private:
   deadline_timer _deadline;
 
   SonarStatusCallback _sonarStatusCallback;
-
 };
 
-}
+}  // namespace liboculus
