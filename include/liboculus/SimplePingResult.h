@@ -27,7 +27,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
- #pragma once
+#pragma once
+
+#include "BearingData.h"
+#include "DataTypes.h"
+#include "ImageData.h"
+
+#include "Oculus/Oculus.h"
 
 #include <memory>
 #include <string.h>
@@ -35,17 +41,10 @@
 
 #include <g3log/g3log.hpp>
 
-#include "Oculus/Oculus.h"
-
-#include "DataTypes.h"
-#include "ImageData.h"
-#include "BearingData.h"
-
 namespace liboculus {
 
 using std::shared_ptr;
 using std::vector;
-
 
 class MessageHeader {
 public:
