@@ -39,7 +39,7 @@ SonarConfiguration::SonarConfiguration()
       _callback() {
   memset(&_sfm, 0, sizeof(OculusSimpleFireMessage));
 
-  // TODO(lindzey): replace (here and everywhere) with OCULUS_CHECK_ID
+  // Fill in OculusMessageHeader _sfm.head
   _sfm.head.oculusId    = OCULUS_CHECK_ID;  // 0x4f53
   _sfm.head.srcDeviceId = 0;
   _sfm.head.dstDeviceId = 7892;  // Q(lindzey): Where does this come from?
@@ -47,44 +47,30 @@ SonarConfiguration::SonarConfiguration()
   _sfm.head.msgVersion  = 0;
   _sfm.head.payloadSize = sizeof(OculusSimpleFireMessage) - sizeof(OculusMessageHeader);
 
-  // OculusMessageHeader head;     // The standard message header
-  //
-  // uint8_t masterMode;
-  // * mode 0 is flexi mode, needs full fire message (not available for third party developers)
-  // * mode 1 - Low Frequency Mode (wide aperture, navigation)
-  // * mode 2 - High Frequency Mode (narrow aperture, target identification)
-  //
-  // PingRateType pingRate;        // Sets the maximum ping rate.
-  // uint8_t networkSpeed;         // Used to reduce the network comms speed (useful for high latency shared links)
+  // Rest of the fields...
   // uint8_t gammaCorrection;      // 0 and 0xff = gamma correction = 1.0
   //                               // Set to 127 for gamma correction = 0.5
 
-  // double range;                 // The range demand in percent or m depending on flags
-  // double gainPercent;           // The gain demand
   // double speedOfSound;          // ms-1, if set to zero then internal calc will apply using salinity
   // double salinity;              // ppt, set to zero if we are in fresh water
 
   _sfm.masterMode = OCULUS_HIGH_FREQ;
-
-  _sfm.networkSpeed = 0xff;
-
-  // Initial values
-  _sfm.gammaCorrection = 127;  //gamma;
-  _sfm.pingRate        = pingRateNormal;
-  _sfm.range           = 2;  // Meters
-  _sfm.gainPercent     = 50;  // gain;
+  _sfm.pingRate = pingRateNormal;
+  _sfm.networkSpeed = 0xff;  // uint8_t; can reduce network speed for bad links
+  _sfm.gammaCorrection = 127;  // uint8_t; for 127, gamma = 0.5
 
   // uint8_t flags;
   // bit 0: 0 = interpret range as percent, 1 = interpret range as meters
   // bit 1: 0 = 8 bit data, 1 = 16 bit data
-  // bit 2: 0 = wont send gain, 1 = send gain
+  // bit 2: 0 = won't send gain, 1 = send gain
   // bit 3: 0 = send full return message, 1 = send simple return message
   // bit 4: "gain assistance"?
-
   _sfm.flags = 0x19;  // 0x19 = 0b11001. Send simple return msg; range in meters
 
-  _sfm.speedOfSound    = 0.0;  // m/s  0 for automatic calculation speedOfSound;
-  _sfm.salinity        = 0.0;  // ppt; freshwater salinity;
+  _sfm.range = 2;  // 2 m; can be percent or meters, flag controlled
+  _sfm.gainPercent = 50;
+  _sfm.speedOfSound = 0.0;  // m/s  0 to calculate SoS from salinity
+  _sfm.salinity = 0.0;  // ppt; 0 for freshwater, 35 for seawater
 }
 
 void SonarConfiguration::postponeCallback(void) {

@@ -175,7 +175,7 @@ class SimplePingResult : public MessageHeader {
   void dump() const;
 
  private:
-  // Objects which overlay _data for easier interpretation
+  // Objects which overlay the MessageHeader's _buffer for easier interpretation
   BearingData _bearings;
   ImageData _image;
 };  // class SimplePingResult

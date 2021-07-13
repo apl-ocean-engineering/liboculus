@@ -27,6 +27,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Overlay datatype that enables accessing the image data by
+// bearing/range coordinates without copying into another type.
+
 #pragma once
 
 #include "DataTypes.h"

@@ -79,6 +79,34 @@ The `--output` format works for both live data, and datafiles
 specified with `--input`.  The generated files are raw binary
 streams of sonar packets, and can be opened by `oc_client`.
 
+## Library Design
+
+This library makes liberal use of overlay classes in order to provide
+zero-copy accessor functions into the raw data chunks received from
+the oculus.
+
+These classes overlay the struct hierarchy defined in
+thirdparty/Oculus/Oculus.h, making it possible to directly cast between the types depending on which accessors you want to use:
+* OculusSimplePingResult carries all image data from the oculus.
+* Its first field is the OculusSimpleFireMessage that triggered data collection
+* In turn, the first field of the OculusSimpleFireMessage is an OculusMessageHeader
+
+So, in our code:
+* MessageHeader (SimplePingResult.h)
+  * Overlays OculusMessageHeader (there exist an accessor function that returns the original Oculus type)
+  * However, it contains a buffer that will accept the full message payload, which is then used by other classes that provide accessors.
+* SimplePingResult (SimplePingResult.{h,cpp}) overlays the OculusSimplePingResult.
+  * SimplePingResult subclasses MessageHeader
+  * Overlays both OculusSimpleFireMessage and OculusSimplePingResult (there are accessor functions that cast it to either)
+  * It has instances of two other overlay classes, BearingData and ImageData.
+* BearingData (BearingData.h) TODO: I'm still confused by how this one actually gets the bearings.
+* ImageData (ImageData.h) overlays the buffer in a SimplePingResult, using OculusSimpleFireMessage.imageOffset to index into the buffer at the correct spot.
+
+
+Other files:
+* DataTypes.h: Utility conversions for enums defined in Oculus.h
+
+
 ## License
 
 This code is released under the [BSD 3-clause license](LICENSE).

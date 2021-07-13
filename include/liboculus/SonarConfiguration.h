@@ -48,6 +48,10 @@ class SonarConfiguration {
     _callback = callback;
   }
 
+  // By default, setting any of the values will cause the configuration
+  // to be sent to the sensors. However, we often want to update multiple
+  // parameters at once, in which case the driver will postpone and then
+  // explicitly reenable the callbacks.
   void postponeCallback();
   void enableCallback();
 
