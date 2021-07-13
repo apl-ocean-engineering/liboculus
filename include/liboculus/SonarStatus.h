@@ -44,8 +44,7 @@ namespace liboculus {
 
 /// Thin wrapper around OculusStatusMsg
 class SonarStatus {
-public:
-
+ public:
   typedef std::chrono::time_point<std::chrono::system_clock> sys_time_point;
 
   SonarStatus();
@@ -67,20 +66,21 @@ public:
   // }
 
   bool valid() const { return _valid; }
+
+  // Print most recent OculusStatusMsg to LOG(DEBUG)
   void dump() const;
 
   boost::asio::ip::address ipAddr() const;
   uint32_t status() const { return _osm.status; }
 
-  void update( const OculusStatusMsg &msg, sys_time_point msgTime = std::chrono::system_clock::now() );
+  void update(const OculusStatusMsg &msg,
+              sys_time_point msgTime = std::chrono::system_clock::now());
 
-protected:
-
-  mutable std::mutex       _statusMutex;
+ protected:
+  mutable std::mutex _statusMutex;
   // mutable std::condition_variable  _statusUpdateCond;
 
-private:
-
+ private:
   bool                  _valid;
   OculusStatusMsg       _osm;             // The more recent status message
   sys_time_point        _msgTime;     // The time of the last message
