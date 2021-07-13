@@ -32,122 +32,121 @@
 namespace liboculus {
 
 
-  SonarClient::SonarClient( SonarConfiguration &config, const std::string &ipAddr )
-      : _ioSrv(),
+SonarClient::SonarClient( SonarConfiguration &config, const std::string &ipAddr )
+    : _ioSrv(),
       _statusRx( _ioSrv.service() ),
       _dataRx( _ioSrv.service() ),
-      _config( config )
-  {
+      _config( config ) {
 
-    _statusRx.setCallback( std::bind( &SonarClient::receiveStatus, this, std::placeholders::_1 ));
+  _statusRx.setCallback( std::bind( &SonarClient::receiveStatus, this, std::placeholders::_1 ));
 
-    if( ! ipAddr.empty() && ipAddr != "auto" ) {
-      LOG(INFO) << "Connecting to sonar with IP address " << ipAddr;
-      auto addr( boost::asio::ip::address_v4::from_string( ipAddr ) );
+  if( ! ipAddr.empty() && ipAddr != "auto" ) {
+    LOG(INFO) << "Connecting to sonar with IP address " << ipAddr;
+    auto addr( boost::asio::ip::address_v4::from_string( ipAddr ) );
 
-      LOG_IF(FATAL,addr.is_unspecified()) << "Couldn't parse IP address" << ipAddr;
-      _dataRx.connect( addr, _config );
-    }
-
-  }
-
-  SonarClient::~SonarClient()
-  {
-    stop();
-    join();
-  }
-
-  void SonarClient::start() {
-    _ioSrv.fork();
-  }
-
-  void SonarClient::join() {
-    _ioSrv.join();
-  }
-
-  void SonarClient::stop() {
-    _ioSrv.stop();
-  }
-
-  void SonarClient::receiveStatus( const SonarStatus &status ) {
-
-    // Always check the sonar status
-    {
-      uint32_t statusFlags = status.status();
-
-      // Lifted from the example SDK
-      OculusMasterStatusType mst = (OculusMasterStatusType)(statusFlags & 0x07);
-      bool checkPause = false;
-
-      //qDebug() << "Master Status Type: " << mst;
-      if (mst == oculusMasterStatusSsblBoot) {
-        LOG(WARNING) << "Error: SSBL Bootloader";
-        checkPause = true;
-      }
-      else if (mst == oculusMasterStatusSsblRun) {
-        LOG(WARNING) << "Error: SSBL Run";
-        checkPause = true;
-
-      }
-            /*
-            else if (mst == oculusMasterStatusMainBoot) {
-            error = "Error: Main Bootloader";
-            color = QColor("yellow");
-            show = true;
-          }
-          else if (mst == oculusMasterStatusMainRun) {
-          error = "Error: Main Run";
-          color = QColor("yellow");
-          show = true;
-        }
-        */
-
-    // Check the pause reason
-    if (checkPause) {
-      // Pause reason
-      OculusPauseReasonType prt = (OculusPauseReasonType)((statusFlags & 0x38) >> 3);
-
-      if (prt == oculusPauseMagSwitch) {
-        LOG(WARNING) << "Halt: Mag Switch Detected";
-      }
-      else if (prt == oculusPauseBootFromMain) {
-        LOG(WARNING) << "Halt: Boot From Main";
-      }
-      else if (prt == oculusPauseFlashError) {
-        LOG(WARNING) << "Halt: Flash Error. Update firmware";
-      }
-      else if (prt == oculusPauseJtagLoad) {
-        LOG(WARNING) << "Halt: JTAG Load";
-      }
-    }
-
-      // High temp
-      const bool overTempShutdown = (statusFlags & (1 << 15));
-      const bool highTemp = (statusFlags & (1 << 14));
-
-      if (overTempShutdown) {
-        LOG(WARNING) << "Warning: High Temp - Ping Rate Stopped";
-      } else if (highTemp) {
-        LOG(WARNING) << "Warning: High Temperature";
-      }
-
-      const bool transmitError = (statusFlags & (1 << 16));
-      if (transmitError) {
-        LOG(WARNING) << "Critical: Transmit Circuit Failure";
-      }
-    }
-
-
-    if( _dataRx.connected() ) return;
-
-    status.dump();
-
-    // Attempt auto detection
-    if( status.valid() ) {
-      auto addr( status.ipAddr() );
-      LOG(INFO) << "Using sonar detected at " << addr;
-      _dataRx.connect( addr, _config );
-    }
+    LOG_IF(FATAL,addr.is_unspecified()) << "Couldn't parse IP address" << ipAddr;
+    _dataRx.connect( addr, _config );
   }
 
 }
+
+SonarClient::~SonarClient()
+{
+  stop();
+  join();
+}
+
+void SonarClient::start() {
+  _ioSrv.fork();
+}
+
+void SonarClient::join() {
+  _ioSrv.join();
+}
+
+void SonarClient::stop() {
+  _ioSrv.stop();
+}
+
+void SonarClient::receiveStatus( const SonarStatus &status ) {
+
+  // Always check the sonar status
+  {
+    uint32_t statusFlags = status.status();
+
+    // Lifted from the example SDK
+    OculusMasterStatusType mst = (OculusMasterStatusType)(statusFlags & 0x07);
+    bool checkPause = false;
+
+    //qDebug() << "Master Status Type: " << mst;
+    if (mst == oculusMasterStatusSsblBoot) {
+      LOG(WARNING) << "Error: SSBL Bootloader";
+      checkPause = true;
+    }
+    else if (mst == oculusMasterStatusSsblRun) {
+      LOG(WARNING) << "Error: SSBL Run";
+      checkPause = true;
+
+    }
+          /*
+          else if (mst == oculusMasterStatusMainBoot) {
+          error = "Error: Main Bootloader";
+          color = QColor("yellow");
+          show = true;
+        }
+        else if (mst == oculusMasterStatusMainRun) {
+        error = "Error: Main Run";
+        color = QColor("yellow");
+        show = true;
+      }
+      */
+
+  // Check the pause reason
+  if (checkPause) {
+    // Pause reason
+    OculusPauseReasonType prt = (OculusPauseReasonType)((statusFlags & 0x38) >> 3);
+
+    if (prt == oculusPauseMagSwitch) {
+      LOG(WARNING) << "Halt: Mag Switch Detected";
+    }
+    else if (prt == oculusPauseBootFromMain) {
+      LOG(WARNING) << "Halt: Boot From Main";
+    }
+    else if (prt == oculusPauseFlashError) {
+      LOG(WARNING) << "Halt: Flash Error. Update firmware";
+    }
+    else if (prt == oculusPauseJtagLoad) {
+      LOG(WARNING) << "Halt: JTAG Load";
+    }
+  }
+
+    // High temp
+    const bool overTempShutdown = (statusFlags & (1 << 15));
+    const bool highTemp = (statusFlags & (1 << 14));
+
+    if (overTempShutdown) {
+      LOG(WARNING) << "Warning: High Temp - Ping Rate Stopped";
+    } else if (highTemp) {
+      LOG(WARNING) << "Warning: High Temperature";
+    }
+
+    const bool transmitError = (statusFlags & (1 << 16));
+    if (transmitError) {
+      LOG(WARNING) << "Critical: Transmit Circuit Failure";
+    }
+  }
+
+
+  if( _dataRx.connected() ) return;
+
+  status.dump();
+
+  // Attempt auto detection
+  if( status.valid() ) {
+    auto addr( status.ipAddr() );
+    LOG(INFO) << "Using sonar detected at " << addr;
+    _dataRx.connect( addr, _config );
+  }
+}
+
+}  // namespace liboculus
