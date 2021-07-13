@@ -40,15 +40,10 @@ using boost::asio::ip::address_v4;
 
 SonarStatus::SonarStatus()
     : _statusMutex(),
-      //_statusUpdateCond(),
       _valid(false) {}
 
 OculusStatusMsg SonarStatus::operator()(void) const {
   std::lock_guard<std::mutex> lock(_statusMutex);
-
-  // Copy?
-  // OculusStatusMsg osm;
-  // memcpy((void *)&osm, (void *)&_osm, sizeof(OculusStatusMsg));
 
   return _osm;
 }
@@ -69,9 +64,6 @@ void SonarStatus::update(const OculusStatusMsg &msg,  sys_time_point msgTime) {
 
   // Dump must be outside of the lock_guard or you get a race condition
   //dump();
-
-  //LOG(DEBUG) << "Updating all listeners!";
-  //_statusUpdateCond.notify_all();
 }
 
 void SonarStatus::dump() const {
