@@ -31,6 +31,7 @@
 #include "liboculus/SonarConfiguration.h"
 
 #include <boost/asio.hpp>
+#include <g3log/g3log.hpp>
 
 namespace liboculus {
 
@@ -99,6 +100,8 @@ void SonarConfiguration::setRange(double input) {
   // may need to use a double instead of uint8_t (depends on flags)
   if (input <= 40 && input > 0) {
     _sfm.range = input;
+  } else {
+    LOG(INFO) << "Requested invalid range: " << input;
   }
   sendCallback();
 }
@@ -106,13 +109,17 @@ void SonarConfiguration::setRange(double input) {
 void SonarConfiguration::setGainPercent(double input) {
   if (input <= 100 && input > 0) {
     _sfm.gainPercent = input;
+  } else {
+    LOG(INFO) << "Requested invalid gain: " << input;
   }
   sendCallback();
 }
 
-void SonarConfiguration::setGamma(double input) {
+void SonarConfiguration::setGamma(int input) {
   if (input <= 255 && input > 0) {
     _sfm.gammaCorrection = input;
+  } else {
+    LOG(INFO) << "Requested invalid gamma: " << input;
   }
   sendCallback();
 }

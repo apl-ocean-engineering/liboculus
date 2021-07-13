@@ -56,7 +56,7 @@ class SonarConfiguration {
   void enableCallback();
 
   // Setter functions
-  void setGamma(double input);
+  void setGamma(int input);
 
   void setPingRate(PingRateType newRate);
 
