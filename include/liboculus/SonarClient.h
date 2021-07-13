@@ -26,7 +26,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
- #pragma once
+
+#pragma once
 
 #include <string>
 #include <thread>
@@ -37,39 +38,36 @@
 
 namespace liboculus {
 
-  class SonarClient {
-  public:
+class SonarClient {
+ public:
+  SonarClient(SonarConfiguration &config, const std::string &ipAddr = "");
 
-    SonarClient( SonarConfiguration &config, const std::string &ipAddr = "" );
+  ~SonarClient();
 
-    ~SonarClient();
+  void start();
+  void join();
+  void stop();
 
-    void start();
-    void join();
-    void stop();
+  void updateConfiguration(const SonarConfiguration &msg);
+  const SonarConfiguration &configuration() const;
 
-    void updateConfiguration( const SonarConfiguration &msg );
-    const SonarConfiguration &configuration() const;
+  // Simple passthrough
+  void setDataRxCallback(DataRx::SimplePingCallback callback) {
+    _dataRx.setCallback(callback);
+  }
 
-    // Simple passthrough
-    void setDataRxCallback( DataRx::SimplePingCallback callback )
-      { _dataRx.setCallback( callback ); }
+ protected:
+  void receiveStatus(const SonarStatus& status);
 
-  protected:
+ private:
+  std::string _ipAddr;
 
-    void receiveStatus( const SonarStatus & status );
+  IoServiceThread _ioSrv;
+  StatusRx _statusRx;
+  DataRx _dataRx;
 
-  private:
+  // unfortunately, need to have a copy when receiveStatus is called...
+  SonarConfiguration &_config;
 
-    std::string _ipAddr;
-
-    IoServiceThread _ioSrv;
-    StatusRx _statusRx;
-    DataRx _dataRx;
-
-    // unfortunately, need to have a copy when receiveStatus is called...
-    SonarConfiguration &_config;
-
-  };
-
-}
+};  // class SonarClient
+}  // namespace liboculus

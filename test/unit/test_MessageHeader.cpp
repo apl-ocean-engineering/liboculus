@@ -11,7 +11,7 @@ void ValidateOneRawPingHeader( const MessageHeader &hdr ) {
 
   // These are known apriori for one_ping.raw
   ASSERT_EQ( messageSimplePingResult, hdr.msgId() );
-  ASSERT_EQ( 0x4f53, hdr.oculusId() );
+  ASSERT_EQ( OCULUS_CHECK_ID, hdr.oculusId() );
   ASSERT_EQ( 182000, hdr.payloadSize() );
 
 }

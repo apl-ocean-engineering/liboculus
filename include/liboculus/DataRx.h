@@ -29,6 +29,9 @@
 
 #pragma once
 
+#include "SimplePingResult.h"
+#include "SonarConfiguration.h"
+
 #include <memory>
 
 #include <boost/asio.hpp>
@@ -36,52 +39,55 @@
 
 #include "Oculus/Oculus.h"
 
-#include "SimplePingResult.h"
-#include "SonarConfiguration.h"
 
 namespace liboculus {
 
-  using std::shared_ptr;
-  using boost::asio::ip::tcp;
+using std::shared_ptr;
+using boost::asio::ip::tcp;
 
 // ----------------------------------------------------------------------------
 // DataRx - a state machine for receiving sonar data over the network
 
 class DataRx {
-public:
-
+ public:
   // n.b. takes IP in __NETWORK__ byte order
-  DataRx(boost::asio::io_service &context );
+  explicit DataRx(boost::asio::io_service &context);
 
   DataRx(boost::asio::io_service &context, uint32_t ip,
-               SonarConfiguration &config );
+         SonarConfiguration &config);
 
-  DataRx(boost::asio::io_service &context, const boost::asio::ip::address &addr,
-               SonarConfiguration &config );
+  DataRx(boost::asio::io_service &context,
+         const boost::asio::ip::address &addr,
+         SonarConfiguration &config);
 
-  virtual ~DataRx();
+  virtual ~DataRx() {}
 
-  void connect( uint32_t ip, SonarConfiguration &config );
-  void connect( const boost::asio::ip::address &addr, SonarConfiguration &config );
+  void connect(uint32_t ip, SonarConfiguration &config);
+  void connect(const boost::asio::ip::address &addr,
+               SonarConfiguration &config);
 
   bool connected() const { return _socket.is_open(); }
 
-  typedef std::function< void( const SimplePingResult & ) > SimplePingCallback;
-  void setCallback( SimplePingCallback callback );
+  typedef std::function< void(const SimplePingResult &) > SimplePingCallback;
+  void setCallback(SimplePingCallback callback);
 
-private:
-
-  void onConnect(const boost::system::error_code& error, SonarConfiguration &config);
+ private:
+  void onConnect(const boost::system::error_code& error,
+                 const SonarConfiguration &config);
 
   // void scheduleWrite();
-  // void writeHandler(const boost::system::error_code& ec );
+  // void writeHandler(const boost::system::error_code& ec);
 
   void scheduleHeaderRead();
-  void readHeader(MessageHeader hdr, const boost::system::error_code& ec, std::size_t bytes_transferred);
-  void readSimplePingResult(MessageHeader hdr, const boost::system::error_code& ec, std::size_t bytes_transferred);
+  void readHeader(MessageHeader hdr,
+                  const boost::system::error_code& ec,
+                  std::size_t bytes_transferred);
+  void readSimplePingResult(MessageHeader hdr,
+                            const boost::system::error_code& ec,
+                            std::size_t bytes_transferred);
 
   // Immediately send configuration update to the sonar
-  void sendConfiguration( const SonarConfiguration &config );
+  void sendConfiguration(const SonarConfiguration &config);
 
   boost::asio::io_service  &_ioService;
   tcp::socket _socket;
@@ -89,7 +95,6 @@ private:
 //  boost::asio::steady_timer _writeTimer;
 
   SimplePingCallback _simplePingCallback;
-
 };
 
-}
+}  // namespace liboculus

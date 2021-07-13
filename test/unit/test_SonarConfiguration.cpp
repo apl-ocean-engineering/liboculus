@@ -6,7 +6,7 @@ using namespace liboculus;
 
 void validateOculusHeader( const OculusMessageHeader &head )
 {
-  ASSERT_EQ( head.oculusId, 0x4f53 );
+  ASSERT_EQ( head.oculusId, OCULUS_CHECK_ID);  // 0x4f53
 
   // \TODO  exapand validity testing
 }

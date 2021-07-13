@@ -27,44 +27,50 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Overlay datatype that enables accessing the image data by
+// bearing/range coordinates without copying into another type.
+
 #pragma once
 
-#include <iostream>
+#include "DataTypes.h"
 #include "Oculus/Oculus.h"
+
+#include <iostream>
+
+#include <g3log/g3log.hpp>  // needed for CHECK macro
 
 namespace liboculus {
 
-  class ImageData {
-  public:
-    // \TODO get rid of this when the base constructor for SimplePingResult goes away
-    ImageData()
-      : _ptr(nullptr), _numRanges(0), _numBeams(0), _dataSz(0)
-      {;}
+class ImageData {
+ public:
+  // \TODO get rid of this when the base constructor for SimplePingResult goes away
+  ImageData()
+      : _ptr(nullptr), _numRanges(0), _numBeams(0), _dataSz(0) {}
 
-    ImageData( OculusSimplePingResult *ping )
-      : _ptr( &(reinterpret_cast<uint8_t *>(ping)[ping->imageOffset]) ),
-        _numRanges( ping->nRanges ),
-        _numBeams( ping->nBeams ),
-        _dataSz( SizeOfDataSize(ping->dataSize) )
-    {;}
+  ImageData( OculusSimplePingResult *ping )
+    : _ptr( &(reinterpret_cast<uint8_t *>(ping)[ping->imageOffset]) ),
+      _numRanges( ping->nRanges ),
+      _numBeams( ping->nBeams ),
+      _dataSz( SizeOfDataSize(ping->dataSize) ) {}
 
-    // TODO.  Deal with non-8-bit data somehow
-    uint8_t at(unsigned int bearing, unsigned int range) const {
-      CHECK(_dataSz == 1) << "Sorry, can only handle 8-bit data right now";
-      if (_ptr == nullptr)
-        return 0;
-
-      // TODO range check
-      const unsigned int index = range * _numBeams + bearing;
-      CHECK(index < (unsigned int)(_numRanges * _numBeams));
-
-      return ((uint8_t *)_ptr)[range * _numBeams + bearing];
+  // TODO.  Deal with non-8-bit data somehow
+  uint8_t at(unsigned int bearing, unsigned int range) const {
+    CHECK(_dataSz == 1) << "Sorry, can only handle 8-bit data right now";
+    if (_ptr == nullptr) {
+      return 0;
     }
 
-  private:
-    uint8_t *_ptr;
-    uint16_t _numRanges, _numBeams;
-    uint8_t _dataSz;
-  };
+    // TODO range check
+    const unsigned int index = range * _numBeams + bearing;
+    CHECK(index < (unsigned int)(_numRanges * _numBeams));
 
-}
+    return ((uint8_t *)_ptr)[range * _numBeams + bearing];
+  }
+
+ private:
+  uint8_t *_ptr;
+  uint16_t _numRanges, _numBeams;
+  uint8_t _dataSz;
+};  // class ImageData
+
+}  // namespace liboculus
