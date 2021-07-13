@@ -48,13 +48,6 @@ SonarConfiguration::SonarConfiguration()
   _sfm.head.msgVersion  = 0;
   _sfm.head.payloadSize = sizeof(OculusSimpleFireMessage) - sizeof(OculusMessageHeader);
 
-  // Rest of the fields...
-  // uint8_t gammaCorrection;      // 0 and 0xff = gamma correction = 1.0
-  //                               // Set to 127 for gamma correction = 0.5
-
-  // double speedOfSound;          // ms-1, if set to zero then internal calc will apply using salinity
-  // double salinity;              // ppt, set to zero if we are in fresh water
-
   _sfm.masterMode = OCULUS_HIGH_FREQ;
   _sfm.pingRate = pingRateNormal;
   _sfm.networkSpeed = 0xff;  // uint8_t; can reduce network speed for bad links
@@ -101,7 +94,7 @@ void SonarConfiguration::setRange(double input) {
   if (input <= 40 && input > 0) {
     _sfm.range = input;
   } else {
-    LOG(INFO) << "Requested invalid range: " << input;
+    LOG(WARNING) << "Requested invalid range: " << input;
   }
   sendCallback();
 }
@@ -110,7 +103,7 @@ void SonarConfiguration::setGainPercent(double input) {
   if (input <= 100 && input > 0) {
     _sfm.gainPercent = input;
   } else {
-    LOG(INFO) << "Requested invalid gain: " << input;
+    LOG(WARNING) << "Requested invalid gain: " << input;
   }
   sendCallback();
 }
@@ -119,7 +112,7 @@ void SonarConfiguration::setGamma(int input) {
   if (input <= 255 && input > 0) {
     _sfm.gammaCorrection = input;
   } else {
-    LOG(INFO) << "Requested invalid gamma: " << input;
+    LOG(WARNING) << "Requested invalid gamma: " << input;
   }
   sendCallback();
 }

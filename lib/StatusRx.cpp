@@ -52,7 +52,7 @@ namespace liboculus {
         _valid(0), _invalid(0),
         _ioService(context),
         _socket(_ioService),
-        _inputBuffer sizeof(OculusStatusMsg)),
+        _inputBuffer(sizeof(OculusStatusMsg)),
         _deadline(_ioService),
         _sonarStatusCallback() {
     // Create and setup a broadcast listening socket

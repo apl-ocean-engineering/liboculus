@@ -53,7 +53,7 @@ boost::asio::ip::address SonarStatus::ipAddr() const {
   return address_v4(ntohl(_osm.ipAddr));
 }
 
-void SonarStatus::update(const OculusStatusMsg &msg,  sys_time_point msgTime) {
+void SonarStatus::update(const OculusStatusMsg &msg, sys_time_point msgTime) {
   {
     std::lock_guard<std::mutex> lock(_statusMutex);
     memcpy((void *)&_osm, (void *)&msg, sizeof(OculusStatusMsg));

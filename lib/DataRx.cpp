@@ -43,7 +43,7 @@ namespace liboculus {
   using std::shared_ptr;
 
   // ----------------------------------------------------------------------------
-  // DataRx - a listening socket for oculus status messages
+  // DataRx - a listening socket for oculus data messages
 
   DataRx::DataRx(boost::asio::io_service &context)
     : _ioService(context),

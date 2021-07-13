@@ -35,7 +35,7 @@
 
 namespace liboculus {
 
-// OO wrapper around OculusSonarConfiguration
+// Thin OO wrapper around the OculusSimpleFireMessage.
 class SonarConfiguration {
  public:
   typedef std::function< void(const SonarConfiguration &) > SonarConfigurationChangedCallback;
