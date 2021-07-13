@@ -46,33 +46,24 @@ namespace liboculus {
   // ----------------------------------------------------------------------------
   // StatusRx - a listening socket for oculus status messages
 
-  StatusRx::StatusRx(boost::asio::io_service &context )
-            : _status(),
-            _port( 52102 ),
-            _valid(0), _invalid(0),
-            _ioService(context),
-            _socket(_ioService),
-            _inputBuffer( sizeof(OculusStatusMsg) ),
-            _deadline(_ioService),
-            _sonarStatusCallback()
-  {
+  StatusRx::StatusRx(boost::asio::io_service &context)
+      : _status(),
+        _port(52102),  // fixed port for status messages
+        _valid(0), _invalid(0),
+        _ioService(context),
+        _socket(_ioService),
+        _inputBuffer sizeof(OculusStatusMsg)),
+        _deadline(_ioService),
+        _sonarStatusCallback() {
     // Create and setup a broadcast listening socket
-    _port     = 52102;   // fixed port for status messages
-    _valid    = 0;
-    _invalid  = 0;
-
     doConnect();
   }
 
-  StatusRx::~StatusRx(){
-    ;
-  }
+  void StatusRx::doConnect() {
+    boost::asio::ip::udp::endpoint local(boost::asio::ip::address_v4::any(),
+                                         _port);
 
-  void StatusRx::doConnect()
-  {
-  boost::asio::ip::udp::endpoint local( boost::asio::ip::address_v4::any(), 52102);
     boost::system::error_code error;
-
     _socket.open(boost::asio::ip::udp::v4(), error);
 
     boost::asio::socket_base::broadcast option(true);
