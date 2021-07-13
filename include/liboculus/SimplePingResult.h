@@ -171,31 +171,7 @@ class SimplePingResult : public MessageHeader {
   const BearingData &bearings() const { return _bearings; }
   const ImageData &image() const      { return _image; }
 
-  virtual bool valid() const {
-    if (!MessageHeader::valid()) {
-      return false;
-    }
-
-    int num_pixels = oculusPing()->nRanges * oculusPing()->nBeams;
-    size_t expectedImageSize = SizeOfDataSize(oculusPing()->dataSize) * num_pixels;
-
-    if (oculusPing()->imageSize != expectedImageSize) {
-      LOG(WARNING) << "ImageSize size in header " << oculusPing()->imageSize
-                   << " does not match expected data size of "
-                   << expectedImageSize;
-      return false;
-    }
-
-    // size_t totalSize = expectedImageSize + _msg.imageOffset;
-    // if(_msg.messageSize != totalSize) {
-    //   LOG(WARNING) << "Message size " << _msg.messageSize << " does not match
-    //   expected message size of " << totalSize; return _valid;
-    // }
-
-    CHECK(oculusPing()->imageOffset > sizeof(OculusSimplePingResult));
-    return true;
-  }
-
+  virtual bool valid() const;
   void dump() const;
 
  private:

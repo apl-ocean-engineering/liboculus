@@ -31,6 +31,31 @@
 
 namespace liboculus {
 
+bool SimplePingResult::valid() const {
+  if (!MessageHeader::valid()) {
+    return false;
+  }
+
+  int num_pixels = oculusPing()->nRanges * oculusPing()->nBeams;
+  size_t expected_size = SizeOfDataSize(oculusPing()->dataSize) * num_pixels;
+
+  if (oculusPing()->imageSize != expected_size) {
+    LOG(WARNING) << "ImageSize size in header " << oculusPing()->imageSize
+                 << " does not match expected data size of "
+                 << expected_size;
+    return false;
+  }
+
+  // size_t totalSize = expected_size + _msg.imageOffset;
+  // if(_msg.messageSize != totalSize) {
+  //   LOG(WARNING) << "Message size " << _msg.messageSize << " does not match
+  //   expected message size of " << totalSize; return _valid;
+  // }
+
+  CHECK(oculusPing()->imageOffset > sizeof(OculusSimplePingResult));
+  return true;
+}
+
 void SimplePingResult::dump() const {
   LOG(DEBUG) << "--------------";
   LOG(DEBUG) << "        Mode: " << FreqModeToString(oculusFireMsg()->masterMode);
