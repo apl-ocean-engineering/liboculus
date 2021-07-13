@@ -35,23 +35,21 @@
 
 namespace liboculus {
 
-
 // OO wrapper around OculusSonarConfiguration
 class SonarConfiguration {
-public:
-
-  typedef std::function< void( const SonarConfiguration & ) > SonarConfigurationChangedCallback;
+ public:
+  typedef std::function< void(const SonarConfiguration &) > SonarConfigurationChangedCallback;
 
   SonarConfiguration();
 
-  void serializeTo( boost::asio::streambuf &buffer ) const;
+  void serializeTo(boost::asio::streambuf &buffer) const;
 
-  void setCallback( SonarConfigurationChangedCallback callback )
-    { _callback = callback; }
+  void setCallback(SonarConfigurationChangedCallback callback) {
+    _callback = callback;
+  }
 
   void postponeCallback();
   void enableCallback();
-  void sendCallback( );
 
   // Setter functions
   void setGamma(double input);
@@ -73,15 +71,15 @@ public:
 
   void setFreqMode(OculusFreqMode input);
 
-private:
-
-
-  bool _postponeCallback;
+ private:
+  //
+  void sendCallback();
+  // Whether to immediately send callbacks when set* is called.
+  bool postpone_callback_;
 
   OculusSimpleFireMessage _sfm;
 
   SonarConfigurationChangedCallback _callback;
+};  // class SonarConfiguration
 
-};
-
-}
+}  // namespace liboculus

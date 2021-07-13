@@ -27,18 +27,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <boost/asio.hpp>
 
 #include "liboculus/SonarConfiguration.h"
 
+#include <boost/asio.hpp>
 
 namespace liboculus {
 
 SonarConfiguration::SonarConfiguration()
-  : _postponeCallback( false ),
-    _callback()
-{
-  memset( &_sfm, 0, sizeof(OculusSimpleFireMessage));
+    : postpone_callback_(false),
+      _callback() {
+  memset(&_sfm, 0, sizeof(OculusSimpleFireMessage));
 
   // TODO(lindzey): replace (here and everywhere) with OCULUS_CHECK_ID
   _sfm.head.oculusId    = OCULUS_CHECK_ID;  // 0x4f53
@@ -65,7 +64,7 @@ SonarConfiguration::SonarConfiguration()
   // double speedOfSound;          // ms-1, if set to zero then internal calc will apply using salinity
   // double salinity;              // ppt, set to zero if we are in fresh water
 
-  _sfm.masterMode      = OCULUS_HIGH_FREQ;
+  _sfm.masterMode = OCULUS_HIGH_FREQ;
 
   _sfm.networkSpeed = 0xff;
 
@@ -88,70 +87,63 @@ SonarConfiguration::SonarConfiguration()
   _sfm.salinity        = 0.0;  // ppt; freshwater salinity;
 }
 
-void SonarConfiguration::postponeCallback( void ) {
-  _postponeCallback = true;
+void SonarConfiguration::postponeCallback(void) {
+  postpone_callback_ = true;
 }
 
-void SonarConfiguration::enableCallback( void ) {
-  _postponeCallback = false;
+void SonarConfiguration::enableCallback(void) {
+  postpone_callback_ = false;
   sendCallback();
 }
 
-void SonarConfiguration::sendCallback( ) {
-  if( _callback && !_postponeCallback ) {
-     _callback( *this );
+void SonarConfiguration::sendCallback() {
+  if (_callback && !postpone_callback_) {
+     _callback(*this);
   }
 }
 
 // need to integrate flags into dyanmic reconfig
-void SonarConfiguration::setFlags(uint8_t flags)
-{
+void SonarConfiguration::setFlags(uint8_t flags) {
   _sfm.flags = flags;
   sendCallback();
 }
 
-void SonarConfiguration::setRange(double input)
-{
+void SonarConfiguration::setRange(double input) {
   // 40 meters is the max range for the 1200d model
   // may need to use a double instead of uint8_t (depends on flags)
   if (input <= 40 && input > 0) {
     _sfm.range = input;
   }
-
   sendCallback();
 }
 
-void SonarConfiguration::setGainPercent(double input)
-{
+void SonarConfiguration::setGainPercent(double input) {
   if (input <= 100 && input > 0) {
     _sfm.gainPercent = input;
   }
   sendCallback();
 }
 
-void SonarConfiguration::setGamma(double input)
-{
+void SonarConfiguration::setGamma(double input) {
   if (input <= 255 && input > 0) {
     _sfm.gammaCorrection = input;
   }
   sendCallback();
 }
 
-void SonarConfiguration::setPingRate(PingRateType newRate)
-{
+void SonarConfiguration::setPingRate(PingRateType newRate) {
   _sfm.pingRate = newRate;
   sendCallback();
 }
 
-void SonarConfiguration::setFreqMode(OculusFreqMode input)
-{
+void SonarConfiguration::setFreqMode(OculusFreqMode input) {
   _sfm.masterMode = input;
   sendCallback();
 }
 
-void SonarConfiguration::serializeTo( boost::asio::streambuf &stream ) const
-{
-  stream.sputn( reinterpret_cast<const char*>(&_sfm), sizeof(OculusSimpleFireMessage) );
+void SonarConfiguration::serializeTo(boost::asio::streambuf &stream) const {
+  stream.sputn(reinterpret_cast<const char*>(&_sfm),
+               sizeof(OculusSimpleFireMessage));
 }
 
-}
+}  // namespace liboculus
