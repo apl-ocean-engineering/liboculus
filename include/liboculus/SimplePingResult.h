@@ -87,7 +87,7 @@ class MessageHeader {
   uint32_t payloadSize() const { return hdr()->payloadSize; }
 
   virtual bool valid() const {
-    return hdr()->oculusId == 0x4f53;
+    return hdr()->oculusId == OCULUS_CHECK_ID;  // 0x4f53
   }
 
   std::shared_ptr<ByteVector> buffer() { return _buffer; }

@@ -40,11 +40,12 @@ SonarConfiguration::SonarConfiguration()
 {
   memset( &_sfm, 0, sizeof(OculusSimpleFireMessage));
 
-  _sfm.head.oculusId    = 0x4f53;
+  // TODO(lindzey): replace (here and everywhere) with OCULUS_CHECK_ID
+  _sfm.head.oculusId    = OCULUS_CHECK_ID;  // 0x4f53
+  _sfm.head.srcDeviceId = 0;
+  _sfm.head.dstDeviceId = 7892;  // Q(lindzey): Where does this come from?
   _sfm.head.msgId       = messageSimpleFire;
   _sfm.head.msgVersion  = 0;
-  _sfm.head.srcDeviceId = 0;
-  _sfm.head.dstDeviceId = 7892;
   _sfm.head.payloadSize = sizeof(OculusSimpleFireMessage) - sizeof(OculusMessageHeader);
 
   // OculusMessageHeader head;     // The standard message header
