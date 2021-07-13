@@ -29,8 +29,12 @@
 
 #pragma once
 
-#include <iostream>
+#include "DataTypes.h"
 #include "Oculus/Oculus.h"
+
+#include <iostream>
+
+#include <g3log/g3log.hpp>  // needed for CHECK macro
 
 namespace liboculus {
 
