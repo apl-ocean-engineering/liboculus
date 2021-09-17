@@ -22,23 +22,21 @@ The library contains no special provisions for _saving_ sonar data,
 but it's straightforward to write packets as a raw binary stream
 (which the library can read) -- see `tools/oculus_client.cpp` for an example.
 
+Using this to interface with an Oculus instrument also requires installing the proprietary SDK, which you will have to obtain from Blueprint Subsea.
+
+## Build/Installation
+
 This is a hybrid repository:
 
-* The native build mechanism is the
-[fips](http://floooh.github.io/fips/) C++
-dependency management tool,
-however we hope the code is still useful for others looking to
-talk to the Oculus.
+* We primarily build using catkin, though there are no ROS dependencies in the code. We hope the code is still useful for others looking to talk to the Oculus.
 
-* This repo will also build in ROS / Catkin.  The `.rosinstall` file at the top
-level will work with `wstool` to install dependencies.
+* Historically, the repo has also supported the [fips](http://floooh.github.io/fips/) C++ dependency management tool. To build with fips: `./fips build`
 
-The code has a few dependencies:
-
-  - [libactiveobject](https://github.com/apl-ocean-engineering/libbinlogger) is our internal collection of thread synchronization classes.
-  - [libg3logger](https://github.com/apl-ocean-engineering/libg3logger) is our version of [g3log](https://github.com/apl-ocean-engineering/libg3logger) which is used for async logging.
-
-Both of these dependencies are handled by fips / wstool.
+The primary dependency is on [g3log](https://github.com/KjellKod/g3log).
+* If using catkin, there are two options:
+  * clone [g3log_catkin](https://gitlab.com/apl-ocean-engineering/g3log_catkin)
+  * use the provided liboculus.repos: `cd <catkin_ws>/src`; `vcs import --input liboculus/liboculus.repos`
+* It will be handled automagically if using fips.
 
 The (optional) test suite also requires Googletest and the (also optional)
 binary `oc_client` requires [CLI11](https://github.com/CLIUtils/CLI11),
@@ -48,9 +46,6 @@ Internally, the ethernet interface uses
 [Boost::asio](https://www.boost.org/doc/libs/1_66_0/doc/html/boost_asio.html),
 so Boost needs to be installed.
 
-To build (with fips):
-
-  ./fips build    // Will probably work
 
 
 ## oc_client binary
