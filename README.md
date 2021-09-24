@@ -76,6 +76,35 @@ streams of sonar packets, and can be opened by `oc_client`.
 
 ## Library Design
 
+The driver using this library is expected to instantiate a SonarClient, and hook up two interfaces:
+1. Instantiate a SonarConfig that will be kept updated with desired parameters; the SonarClient takes this as an argument at construction and keeps a reference to it.
+1. implement a callback that will handle data received from the sensor.
+
+Thus, the data flow is:
+* Updating configuration:
+  - Driver decides configuration needs to be updated. In the case of `oculus_sonar_driver`, this is triggered by `dynamic_reconfigure`. Driver calls `SonarConfiguration::.set{Range,etc.}`. Driver *owns* an instance of SonarConfig.
+  - When updated, `SonarConfig` has a pointer to a callback that it calls, passing a pointer to itself.
+  - That configCallback is responsible for actually sending it to the instrument. This is done by DataRx::sendConfiguration.
+* Receiving
+  - DataRx listens on the specified port. The message is read in two chunks, by `DataRx::readHeader` and `DataRx::readSimplePingResult`. The second of those stuffs the data into a `SimplePingResult` (which in turn is a thin wrapper around the Oculus-defined struct) and calls the provided callback.
+  - This callback was set by ...
+
+* Receiving status
+  - StatusRx
+
+The SonarClient itself owns a StatusRx and a DataRx, each of which listens on a fixed port for the given messages.
+* The StatusRx callback simply prints warnings, and attempts to connect the DataRx using the received address.
+* The DataRx
+
+
+The SonarConfiguration is really obnoxious:
+* the oculus_driver owns it.
+* SonarClient is constructed with a config and keeps a reference
+* SonarClient passes the reference to DataRx
+* DataRx sets the callback that causes ges from the oculus_driver to actually be sent to the instrument.
+
+
+
 This library makes liberal use of overlay classes in order to provide
 zero-copy accessor functions into the raw data chunks received from
 the oculus.
@@ -98,8 +127,13 @@ So, in our code:
 * ImageData (ImageData.h) overlays the buffer in a SimplePingResult, using OculusSimpleFireMessage.imageOffset to index into the buffer at the correct spot.
 
 
-Other files:
+Other files/classes:
 * DataTypes.h: Utility conversions for enums defined in Oculus.h
+
+* StatusRx: Connects to the fixed status port; stuffs messages into a SonarStatus and calls SonarClient's callback with the SonarStatus.
+* SonarStatus: Wrapper around OculusStatusMsg. Only used to dump it to LOG(DEBUG), so I'd like to see it disappear in favor of a log_status helper function.
+
+* IoServiceThread: thin wrapper around boost::asio functions providing a simple worker thread; used by both StatusRx and DataRx
 
 
 ## License
