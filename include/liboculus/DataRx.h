@@ -53,6 +53,11 @@ class DataRx {
   // n.b. takes IP in __NETWORK__ byte order
   explicit DataRx(boost::asio::io_service &context);
 
+  // NB: The config is NOT const. This is how the driver's configuration
+  //     is hooked up to the instrument (so DataRx to call setCallback)
+  // TODO(lindzey): This architecture is very ugly. Consider rewriting
+  //     so the config's callback is a function in the client, who in
+  //     turn directly calls the function in DataRx, which it owns.
   DataRx(boost::asio::io_service &context, uint32_t ip,
          SonarConfiguration &config);
 
@@ -72,16 +77,23 @@ class DataRx {
   void setCallback(SimplePingCallback callback);
 
  private:
+  // Callback for when the socket is connected. Schedule the first header read
+  // and send the first configuration to the sensor.
   void onConnect(const boost::system::error_code& error,
                  const SonarConfiguration &config);
 
-  // void scheduleWrite();
-  // void writeHandler(const boost::system::error_code& ec);
-
+  // Request bytes from the socket, set up readHeader as callback
   void scheduleHeaderRead();
+  // Callback for when header bytes have been received.
+  // NOTE(lindzey): Given how much trouble the rest of this driver goes to
+  //   to avoid copying data, it seems odd that the MessageHeaders are being
+  //   passed around by value.
   void readHeader(MessageHeader hdr,
                   const boost::system::error_code& ec,
                   std::size_t bytes_transferred);
+  // Callback for when payload bytes have been received for a message known
+  // to be a simplePingResult. Stuff them into a SimplePingResult and pass
+  // it along to the registered callback.
   void readSimplePingResult(MessageHeader hdr,
                             const boost::system::error_code& ec,
                             std::size_t bytes_transferred);
@@ -91,8 +103,6 @@ class DataRx {
 
   boost::asio::io_service  &_ioService;
   tcp::socket _socket;
-
-//  boost::asio::steady_timer _writeTimer;
 
   SimplePingCallback _simplePingCallback;
 };

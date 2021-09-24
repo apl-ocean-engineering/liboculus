@@ -59,7 +59,8 @@ SonarConfiguration::SonarConfiguration()
   // bit 2: 0 = won't send gain, 1 = send gain
   // bit 3: 0 = send full return message, 1 = send simple return message
   // bit 4: "gain assistance"?
-  _sfm.flags = 0x19;  // 0x19 = 0b11001. Send simple return msg; range in meters
+  // bit 6: use 512 beams (vs 256): email from Blueprint said to set flags |= 0x40
+  _sfm.flags = 0x59;  // 0x59 = 0b1011001. Send simple return msg; range in meters; 512 beams
 
   _sfm.range = 2;  // 2 m; can be percent or meters, flag controlled
   _sfm.gainPercent = 50;
@@ -76,13 +77,17 @@ void SonarConfiguration::enableCallback(void) {
   sendCallback();
 }
 
+// TODO(lindzey): I can't figure out where this is actually set.
+//    It's not set in SonarClient, unless _dataRx.connect() does something
+//    It's not directly set in oculus_sonar_nodelet.
 void SonarConfiguration::sendCallback() {
   if (_callback && !postpone_callback_) {
      _callback(*this);
   }
 }
 
-// need to integrate flags into dyanmic reconfig
+// TODO(lindzey): I don't love that the driver knows how to
+//   convert bools to flags. Better to do that here ...
 void SonarConfiguration::setFlags(uint8_t flags) {
   _sfm.flags = flags;
   sendCallback();

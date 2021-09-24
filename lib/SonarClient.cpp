@@ -67,6 +67,7 @@ void SonarClient::stop() {
   _ioSrv.stop();
 }
 
+// TODO(lindzey): Should any of these get surfaced to ROS?
 void SonarClient::receiveStatus(const SonarStatus &status) {
   // Always check the sonar status
   {

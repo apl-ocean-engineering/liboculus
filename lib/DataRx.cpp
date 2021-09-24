@@ -66,6 +66,9 @@ DataRx::DataRx(boost::asio::io_service &context,
   connect(addr, config);
 }
 
+// QUESTION(lindzey): Where is this actually called??
+//    Ah -- SonarClient renames this to setDataRxCallback, and
+//    the driver calls that.
 void DataRx::setCallback(SimplePingCallback callback) {
   _simplePingCallback = callback;
 }
@@ -157,12 +160,15 @@ void DataRx::readHeader(MessageHeader hdr, const boost::system::error_code& ec,
   // * messageLogs
   // * messageDummy
 
+  // TODO(lindzey): This seems to guarantee a buffer overrun if we just continue here.
   if (hdr.msgId() == messageSimplePingResult) {
     if (!hdr.expandForPayload()) {
       LOG(WARNING) << "Unable to expand for payload";
     }
 
     // Read the remainder of the packet
+    // QUESTION(lindzey): Why is this scheduled as an async_read, while the
+    //    others directly read?
     auto b = boost::asio::buffer(hdr.payloadPtr(), hdr.payloadSize());
     boost::asio::async_read(_socket, b,
                             boost::bind(&DataRx::readSimplePingResult,
@@ -176,55 +182,44 @@ void DataRx::readHeader(MessageHeader hdr, const boost::system::error_code& ec,
     //     cause problems? Is it maybe why I have to restart the driver
     //     twice to recover after getting it into a weird state?
 
-  } else if (hdr.msgId() == messageLogs) {
-    LOG(DEBUG) << "Fetching " << hdr.payloadSize() << " bytes of Log message";
-    if (hdr.payloadSize() > 0) {
-      boost::asio::streambuf junkBuffer(hdr.payloadSize());
-      auto bytes_recvd = boost::asio::read(_socket, junkBuffer);
+  } else {
+    // Always download the rest of the message.
+    auto payload_bytes = hdr.payloadSize();
+    uint32_t bytes_received;
+    boost::asio::streambuf junk_buffer(hdr.payloadSize());
+    if (payload_bytes > 0) {
+      LOG(DEBUG) << "Fetching " << payload_bytes << " bytes of payload";
+      // Q(lindzey): Is it OK for this NOT to be an async_read? It replaces
+      //   multiple calls, some of which were read and the rest async_read.
+      bytes_received = boost::asio::read(_socket, junk_buffer);
+      if (bytes_received != payload_bytes) {
+        LOG(WARNING) << "Requested " << payload_bytes << " payload bytes, "
+                     << "but only received " << bytes_received;
+      }
+    }
 
-      LOG(DEBUG) << "Read " << bytes_recvd << " of logging info";
-      if (bytes_recvd > 0) {
-        std::string s((std::istreambuf_iterator<char>(&junkBuffer)),
+    // Message-specific handling
+    if (hdr.msgId() == messageLogs) {
+      // Actually want to log these!
+      LOG(DEBUG) << "Read " << bytes_received << " of logging info";
+      if (bytes_received > 0) {
+        std::string s((std::istreambuf_iterator<char>(&junk_buffer)),
                       std::istreambuf_iterator<char>());
         LOG(DEBUG) << s;
-        scheduleHeaderRead();
       } else {
         LOG(WARNING) << "Error on receive of payload for log message: "
                      << ec.message();
       }
-    }
-
-  } else {
-    // Drop the rest of the message
-
-    const size_t discardSz = hdr.payloadSize();
-
-    if (discardSz == 0) {
-      if (hdr.msgId() == messageDummy) {
-        LOG(DEBUG) << "Ignoring dummy message";
-      } else {
-        LOG(INFO) << "Unknown message ID " << static_cast<int>(hdr.msgId());
-      }
-      scheduleHeaderRead();
+    } else if (hdr.msgId() == messageDummy) {
+      LOG(DEBUG) << "Ignoring dummy message";
     } else {
-      LOG(INFO) << "Unknown message ID " << static_cast<int>(hdr.msgId())
-                << ", need to drain an additional " << discardSz << " bytes";
-
-      std::vector<char> junkBuffer(discardSz);
-
-      // QUESTION(LEL): Why is this async_read rather than read() like in
-      //     the previous block handling log messages?
-      boost::asio::async_read(_socket,
-                              boost::asio::buffer(junkBuffer, discardSz),
-          [this](boost::system::error_code ec, std::size_t bytes_recvd) {
-            LOG(DEBUG) << "Read and discarded " << bytes_recvd;
-            if (!ec && bytes_recvd > 0) {
-              scheduleHeaderRead();
-            } else {
-              LOG(WARNING) << "Error on receive of add'l data: " << ec.message();
-            }
-          });
+      // Unhandled values of the OculusMessageType enum:
+      // messagesSimpleFire, messagePingResult, messageUserConfig
+      LOG(INFO) << "Unknown message ID " << static_cast<int>(hdr.msgId());
     }
+
+    // Finally, set up for the next round.
+    scheduleHeaderRead();
   }
 }
 
