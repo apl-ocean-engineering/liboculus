@@ -152,6 +152,7 @@ class SimplePingResult : public MessageHeader {
   ~SimplePingResult() {}
 
   // Because the message consists of nested structs, these are trivial
+  // QUESTION(lindzey): When do the non-const ones get used??
   OculusSimpleFireMessage *oculusFireMsg()  {
     return reinterpret_cast< OculusSimpleFireMessage *>(ptr());
   }
@@ -171,6 +172,7 @@ class SimplePingResult : public MessageHeader {
   const BearingData &bearings() const { return _bearings; }
   const ImageData &image() const      { return _image; }
 
+  // QUESTION(lindzey): Why aren't these override?
   virtual bool valid() const;
   void dump() const;
 
