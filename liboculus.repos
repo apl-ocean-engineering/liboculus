@@ -1,1 +1,1 @@
-- git: {local-name: g3log_catkin, uri: "https://gitlab.com/apl-ocean-engineering/lsd-slam/g3log_catkin.git", version: main}
+- git: {local-name: g3log_ros, uri: "https://gitlab.com/apl-ocean-engineering/g3log_ros.git", version: main}

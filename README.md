@@ -34,7 +34,7 @@ This is a hybrid repository:
 
 The primary dependency is on [g3log](https://github.com/KjellKod/g3log).
 * If using catkin, there are two options:
-  * clone [g3log_catkin](https://gitlab.com/apl-ocean-engineering/g3log_catkin)
+  * clone [g3log_ros](https://gitlab.com/apl-ocean-engineering/g3log_ros)
   * use the provided liboculus.repos: `cd <catkin_ws>/src`; `vcs import --input liboculus/liboculus.repos`
 * It will be handled automagically if using fips.
 
