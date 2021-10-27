@@ -63,10 +63,18 @@ class SonarClient {
   std::string _ipAddr;
 
   IoServiceThread _ioSrv;
+  // Status and Data messages come in on different ports, so they're
+  // handled separately.
   StatusRx _statusRx;
   DataRx _dataRx;
 
   // unfortunately, need to have a copy when receiveStatus is called...
+  // (We want the driver to be able to connect to the instrument whenever
+  // it becomes available, which requires the SonarClient to know the
+  // most recent configuration state, not just the state at startup.
+  // Additionally, when _config is passed to DataRx, the configuration's
+  // callback is bound to the proper member function for DataRx to update
+  // the instrument's configuration.)
   SonarConfiguration &_config;
 
 };  // class SonarClient
