@@ -33,8 +33,8 @@ This is a hybrid repository:
 
 The primary dependency is on [g3log](https://github.com/KjellKod/g3log).
 * If using catkin, there are two options:
-  * clone [g3log_ros](https://gitlab.com/apl-ocean-engineering/g3log_ros)
-  * use the provided liboculus.repos: `cd <catkin_ws>/src`; `vcs import --input liboculus/liboculus.repos`
+  * clone [g3log_ros](https://gitlab.com/apl-ocean-engineering/g3log_ros) into your workspace's `src/` directory
+  * use the provided `liboculus.rosinstall` file: `cd <catkin_ws>/src`; `vcs import --input liboculus/liboculus.repos`
 * It will be handled automagically if using fips.
 
 The (optional) test suite also requires Googletest and the (also optional)
@@ -51,9 +51,10 @@ so Boost needs to be installed.
 
 The repo contains one binary, `oc_client` which can read data either from a
 real Oculus sonar via ethernet, or from a file containing raw Ethernet
-data, or in our GPMF-based data format.   As above, it can't actually read
-files saved by the Oculus client as it saves a ping message format for which
-we don't have the data format.
+data.
+
+As noted above, it **cannot** read
+files saved by the proprietary Oculus GUI as that receives data from the sonar in a proprietary data format (independent from the `SimplePingResult` format used in this code).
 
 Here's the help string for `oc_client`:
 
