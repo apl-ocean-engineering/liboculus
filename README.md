@@ -10,19 +10,18 @@ This library contains code for:
   - Communicating with a [Blueprint Subsea Oculus](https://www.blueprintsubsea.com/oculus/index.php) imaging sonar over
     its ethernet interface.
 
-  - Decoding and parsing fields from the resulting ping messages.
+  - Requesting that the sonar ping.
 
-  - Loading and parsing sonar data stored as either:
+  - Decoding and parsing fields from the resulting ping messages from the sonar.
+
+  - Loading and parsing sonar data recorded as either:
     - Raw streams of binary packets.
     - Data encoded in the GPMF format by `serdp_recorder`
-    - (A scaffold exists for reading files saved by in GUI provided by Oculus,
-      but it receives sonar data in an undocumented ping format).
+    - **Note:** This repo includes scaffold code for reading `.oculus` files saved from the Blueprint GUI, but as that format is proprietary and undocumented **we cannot actually parse `.oculus` files.**
 
 The library contains no special provisions for _saving_ sonar data,
 but it's straightforward to write packets as a raw binary stream
 (which the library can read) -- see `tools/oculus_client.cpp` for an example.
-
-Using this to interface with an Oculus instrument also requires installing the proprietary SDK, which you will have to obtain from Blueprint Subsea.
 
 ## Build/Installation
 
@@ -139,3 +138,5 @@ Other files/classes:
 ## License
 
 This code is released under the [BSD 3-clause license](LICENSE).
+
+This repository contains one file provided by Blueprint as part of their free "Oculus Viewer" sample application ([thirdparty/Oculus/Oculus.h](thirdpart/Oculus/Oculus.h)), which describes their protocol and data formats.   This file is distributed under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html).
