@@ -42,16 +42,22 @@ class SonarConfiguration {
 
   SonarConfiguration();
 
-  void serializeTo(boost::asio::streambuf &buffer) const;
+  std::vector<uint8_t> serialize() const;
 
+  // The callback is called any time the configuration is changed.
+  // Typically this callback would send the resulting change to
+  // the sonar.
   void setCallback(SonarConfigurationChangedCallback callback) {
     _callback = callback;
   }
 
   // By default, setting any of the values will cause the configuration
   // to be sent to the sensors. However, we often want to update multiple
-  // parameters at once, in which case the driver will postpone and then
-  // explicitly reenable the callbacks.
+  // parameters at once.  These functions can be used to "pause" and "unpause"
+  // calls to the callback.
+  //
+  // The callback is always called when enableCallback() is called ... even if
+  // no changes have occurred in the configuration.
   void postponeCallback();
   void enableCallback();
 

@@ -132,9 +132,11 @@ void SonarConfiguration::setFreqMode(OculusFreqMode input) {
   sendCallback();
 }
 
-void SonarConfiguration::serializeTo(boost::asio::streambuf &stream) const {
-  stream.sputn(reinterpret_cast<const char*>(&_sfm),
-               sizeof(OculusSimpleFireMessage));
+std::vector<uint8_t> SonarConfiguration::serialize() const {
+  std::vector<uint8_t> v;
+  const auto ptr=reinterpret_cast<const char*>(&_sfm);
+  v.insert(v.end(), ptr, ptr + sizeof(OculusSimpleFireMessage));
+  return v;
 }
 
 }  // namespace liboculus

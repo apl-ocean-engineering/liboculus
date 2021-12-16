@@ -112,7 +112,7 @@ void SonarClient::receiveStatus(const SonarStatus &status) {
     const bool highTemp = (status_flags & (1 << 14));
 
     if (overTempShutdown) {
-      LOG(WARNING) << "Warning: High Temp - Ping Rate Stopped";
+      LOG(WARNING) << "Warning: High Temp - Pings Stopped";
     } else if (highTemp) {
       LOG(WARNING) << "Warning: High Temperature";
     }

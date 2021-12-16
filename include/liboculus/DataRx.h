@@ -76,6 +76,12 @@ class DataRx {
   typedef std::function< void(const SimplePingResult &) > SimplePingCallback;
   void setCallback(SimplePingCallback callback);
 
+  typedef std::function< void(const std::vector<uint8_t> &) > DataRxCallback;
+  typedef DataRxCallback DataTxCallback;
+  void setDataRxCallback(DataRxCallback callback);
+  void setDataTxCallback(DataTxCallback callback);
+
+
  private:
   // Callback for when the socket is connected. Schedule the first header read
   // and send the first configuration to the sensor.
@@ -105,6 +111,9 @@ class DataRx {
   tcp::socket _socket;
 
   SimplePingCallback _simplePingCallback;
+
+  DataRxCallback _dataRxCallback;
+  DataTxCallback _dataTxCallback;
 };
 
 }  // namespace liboculus

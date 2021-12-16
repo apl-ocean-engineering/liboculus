@@ -33,6 +33,7 @@
 #include <sstream>
 
 #include <boost/bind.hpp>
+#include <boost/asio/buffer.hpp>
 #include <chrono>
 
 #include "g3log/g3log.hpp"
@@ -41,6 +42,8 @@ namespace liboculus {
 
 using std::string;
 using std::shared_ptr;
+
+namespace asio = boost::asio;
 
 // ----------------------------------------------------------------------------
 // DataRx - a listening socket for oculus data messages
@@ -73,16 +76,26 @@ void DataRx::setCallback(SimplePingCallback callback) {
   _simplePingCallback = callback;
 }
 
+void DataRx::setDataRxCallback(DataRxCallback callback) {
+  _dataRxCallback = callback;
+}
+
+void DataRx::setDataTxCallback(DataTxCallback callback) {
+  _dataTxCallback = callback;
+}
+
+
+
 void DataRx::connect(uint32_t ip,  SonarConfiguration &config) {
   connect(boost::asio::ip::address_v4(ip), config);
 }
 
-void DataRx::connect(const boost::asio::ip::address &addr,
+void DataRx::connect(const asio::ip::address &addr,
                      SonarConfiguration &config) {
   if (connected()) return;
 
   uint16_t port = 52100;
-  boost::asio::ip::address ipAddress = addr;
+  asio::ip::address ipAddress = addr;
 
   boost::asio::ip::tcp::endpoint sonarEndpoint(ipAddress, port);
 
@@ -113,12 +126,13 @@ void DataRx::onConnect(const boost::system::error_code& ec,
 //== Data writers
 
 void DataRx::sendConfiguration(const SonarConfiguration &msg) {
-  // Send it out immediately
-  boost::asio::streambuf buf;
-  msg.serializeTo(buf);
+  std::vector<std::uint8_t> vector_buffer = msg.serialize();
+  asio::const_buffer vector_buffer_view = asio::buffer(vector_buffer);
 
-  auto result = _socket.send(buf.data());
+  auto result = _socket.send(vector_buffer_view);
   LOG(DEBUG) << "Sent " << result << " bytes to sonar";
+
+  _dataTxCallback(vector_buffer);
 }
 
 //=== Readers
@@ -138,6 +152,8 @@ void DataRx::readHeader(MessageHeader hdr, const boost::system::error_code& ec,
     return;
   }
   LOG(DEBUG) << "Got " << bytes_transferred << " bytes of header from sonar";
+
+ // _dataRxCallback(header.buffer());
 
   if (bytes_transferred != sizeof(OculusMessageHeader)) {
     LOG(WARNING) << "Received short header of " << bytes_transferred
@@ -197,6 +213,8 @@ void DataRx::readHeader(MessageHeader hdr, const boost::system::error_code& ec,
                      << "but only received " << bytes_received;
       }
     }
+
+ // _dataRxCallback(junk_buffer.data());
 
     // Message-specific handling
     if (hdr.msgId() == messageLogs) {
