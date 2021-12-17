@@ -101,9 +101,9 @@ namespace liboculus {
 
       LOG(DEBUG) << "Got status message.  Updating!";
       _status.update(_osm);
-      if(_sonarStatusCallback) {
-        _sonarStatusCallback(_status);
-      }
+      auto is_good = parseStatus();
+
+      _sonarStatusCallback(_status, is_good);
 
       _valid++;
 
@@ -114,5 +114,68 @@ namespace liboculus {
       //stop();
     }
   }
+
+// TODO(lindzey): Should any of these get surfaced to ROS?
+bool StatusRx::parseStatus() {
+  // Always check the sonar status
+  {
+    uint32_t status_flags = _status.status();
+
+    // Lifted from the example SDK
+    OculusMasterStatusType mst = (OculusMasterStatusType)(status_flags & 0x07);
+    bool checkPause = false;
+
+    if (mst == oculusMasterStatusSsblBoot) {
+      LOG(WARNING) << "Error: SSBL Bootloader";
+      checkPause = true;
+    } else if (mst == oculusMasterStatusSsblRun) {
+      LOG(WARNING) << "Error: SSBL Run";
+      checkPause = true;
+    }
+    /*
+    else if (mst == oculusMasterStatusMainBoot) {
+      LOG(WARNING) << "Error: Main Bootloader";
+    } else if (mst == oculusMasterStatusMainRun) {
+      LOG(WARNING) << "Error: Main Run";
+    }
+    */
+
+    // Check the pause reason
+    if (checkPause) {
+      OculusPauseReasonType prt = (OculusPauseReasonType)((status_flags & 0x38) >> 3);
+
+      if (prt == oculusPauseMagSwitch) {
+        LOG(WARNING) << "Halt: Mag Switch Detected";
+      } else if (prt == oculusPauseBootFromMain) {
+        LOG(WARNING) << "Halt: Boot From Main";
+      } else if (prt == oculusPauseFlashError) {
+        LOG(WARNING) << "Halt: Flash Error. Update firmware";
+      } else if (prt == oculusPauseJtagLoad) {
+        LOG(WARNING) << "Halt: JTAG Load";
+      }
+
+      return false;
+    }
+
+    // High temp
+    const bool overTempShutdown = (status_flags & (1 << 15));
+    const bool highTemp = (status_flags & (1 << 14));
+
+    if (overTempShutdown) {
+      LOG(WARNING) << "Warning: High Temp - Pings Stopped";
+      return false;
+    } else if (highTemp) {
+      LOG(WARNING) << "Warning: High Temperature";
+    }
+
+    const bool transmitError = (status_flags & (1 << 16));
+    if (transmitError) {
+      LOG(WARNING) << "Critical: Transmit Circuit Failure";
+      return false;
+    }
+  }
+
+  return true;
+}
 
 }  // namespace liboculus

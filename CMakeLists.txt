@@ -71,7 +71,7 @@ else()
 
   set(oculus_SRCS
               lib/SimplePingResult.cpp
-              lib/SonarClient.cpp
+              lib/DataRx.cpp
               lib/SonarConfiguration.cpp
               lib/SonarStatus.cpp
               lib/StatusRx.cpp

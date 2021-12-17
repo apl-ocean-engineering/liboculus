@@ -12,7 +12,9 @@ using std::string;
 #include <libg3logger/g3logger.h>
 #include <CLI/CLI.hpp>
 
-#include "liboculus/SonarClient.h"
+#include "liboculus/DataRx.h"
+#include "liboculus/StatusRx.h"
+#include "IoServiceThread.h"
 #include "liboculus/SonarPlayer.h"
 
 
@@ -88,16 +90,18 @@ int main( int argc, char **argv ) {
   LOG(DEBUG) << "Starting loop";
 
   SonarConfiguration config;
-  config.setPingRate( pingRateNormal );
+  config.setPingRate(pingRateNormal);
 
-  _client.reset( new SonarClient(ipAddr) );
+  std::shared_ptr<IoServiceThread> ioSrv = std::make_shared<IoServiceThread>();
+  DataRx _client(ioSrv);
+  StatusRx _status(ioSrv);
 
   _client->setDataRxCallback( [&]( const SimplePingResult &ping ) {
 
     auto valid = ping.valid();
     // LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
 
-    if( !valid ) {
+    if (!valid) {
       LOG(DEBUG) << "Got invalid ping";
       return;
     }
@@ -114,10 +118,19 @@ int main( int argc, char **argv ) {
   });
 
   _client->onConnectCallback( [&]() {
-    _client->sendConfiguration(config);
+    _client->sendSimpleFireMessage(config);
   });
 
-  _client->start();
+  // Connect client
+  if (ipAddr == "auto") {
+    _status->setCallback( [&]( const SonarStatus &status, bool is_valid ){
+      if (!is_valid || _client->isConncted()) return;
+      _client->connect(_status.ipAddr());
+    });
+  } else {
+    _client->connect(ipAddr);
+  }
+  ioSrv->start();
 
   // Imprecise statistic for now...
   int lastCount = 0;
@@ -130,7 +143,8 @@ int main( int argc, char **argv ) {
     sleep(1);
   }
 
-  _client->join();
+  ioSrv->stop();
+  ioSrv->join();
 
   if( output.is_open() ) output.close();
 

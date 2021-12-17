@@ -39,47 +39,56 @@
 
 namespace liboculus {
 
-class SonarClient {
+class DataRx {
  public:
-  SonarClient(const std::string &ipAddr = "");
+  DataRx(const std::shared_ptr<IoServiceThread> &iosrv);
 
-  ~SonarClient();
+  ~DataRx();
 
-  void start();
-  void join();
-  void stop();
+  void connect(const boost::asio::ip::address &addr);
+  void connect(const std::string &strAddr) {
+       auto addr(boost::asio::ip::address_v4::from_string(strAddr));
+       //LOG_IF(FATAL,addr.is_unspecified()) << "Couldn't parse IP address" << ipAddr;  
+       connect(addr);
+  }
+
+
+//   void start();
+//   void join();
+//   void stop();
 
   typedef std::function< void(const SimplePingResult &) > SimplePingCallback;
   void setCallback(SimplePingCallback callback)         { _simplePingCallback = callback; }
 
-  typedef std::function< void() > OnConnectCallback;
-  void setOnConnectCallback(OnConnectCallback callback) { _onConnectCallback = callback; }
+ typedef std::function< void() > OnConnectCallback;
+ void setOnConnectCallback(OnConnectCallback callback) { _onConnectCallback = callback; }
 
-  typedef std::function< void(const std::vector<uint8_t> &) > DataRxCallback;
-  typedef DataRxCallback DataTxCallback;
-  void setDataRxCallback(DataRxCallback callback)       { _dataRxCallback = callback; }
-  void setDataTxCallback(DataTxCallback callback)       { _dataTxCallback = callback; }
+//   typedef std::function< void(const std::vector<uint8_t> &) > DataRxCallback;
+//   typedef DataRxCallback DataTxCallback;
+//   void setDataRxCallback(DataRxCallback callback)       { _dataRxCallback = callback; }
+//   void setDataTxCallback(DataTxCallback callback)       { _dataTxCallback = callback; }
+
+
 
   // Immediately send configuration update to the sonar
-  void sendConfiguration(const SonarConfiguration &config);
+  void sendSimpleFireMessage(const SonarConfiguration &config);
 
 
  protected:
   void onConnect(const boost::system::error_code& error);
  
-  void receiveStatus(const SonarStatus& status);
+  //void receiveStatus(const SonarStatus& status);
 
  private:
 
   std::string _ipAddr;
 
-  IoServiceThread _ioSrv;
+  std::shared_ptr<IoServiceThread> _ioSrv;
 
   // Status and Data messages come in on different ports, so they're
   // handled separately.
-  StatusRx _statusRx;
+  //StatusRx _statusRx;
 
-  void connect(const boost::asio::ip::address &addr);
 
   bool connected() const { return _socket.is_open(); }
 
@@ -103,10 +112,10 @@ class SonarClient {
   boost::asio::ip::tcp::socket _socket;
 
   SimplePingCallback _simplePingCallback;
-  DataRxCallback _dataRxCallback;
-  DataTxCallback _dataTxCallback;
+//   DataRxCallback _dataRxCallback;
+//   DataTxCallback _dataTxCallback;
 
   OnConnectCallback _onConnectCallback;
 
-};  // class SonarClient
+};  // class DataRx
 }  // namespace liboculus

@@ -56,16 +56,19 @@ class StatusRx {
   const SonarStatus &status() const
     { return _status; }
 
-  typedef std::function< void( const SonarStatus & ) > SonarStatusCallback;
+  typedef std::function< void( const SonarStatus &, bool ) > SonarStatusCallback;
 
-  void setCallback( SonarStatusCallback callback )
-    { _sonarStatusCallback = callback; }
+  void setCallback( SonarStatusCallback callback ) { 
+    _sonarStatusCallback = callback; 
+  }
 
  private:
   void doConnect();
 
   void startReader();
   void handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred );
+
+  bool parseStatus();
 
 //  void doReceiveStatusMessage();
 
