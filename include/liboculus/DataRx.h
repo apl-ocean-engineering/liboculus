@@ -31,9 +31,10 @@
 
 #include <string>
 #include <thread>
+#include <vector>
+#include <memory>
 #include "liboculus/IoServiceThread.h"
 
-#include "liboculus/StatusRx.h"
 #include "liboculus/SimplePingResult.h"
 #include "liboculus/SonarConfiguration.h"
 
@@ -41,7 +42,7 @@ namespace liboculus {
 
 class DataRx {
  public:
-  DataRx(const std::shared_ptr<IoServiceThread> &iosrv);
+  explicit DataRx(const std::shared_ptr<IoServiceThread> &iosrv);
 
   ~DataRx();
 
@@ -52,45 +53,31 @@ class DataRx {
        connect(addr);
   }
 
-
-//   void start();
-//   void join();
-//   void stop();
+  bool isConnected() const { return _socket.is_open(); }
 
   typedef std::function< void(const SimplePingResult &) > SimplePingCallback;
-  void setCallback(SimplePingCallback callback)         { _simplePingCallback = callback; }
+  void setOnSimplePingResult(SimplePingCallback callback) {
+    _simplePingCallback = callback;
+  }
 
- typedef std::function< void() > OnConnectCallback;
- void setOnConnectCallback(OnConnectCallback callback) { _onConnectCallback = callback; }
+  typedef std::function< void() > OnConnectCallback;
+  void setOnConnectCallback(OnConnectCallback callback) {
+    _onConnectCallback = callback;
+  }
 
-//   typedef std::function< void(const std::vector<uint8_t> &) > DataRxCallback;
-//   typedef DataRxCallback DataTxCallback;
-//   void setDataRxCallback(DataRxCallback callback)       { _dataRxCallback = callback; }
-//   void setDataTxCallback(DataTxCallback callback)       { _dataTxCallback = callback; }
-
-
-
-  // Immediately send configuration update to the sonar
   void sendSimpleFireMessage(const SonarConfiguration &config);
 
-
- protected:
-  void onConnect(const boost::system::error_code& error);
- 
-  //void receiveStatus(const SonarStatus& status);
+  // Implement data read / data written hooks as virtual functions rather
+  // rather than callbacks
+  // The override *must* call this function for the data to be written
+  // to the network
+  virtual void write(const std::vector<uint8_t> &bytes);
+  virtual void haveRead(const std::vector<uint8_t> &bytes) {;}
 
  private:
-
-  std::string _ipAddr;
-
+  void onConnect(const boost::system::error_code& error);
+ 
   std::shared_ptr<IoServiceThread> _ioSrv;
-
-  // Status and Data messages come in on different ports, so they're
-  // handled separately.
-  //StatusRx _statusRx;
-
-
-  bool connected() const { return _socket.is_open(); }
 
   // Request bytes from the socket, set up readHeader as callback
   void scheduleHeaderRead();
@@ -109,12 +96,10 @@ class DataRx {
                             const boost::system::error_code& ec,
                             std::size_t bytes_transferred);
 
+
   boost::asio::ip::tcp::socket _socket;
 
   SimplePingCallback _simplePingCallback;
-//   DataRxCallback _dataRxCallback;
-//   DataTxCallback _dataTxCallback;
-
   OnConnectCallback _onConnectCallback;
 
 };  // class DataRx

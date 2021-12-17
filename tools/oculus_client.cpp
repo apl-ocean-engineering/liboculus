@@ -124,7 +124,7 @@ int main( int argc, char **argv ) {
   // Connect client
   if (ipAddr == "auto") {
     _status->setCallback( [&]( const SonarStatus &status, bool is_valid ){
-      if (!is_valid || _client->isConncted()) return;
+      if (!is_valid || _client->isConnected()) return;
       _client->connect(_status.ipAddr());
     });
   } else {
@@ -134,7 +134,7 @@ int main( int argc, char **argv ) {
 
   // Imprecise statistic for now...
   int lastCount = 0;
-  while( !doStop ) {
+  while (!doStop) {
     auto c = count;
 
     LOG(INFO) << "Received pings at " << c-lastCount << " Hz";

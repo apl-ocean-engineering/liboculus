@@ -44,7 +44,7 @@ DataRx::~DataRx() {
 }
 
 void DataRx::connect(const asio::ip::address &addr) {
-  if (connected()) return;
+  if (isConnected()) return;
 
   uint16_t port = 52100;
 
@@ -69,13 +69,15 @@ void DataRx::onConnect(const boost::system::error_code& ec) {
 //== Data writers
 
 void DataRx::sendSimpleFireMessage(const SonarConfiguration &msg) {
-  std::vector<std::uint8_t> vector_buffer = msg.serialize();
-  asio::const_buffer vector_buffer_view = asio::buffer(vector_buffer);
+  std::vector<std::uint8_t> data = msg.serialize();
+  write(data);
+}
+
+void DataRx::write(const std::vector<uint8_t> &data) {
+  asio::const_buffer vector_buffer_view = asio::buffer(data);
 
   auto result = _socket.send(vector_buffer_view);
   LOG(DEBUG) << "Sent " << result << " bytes to sonar";
-
-  //_dataTxCallback(vector_buffer);
 }
 
 //=== Readers
