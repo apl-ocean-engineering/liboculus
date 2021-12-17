@@ -51,7 +51,7 @@ using boost::asio::deadline_timer;
 //
 class StatusRx {
  public:
-  explicit StatusRx(const std::shared_ptr<IoServiceThread> &iosrv);
+  explicit StatusRx(boost::asio::io_context &iosrv);
   ~StatusRx() {}
 
   const SonarStatus &status() const

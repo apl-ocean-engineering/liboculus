@@ -40,41 +40,41 @@
 namespace liboculus {
 
   using std::string;
-
   using boost::asio::ip::address_v4;
 
   // ----------------------------------------------------------------------------
   // StatusRx - a listening socket for oculus status messages
 
-  StatusRx::StatusRx(const std::shared_ptr<IoServiceThread> &iosrv)
+  StatusRx::StatusRx(boost::asio::io_context &iosrv)
       : _status(),
         _port(52102),  // fixed port for status messages
-        _valid(0), _invalid(0),
-        _socket(iosrv->service()),
+        _valid(0), 
+        _invalid(0),
+        _socket(iosrv),
         _inputBuffer(sizeof(OculusStatusMsg)),
-        _deadline(iosrv->service()),
-        _sonarStatusCallback() {
+        _deadline(iosrv),
+        _sonarStatusCallback([](const SonarStatus &, bool){}) {
     // Create and setup a broadcast listening socket
-    doConnect();
+    //doConnect();
   }
 
   void StatusRx::doConnect() {
-    boost::asio::ip::udp::endpoint local(boost::asio::ip::address_v4::any(),
-                                         _port);
+    // boost::asio::ip::udp::endpoint local(boost::asio::ip::address_v4::any(),
+    //                                      _port);
 
-    boost::system::error_code error;
-    _socket.open(boost::asio::ip::udp::v4(), error);
+    // boost::system::error_code error;
+    // _socket.open(boost::asio::ip::udp::v4(), error);
 
-    boost::asio::socket_base::broadcast option(true);
-    _socket.set_option(option);
+    // boost::asio::socket_base::broadcast option(true);
+    // _socket.set_option(option);
 
-    if(!error) {
-      _socket.bind(local);
+    // if(!error) {
+    //   _socket.bind(local);
 
-      startReader();
-    } else {
-      LOG(WARNING) << "Unable to start reader";
-    }
+    //   startReader();
+    // } else {
+    //   LOG(WARNING) << "Unable to start reader";
+    // }
   }
 
   void StatusRx::startReader() {
@@ -102,7 +102,9 @@ namespace liboculus {
       _status.update(_osm);
       auto is_good = parseStatus();
 
-      _sonarStatusCallback(_status, is_good);
+      if (_sonarStatusCallback) {
+        _sonarStatusCallback(_status, is_good);
+      }
 
       _valid++;
 

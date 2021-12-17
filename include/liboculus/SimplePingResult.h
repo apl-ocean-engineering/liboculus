@@ -71,6 +71,7 @@ class MessageHeader {
     if (!valid()) return false;
 
     const size_t dataSize = sizeof(OculusMessageHeader) + payloadSize();
+    LOG(WARNING) << "Expanding to " << dataSize;
     _buffer->resize(dataSize);
 
     return true;
@@ -106,11 +107,11 @@ class MessageHeader {
   }
 
   void dump() const {
-    LOG(DEBUG) << "   Oculus Id: 0x" << std::hex << oculusId();
-    LOG(DEBUG) << "      Msg id: 0x" << std::hex << static_cast<uint16_t>(msgId());
-    LOG(DEBUG) << "      Dst ID: " << std::hex << dstDeviceId();
-    LOG(DEBUG) << "      Src ID: " << std::hex << srcDeviceId();
-    LOG(DEBUG) << "Payload size: " << payloadSize() << " bytes";
+    LOG(INFO) << "   Oculus Id: 0x" << std::hex << oculusId();
+    LOG(INFO) << "      Msg id: 0x" << std::hex << static_cast<uint16_t>(msgId());
+    LOG(INFO) << "      Dst ID: " << std::hex << dstDeviceId();
+    LOG(INFO) << "      Src ID: " << std::hex << srcDeviceId();
+    LOG(INFO) << "Payload size: " << payloadSize() << " bytes";
   }
 
  protected:

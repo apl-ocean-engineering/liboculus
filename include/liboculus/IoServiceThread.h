@@ -33,13 +33,14 @@
 #include <boost/bind.hpp>
 
 
+
 namespace liboculus {
 
 // Generic "worker thread" for boost::asio
 class IoServiceThread {
  public:
   IoServiceThread()
-      : _service(),
+      : _context(),
         _thread() {}
 
   ~IoServiceThread() {}
@@ -47,26 +48,26 @@ class IoServiceThread {
   void start() {
     if (_thread) return; // running
 
-    _thread.reset(new std::thread(boost::bind(&boost::asio::io_service::run,
-                                              &_service)));
+    _thread.reset(new std::thread(boost::bind(&boost::asio::io_context::run,
+                                              &_context)));
   }
 
   void stop() {
     if (!_thread) return; // stopped
-    _service.stop();
+    _context.stop();
   }
 
   void join() {
     if (!_thread) return; // stopped
     _thread->join();
-    _service.reset();
+    _context.reset();
     _thread.reset();
   }
 
-  boost::asio::io_service &service() { return _service; }
+  boost::asio::io_context &context() { return _context; }
 
  private:
-  boost::asio::io_service _service;
+  boost::asio::io_context _context;
   std::unique_ptr<std::thread> _thread;
 };
 

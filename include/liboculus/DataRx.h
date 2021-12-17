@@ -42,7 +42,7 @@ namespace liboculus {
 
 class DataRx {
  public:
-  explicit DataRx(const std::shared_ptr<IoServiceThread> &iosrv);
+  explicit DataRx(boost::asio::io_context &iosrv);
 
   ~DataRx();
 
@@ -71,33 +71,36 @@ class DataRx {
   // rather than callbacks
   // The override *must* call this function for the data to be written
   // to the network
-  virtual void write(const std::vector<uint8_t> &bytes);
+  virtual void haveWritten(const std::vector<uint8_t> &bytes) {;}
   virtual void haveRead(const std::vector<uint8_t> &bytes) {;}
 
  private:
   void onConnect(const boost::system::error_code& error);
  
-  std::shared_ptr<IoServiceThread> _ioSrv;
-
-  // Request bytes from the socket, set up readHeader as callback
+  // This function is essentially "reset the state machine"
   void scheduleHeaderRead();
+
+
   // Callback for when header bytes have been received.
   // NOTE(lindzey): Given how much trouble the rest of this driver goes to
   //   to avoid copying data, it seems odd that the MessageHeaders are being
   //   passed around by value.
-  void readHeader(MessageHeader hdr,
-                  const boost::system::error_code& ec,
+  void readHeader(const boost::system::error_code& ec,
                   std::size_t bytes_transferred);
 
   // Callback for when payload bytes have been received for a message known
   // to be a simplePingResult. Stuff them into a SimplePingResult and pass
   // it along to the registered callback.
-  void readSimplePingResult(MessageHeader hdr,
-                            const boost::system::error_code& ec,
+  void readSimplePingResult(const boost::system::error_code& ec,
                             std::size_t bytes_transferred);
 
-
+  // We got severe linkage issues if the IoServiceThread wasn't
+  // instantiated within an object in the liboculus shared library.  
+  // (shrug)
   boost::asio::ip::tcp::socket _socket;
+
+  //
+  std::vector<uint8_t> _buffer;
 
   SimplePingCallback _simplePingCallback;
   OnConnectCallback _onConnectCallback;
