@@ -69,8 +69,13 @@ else()
               thirdparty
               ${catkin_INCLUDE_DIRS} )
 
-  file(GLOB oculus_SRCS
-              lib/*cpp )
+  set(oculus_SRCS
+              lib/SimplePingResult.cpp
+              lib/SonarClient.cpp
+              lib/SonarConfiguration.cpp
+              lib/SonarStatus.cpp
+              lib/StatusRx.cpp
+              lib/SonarPlayer.cpp )
 
 
   add_library(liboculus_LIB ${oculus_SRCS})

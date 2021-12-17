@@ -90,12 +90,12 @@ int main( int argc, char **argv ) {
   SonarConfiguration config;
   config.setPingRate( pingRateNormal );
 
-  _client.reset( new SonarClient(config, ipAddr) );
+  _client.reset( new SonarClient(ipAddr) );
 
   _client->setDataRxCallback( [&]( const SimplePingResult &ping ) {
 
     auto valid = ping.valid();
-    //LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
+    // LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
 
     if( !valid ) {
       LOG(DEBUG) << "Got invalid ping";
@@ -111,6 +111,10 @@ int main( int argc, char **argv ) {
     count++;
     if( (stopAfter>0) && (count >= stopAfter)) _client->stop();
 
+  });
+
+  _client->onConnectCallback( [&]() {
+    _client->sendConfiguration(config);
   });
 
   _client->start();

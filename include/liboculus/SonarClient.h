@@ -34,13 +34,14 @@
 #include "liboculus/IoServiceThread.h"
 
 #include "liboculus/StatusRx.h"
-#include "liboculus/DataRx.h"
+#include "liboculus/SimplePingResult.h"
+#include "liboculus/SonarConfiguration.h"
 
 namespace liboculus {
 
 class SonarClient {
  public:
-  SonarClient(SonarConfiguration &config, const std::string &ipAddr = "");
+  SonarClient(const std::string &ipAddr = "");
 
   ~SonarClient();
 
@@ -48,34 +49,64 @@ class SonarClient {
   void join();
   void stop();
 
-  void updateConfiguration(const SonarConfiguration &msg);
-  const SonarConfiguration &configuration() const;
+  typedef std::function< void(const SimplePingResult &) > SimplePingCallback;
+  void setCallback(SimplePingCallback callback)         { _simplePingCallback = callback; }
 
-  // Simple passthrough
-  void setDataRxCallback(DataRx::SimplePingCallback callback) {
-    _dataRx.setCallback(callback);
-  }
+  typedef std::function< void() > OnConnectCallback;
+  void setOnConnectCallback(OnConnectCallback callback) { _onConnectCallback = callback; }
+
+  typedef std::function< void(const std::vector<uint8_t> &) > DataRxCallback;
+  typedef DataRxCallback DataTxCallback;
+  void setDataRxCallback(DataRxCallback callback)       { _dataRxCallback = callback; }
+  void setDataTxCallback(DataTxCallback callback)       { _dataTxCallback = callback; }
+
+  // Immediately send configuration update to the sonar
+  void sendConfiguration(const SonarConfiguration &config);
+
 
  protected:
+  void onConnect(const boost::system::error_code& error);
+ 
   void receiveStatus(const SonarStatus& status);
 
  private:
+
   std::string _ipAddr;
 
   IoServiceThread _ioSrv;
+
   // Status and Data messages come in on different ports, so they're
   // handled separately.
   StatusRx _statusRx;
-  DataRx _dataRx;
 
-  // unfortunately, need to have a copy when receiveStatus is called...
-  // (We want the driver to be able to connect to the instrument whenever
-  // it becomes available, which requires the SonarClient to know the
-  // most recent configuration state, not just the state at startup.
-  // Additionally, when _config is passed to DataRx, the configuration's
-  // callback is bound to the proper member function for DataRx to update
-  // the instrument's configuration.)
-  SonarConfiguration &_config;
+  void connect(const boost::asio::ip::address &addr);
+
+  bool connected() const { return _socket.is_open(); }
+
+  // Request bytes from the socket, set up readHeader as callback
+  void scheduleHeaderRead();
+  // Callback for when header bytes have been received.
+  // NOTE(lindzey): Given how much trouble the rest of this driver goes to
+  //   to avoid copying data, it seems odd that the MessageHeaders are being
+  //   passed around by value.
+  void readHeader(MessageHeader hdr,
+                  const boost::system::error_code& ec,
+                  std::size_t bytes_transferred);
+
+  // Callback for when payload bytes have been received for a message known
+  // to be a simplePingResult. Stuff them into a SimplePingResult and pass
+  // it along to the registered callback.
+  void readSimplePingResult(MessageHeader hdr,
+                            const boost::system::error_code& ec,
+                            std::size_t bytes_transferred);
+
+  boost::asio::ip::tcp::socket _socket;
+
+  SimplePingCallback _simplePingCallback;
+  DataRxCallback _dataRxCallback;
+  DataTxCallback _dataTxCallback;
+
+  OnConnectCallback _onConnectCallback;
 
 };  // class SonarClient
 }  // namespace liboculus
