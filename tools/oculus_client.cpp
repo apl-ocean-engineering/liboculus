@@ -125,7 +125,7 @@ int main( int argc, char **argv ) {
   if (ipAddr == "auto") {
     _status->setCallback( [&]( const SonarStatus &status, bool is_valid ){
       if (!is_valid || _client->isConnected()) return;
-      _client->connect(_status.ipAddr());
+      _client->connect(status.ipAddr());
     });
   } else {
     _client->connect(ipAddr);

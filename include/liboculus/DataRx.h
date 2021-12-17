@@ -33,8 +33,8 @@
 #include <thread>
 #include <vector>
 #include <memory>
-#include "liboculus/IoServiceThread.h"
 
+#include "liboculus/IoServiceThread.h"
 #include "liboculus/SimplePingResult.h"
 #include "liboculus/SonarConfiguration.h"
 
@@ -56,7 +56,7 @@ class DataRx {
   bool isConnected() const { return _socket.is_open(); }
 
   typedef std::function< void(const SimplePingResult &) > SimplePingCallback;
-  void setOnSimplePingResult(SimplePingCallback callback) {
+  void setSimplePingCallback(SimplePingCallback callback) {
     _simplePingCallback = callback;
   }
 

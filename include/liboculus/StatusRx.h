@@ -31,13 +31,14 @@
 
 #include <mutex>
 #include <chrono>
-
-#include "Oculus/Oculus.h"
+#include <memory>
 
 #include <boost/asio.hpp>
 
-#include "liboculus/SonarStatus.h"
+#include "Oculus/Oculus.h"
 
+#include "liboculus/IoServiceThread.h"
+#include "liboculus/SonarStatus.h"
 
 namespace liboculus {
 
@@ -50,13 +51,13 @@ using boost::asio::deadline_timer;
 //
 class StatusRx {
  public:
-  StatusRx(boost::asio::io_service &context);
+  explicit StatusRx(const std::shared_ptr<IoServiceThread> &iosrv);
   ~StatusRx() {}
 
   const SonarStatus &status() const
     { return _status; }
 
-  typedef std::function< void( const SonarStatus &, bool ) > SonarStatusCallback;
+  typedef std::function< void(const SonarStatus &, bool) > SonarStatusCallback;
 
   void setCallback( SonarStatusCallback callback ) { 
     _sonarStatusCallback = callback; 
@@ -82,7 +83,6 @@ class StatusRx {
   uint16_t     _valid;      // Number of valid status messages
   uint16_t     _invalid;    // Number of invalid status messages
 
-  boost::asio::io_service& _ioService;
   udp::socket _socket;
 
   boost::asio::streambuf _inputBuffer;

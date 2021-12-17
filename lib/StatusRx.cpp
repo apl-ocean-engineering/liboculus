@@ -46,14 +46,13 @@ namespace liboculus {
   // ----------------------------------------------------------------------------
   // StatusRx - a listening socket for oculus status messages
 
-  StatusRx::StatusRx(boost::asio::io_service &context)
+  StatusRx::StatusRx(const std::shared_ptr<IoServiceThread> &iosrv)
       : _status(),
         _port(52102),  // fixed port for status messages
         _valid(0), _invalid(0),
-        _ioService(context),
-        _socket(_ioService),
+        _socket(iosrv->service()),
         _inputBuffer(sizeof(OculusStatusMsg)),
-        _deadline(_ioService),
+        _deadline(iosrv->service()),
         _sonarStatusCallback() {
     // Create and setup a broadcast listening socket
     doConnect();

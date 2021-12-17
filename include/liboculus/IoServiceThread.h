@@ -44,7 +44,7 @@ class IoServiceThread {
 
   ~IoServiceThread() {}
 
-  void fork() {
+  void start() {
     if (_thread) return; // running
 
     _thread.reset(new std::thread(boost::bind(&boost::asio::io_service::run,
