@@ -38,40 +38,16 @@ namespace liboculus {
 // Thin OO wrapper around the OculusSimpleFireMessage.
 class SonarConfiguration {
  public:
-  typedef std::function< void(const SonarConfiguration &) > SonarConfigurationChangedCallback;
-
   SonarConfiguration();
 
   std::vector<uint8_t> serialize() const;
 
-  // The callback is called any time the configuration is changed.
-  // Typically this callback would send the resulting change to
-  // the sonar.
-  void setCallback(SonarConfigurationChangedCallback callback) {
-    _callback = callback;
-  }
-
-  // By default, setting any of the values will cause the configuration
-  // to be sent to the sensors. However, we often want to update multiple
-  // parameters at once.  These functions can be used to "pause" and "unpause"
-  // calls to the callback.
-  //
-  // The callback is always called when enableCallback() is called ... even if
-  // no changes have occurred in the configuration.
-  void postponeCallback();
-  void enableCallback();
-
   // Setter functions
   void setGamma(int input);
-
   void setPingRate(PingRateType newRate);
-
   void setGainPercent(double input);
-
   void setRange(double input);
-
   void setFlags(uint8_t flags);
-
   void setWaterTemperature(double degC);
 
   typedef enum {
@@ -82,14 +58,7 @@ class SonarConfiguration {
   void setFreqMode(OculusFreqMode input);
 
  private:
-  //
-  void sendCallback();
-  // Whether to immediately send callbacks when set* is called.
-  bool postpone_callback_;
-
   OculusSimpleFireMessage _sfm;
-
-  SonarConfigurationChangedCallback _callback;
 };  // class SonarConfiguration
 
 }  // namespace liboculus

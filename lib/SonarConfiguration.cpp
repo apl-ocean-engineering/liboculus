@@ -35,15 +35,13 @@
 
 namespace liboculus {
 
-SonarConfiguration::SonarConfiguration()
-    : postpone_callback_(false),
-      _callback() {
+SonarConfiguration::SonarConfiguration() {
   memset(&_sfm, 0, sizeof(OculusSimpleFireMessage));
 
   // Fill in OculusMessageHeader _sfm.head
   _sfm.head.oculusId    = OCULUS_CHECK_ID;  // 0x4f53
   _sfm.head.srcDeviceId = 0;
-  _sfm.head.dstDeviceId = 7892;  // Q(lindzey): Where does this come from?
+  _sfm.head.dstDeviceId = 7892;             // Q(lindzey): Where does this come from?
   _sfm.head.msgId       = messageSimpleFire;
   _sfm.head.msgVersion  = 0;
   _sfm.head.payloadSize = sizeof(OculusSimpleFireMessage) - sizeof(OculusMessageHeader);
@@ -68,29 +66,10 @@ SonarConfiguration::SonarConfiguration()
   _sfm.salinity = 0.0;  // ppt; 0 for freshwater, 35 for seawater
 }
 
-void SonarConfiguration::postponeCallback(void) {
-  postpone_callback_ = true;
-}
-
-void SonarConfiguration::enableCallback(void) {
-  postpone_callback_ = false;
-  sendCallback();
-}
-
-// TODO(lindzey): I can't figure out where this is actually set.
-//    It's not set in SonarClient, unless _dataRx.connect() does something
-//    It's not directly set in oculus_sonar_nodelet.
-void SonarConfiguration::sendCallback() {
-  if (_callback && !postpone_callback_) {
-     _callback(*this);
-  }
-}
-
 // TODO(lindzey): I don't love that the driver knows how to
 //   convert bools to flags. Better to do that here ...
 void SonarConfiguration::setFlags(uint8_t flags) {
   _sfm.flags = flags;
-  sendCallback();
 }
 
 void SonarConfiguration::setRange(double input) {
@@ -101,7 +80,6 @@ void SonarConfiguration::setRange(double input) {
   } else {
     LOG(WARNING) << "Requested invalid range: " << input;
   }
-  sendCallback();
 }
 
 void SonarConfiguration::setGainPercent(double input) {
@@ -110,7 +88,6 @@ void SonarConfiguration::setGainPercent(double input) {
   } else {
     LOG(WARNING) << "Requested invalid gain: " << input;
   }
-  sendCallback();
 }
 
 void SonarConfiguration::setGamma(int input) {
@@ -119,17 +96,14 @@ void SonarConfiguration::setGamma(int input) {
   } else {
     LOG(WARNING) << "Requested invalid gamma: " << input;
   }
-  sendCallback();
 }
 
 void SonarConfiguration::setPingRate(PingRateType newRate) {
   _sfm.pingRate = newRate;
-  sendCallback();
 }
 
 void SonarConfiguration::setFreqMode(OculusFreqMode input) {
   _sfm.masterMode = input;
-  sendCallback();
 }
 
 std::vector<uint8_t> SonarConfiguration::serialize() const {
