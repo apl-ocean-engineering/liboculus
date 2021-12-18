@@ -85,7 +85,10 @@ class DataRx {
   // NOTE(lindzey): Given how much trouble the rest of this driver goes to
   //   to avoid copying data, it seems odd that the MessageHeaders are being
   //   passed around by value.
-  void readHeader(const boost::system::error_code& ec,
+  void rxOculusId(const boost::system::error_code& ec,
+                  std::size_t bytes_transferred);
+
+  void rxHeader(const boost::system::error_code& ec,
                   std::size_t bytes_transferred);
 
   // Callback for when payload bytes have been received for a message known

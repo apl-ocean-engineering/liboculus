@@ -87,18 +87,44 @@ void DataRx::sendSimpleFireMessage(const SonarConfiguration &msg) {
 //=== Readers
 void DataRx::scheduleHeaderRead() {
 
-  _buffer.resize(sizeof(uint16_t));
-  asio::mutable_buffer buffer_view = asio::buffer(_buffer, sizeof(uint16_t));
+  LOG(INFO) << "== Back to start of state machine ==";
+  _buffer.resize(sizeof(OculusMessageHeader));
 
   async_read(_socket,
-              buffer_view,
-              boost::bind(&DataRx::readHeader, this, _1, _2));
+              asio::buffer(_buffer, sizeof(uint16_t)),
+              boost::bind(&DataRx::rxOculusId, this, _1, _2));
 }
 
 
 //==== States in the state machine... ====
 
-void DataRx::readHeader(const boost::system::error_code& ec,
+void DataRx::rxOculusId(const boost::system::error_code& ec,
+                        std::size_t bytes_transferred) {  
+  if (ec) {
+    LOG(WARNING) << "Error on receive of header: " << ec.message();
+    scheduleHeaderRead();
+  }
+
+  LOG(WARNING) << "Buffer has " << _buffer.size() << " bytes";
+  LOG(DEBUG) << std::hex << static_cast<int>(_buffer[0]) << " : " << static_cast<int>(_buffer[1]);
+
+  if ((_buffer.data()[0] == 0x53) && (_buffer.data()[1] == 0x4f)) {
+    LOG(WARNING) << "Got header";
+
+    const auto offset = bytes_transferred;
+    const auto sz = sizeof(OculusMessageHeader)-offset;
+    auto buffer_view = asio::buffer(_buffer, sz)+offset;
+
+    async_read(_socket,
+              buffer_view,
+              boost::bind(&DataRx::rxHeader, this, _1, _2));
+    return;
+  }
+
+  scheduleHeaderRead();
+}
+
+void DataRx::rxHeader(const boost::system::error_code& ec,
                         std::size_t bytes_transferred) {  
   if (ec) {
     LOG(WARNING) << "Error on receive of header: " << ec.message();
