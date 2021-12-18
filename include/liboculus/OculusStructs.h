@@ -29,15 +29,16 @@
 
 #pragma once
 
+#include <memory>
+#include <string>
+#include <vector>
+#include <cassert>
+
 #include "BearingData.h"
 #include "DataTypes.h"
 #include "ImageData.h"
 
 #include "Oculus/Oculus.h"
-
-#include <memory>
-#include <string.h>
-#include <vector>
 
 #include <g3log/g3log.hpp>
 
@@ -48,34 +49,16 @@ using std::vector;
 
 class MessageHeader {
  public:
-  typedef std::vector<uint8_t> ByteVector;
 
-  MessageHeader() : _buffer(new ByteVector(sizeof(OculusMessageHeader), 0)) {}
+  MessageHeader() = delete;
+  MessageHeader( const MessageHeader & ) = delete;
 
-  MessageHeader(const char *data, size_t len) : _buffer(new ByteVector(len)) {
-    memcpy(_buffer->data(), data, len);
-  }
-
-  explicit MessageHeader(const ByteVector &other)
-      : _buffer(new ByteVector(other)) {}
-
-  MessageHeader(const MessageHeader &other) : _buffer(other.buffer()) {}
+  explicit MessageHeader(const ByteVector &buffer)
+      : _buffer(buffer) {
+        assert(buffer.size() >= sizeof(OculusMessageHeader));
+      }
 
   ~MessageHeader() {}
-
-  void reset() {
-    _buffer.reset(new ByteVector(sizeof(OculusMessageHeader), 0));
-  }
-
-  bool expandForPayload() {
-    if (!valid()) return false;
-
-    const size_t dataSize = sizeof(OculusMessageHeader) + payloadSize();
-    LOG(WARNING) << "Expanding to " << dataSize;
-    _buffer->resize(dataSize);
-
-    return true;
-  }
 
   // Convenience accessors
   OculusMessageType msgId() const {
@@ -91,22 +74,7 @@ class MessageHeader {
     return hdr()->oculusId == OCULUS_CHECK_ID;  // 0x4f53
   }
 
-  std::shared_ptr<ByteVector> buffer() { return _buffer; }
-  const std::shared_ptr<ByteVector> &buffer() const { return _buffer; }
-
-  void *ptr() const {
-    return _buffer->data();
-  }
-
-  unsigned int size() const {
-    return _buffer->size();
-  }
-
-  void *payloadPtr() {
-    return _buffer->data() + sizeof(OculusMessageHeader);
-  }
-
-  void dump() const {
+  virtual void dump() const {
     LOG(INFO) << "   Oculus Id: 0x" << std::hex << oculusId();
     LOG(INFO) << "      Msg id: 0x" << std::hex << static_cast<uint16_t>(msgId());
     LOG(INFO) << "      Dst ID: " << std::hex << dstDeviceId();
@@ -114,16 +82,15 @@ class MessageHeader {
     LOG(INFO) << "Payload size: " << payloadSize() << " bytes";
   }
 
- protected:
-  OculusMessageHeader *hdr() {
-    return reinterpret_cast<OculusMessageHeader *>(_buffer->data());
-  }
-
   const OculusMessageHeader *hdr() const {
-    return reinterpret_cast<const OculusMessageHeader *>(_buffer->data());
+    return reinterpret_cast<const OculusMessageHeader *>(_buffer.data());
   }
 
-  std::shared_ptr< ByteVector > _buffer;
+  const ByteVector &buffer(void) const { return _buffer; }
+
+ protected:
+
+  const ByteVector &_buffer;
 };  // class MessageHeader
 
 
@@ -132,55 +99,39 @@ class MessageHeader {
 //   OculusSimpleFireMessage (as msg.fireMessage)
 //   then the rest of OculusSimplePingResult
 class SimplePingResult : public MessageHeader {
-  friend class DataRx;
-
  public:
-  // TODO(amarburg?): Don't like having this here.
-  //     Only needed to handle cases in SonarClient which need to be
-  //     able either return a ping or a failure
-  SimplePingResult() : MessageHeader() {}
+  SimplePingResult() = delete;
+  SimplePingResult(const SimplePingResult &other) = delete;
 
-  SimplePingResult(const SimplePingResult &other)
-      : MessageHeader(other),
-        _bearings(reinterpret_cast< BearingDataLocator *>(other.ptr())),
-        _image(reinterpret_cast< OculusSimplePingResult *>(other.ptr())) {}
-
-  explicit SimplePingResult(const MessageHeader &header)
-      : MessageHeader(header),
-        _bearings(reinterpret_cast< BearingDataLocator *>(header.ptr())),
-        _image(reinterpret_cast< OculusSimplePingResult *>(header.ptr())) {}
+  explicit SimplePingResult(const ByteVector &buffer)
+      : MessageHeader(buffer),
+        _bearings(buffer, reinterpret_cast<const OculusSimplePingResult *>(_buffer.data())->nBeams),
+        _image(reinterpret_cast<const OculusSimplePingResult *>(_buffer.data())) {
+        assert(buffer.size() >= sizeof(OculusSimplePingResult));
+      }
 
   ~SimplePingResult() {}
 
-  // Because the message consists of nested structs, these are trivial
-  // QUESTION(lindzey): When do the non-const ones get used??
-  OculusSimpleFireMessage *oculusFireMsg()  {
-    return reinterpret_cast< OculusSimpleFireMessage *>(ptr());
+  const OculusSimpleFireMessage *fireMsg() const {
+      return reinterpret_cast<const OculusSimpleFireMessage *>(_buffer.data());
   }
 
-  const OculusSimpleFireMessage *oculusFireMsg() const {
-      return reinterpret_cast<const OculusSimpleFireMessage *>(ptr());
-  }
-
-  OculusSimplePingResult *oculusPing()  {
-    return reinterpret_cast< OculusSimplePingResult *>(ptr());
-  }
-
-  const OculusSimplePingResult *oculusPing() const  {
-    return reinterpret_cast<const OculusSimplePingResult *>(ptr());
+  const OculusSimplePingResult *ping() const  {
+    return reinterpret_cast<const OculusSimplePingResult *>(_buffer.data());
   }
 
   const BearingData &bearings() const { return _bearings; }
   const ImageData &image() const      { return _image; }
 
   // QUESTION(lindzey): Why aren't these override?
-  virtual bool valid() const;
-  void dump() const;
+  bool valid() const override;
+  void dump() const override;
 
  private:
   // Objects which overlay the MessageHeader's _buffer for easier interpretation
   BearingData _bearings;
   ImageData _image;
+
 };  // class SimplePingResult
 
 }  // namespace liboculus

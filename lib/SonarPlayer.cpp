@@ -35,7 +35,7 @@
 #include "g3log/g3log.hpp"
 
 #include "liboculus/DataTypes.h"
-#include "liboculus/SimplePingResult.h"
+#include "liboculus/OculusStructs.h"
 #include "liboculus/SonarPlayer.h"
 
 namespace liboculus {
@@ -87,44 +87,44 @@ RawSonarPlayer::~RawSonarPlayer() { ; }
 
 bool RawSonarPlayer::nextPacket( MessageHeader &header ) {
 
-  // Advance to the next header byte (actually LSB of header since we're
-  // little-endian)
-  while (_input.peek() != 0x53) {
-    char c;
-    _input.get(c);
-    if (_input.eof()) {
-      LOG(DEBUG) << "No packets before the end of the file";
-      return false;
-    }
-  }
+  // // Advance to the next header byte (actually LSB of header since we're
+  // // little-endian)
+  // while (_input.peek() != 0x53) {
+  //   char c;
+  //   _input.get(c);
+  //   if (_input.eof()) {
+  //     LOG(DEBUG) << "No packets before the end of the file";
+  //     return false;
+  //   }
+  // }
 
-  // Read header
-  header.reset();
-  _input.read( (char *)header.ptr(), sizeof(OculusMessageHeader));
+  // // Read header
+  // header.reset();
+  // _input.read( (char *)header.ptr(), sizeof(OculusMessageHeader));
 
-  if (!header.valid()) {
-    LOG(WARNING) << "Read invalid header";
-    return false;
-  }
+  // if (!header.valid()) {
+  //   LOG(WARNING) << "Read invalid header";
+  //   return false;
+  // }
 
-  header.expandForPayload();
-  _input.read( (char *)header.payloadPtr(), header.payloadSize() );
+  // header.expandForPayload();
+  // _input.read( (char *)header.payloadPtr(), header.payloadSize() );
 
   return true;
 }
 
 bool RawSonarPlayer::nextPing( SimplePingResult &ping ) {
 
-  MessageHeader header;
-  if(!nextPacket(header) ) return false;
+  // MessageHeader header;
+  // if(!nextPacket(header) ) return false;
 
-  if (header.msgId() != messageSimplePingResult) {
-    LOG(DEBUG) << "Skipping message of type " << MessageTypeToString(header.msgId());
-    return false;
-  }
+  // if (header.msgId() != messageSimplePingResult) {
+  //   LOG(DEBUG) << "Skipping message of type " << MessageTypeToString(header.msgId());
+  //   return false;
+  // }
 
-  ping = SimplePingResult(header);
-  return true;
+  // ping = SimplePingResult(header);
+  // return true;
 
 
 }

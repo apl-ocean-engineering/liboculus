@@ -34,8 +34,7 @@
 #include <vector>
 #include <memory>
 
-#include "liboculus/IoServiceThread.h"
-#include "liboculus/SimplePingResult.h"
+#include "liboculus/OculusStructs.h"
 #include "liboculus/SonarConfiguration.h"
 
 namespace liboculus {
@@ -103,7 +102,7 @@ class DataRx {
   boost::asio::ip::tcp::socket _socket;
 
   //
-  std::vector<uint8_t> _buffer;
+  ByteVector _buffer;
 
   SimplePingCallback _simplePingCallback;
   OnConnectCallback _onConnectCallback;

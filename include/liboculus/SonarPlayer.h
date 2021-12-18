@@ -31,7 +31,7 @@
 
 #include <fstream>
 
-#include "liboculus/SimplePingResult.h"
+#include "liboculus/OculusStructs.h"
 
 namespace liboculus {
 

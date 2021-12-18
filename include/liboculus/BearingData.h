@@ -29,9 +29,10 @@
 
 #pragma once
 
-#include "Oculus/Oculus.h"
-
 #include <g3log/g3log.hpp>  // needed for CHECK macro
+
+#include "Oculus/Oculus.h"
+#include "liboculus/DataTypes.h"
 
 namespace liboculus {
 
@@ -43,11 +44,11 @@ struct BearingDataLocator {
 class BearingData {
  public:
   // \TODO get rid of this when the base constructor for SimplePingResult goes away
-  BearingData() : _ptr(nullptr), _numBeams(0) {}
+  BearingData() = delete;
 
-  BearingData( BearingDataLocator *data )
-      : _ptr( data->BearingData ),
-        _numBeams( data->ping.nBeams ) {}
+  BearingData(const ByteVector &buffer, int nBeams)
+      : _buffer(buffer),
+        _numBeams( nBeams ) {}
 
   int size() const { return _numBeams; }
 
@@ -55,13 +56,17 @@ class BearingData {
   float at(unsigned int i) const {
     CHECK(i < _numBeams) << "Requested beam " << i << " out of range";
 
-    return _ptr[i] / 100.0;
+    return bearings()[i] / 100.0;
   }
 
+  private:
 
- private:
-  short *_ptr;
+  const short *bearings() const  {
+    return reinterpret_cast<const BearingDataLocator *>(_buffer.data())->BearingData;
+  }
+
   uint16_t _numBeams;
+  const ByteVector &_buffer;
 };
 
 }  // namespace liboculus

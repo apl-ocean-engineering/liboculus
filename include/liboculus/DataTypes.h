@@ -31,12 +31,15 @@
 
 #pragma once
 
-#include "Oculus/Oculus.h"
-
 #include <cstddef>  // for size_t
 #include <string>
+#include <vector>
+
+#include "Oculus/Oculus.h"
 
 namespace liboculus {
+
+typedef std::vector<uint8_t> ByteVector;
 
 inline const char *DataSizeToString( DataSizeType d ) {
   switch(d) {

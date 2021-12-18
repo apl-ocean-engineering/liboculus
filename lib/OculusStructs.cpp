@@ -27,63 +27,58 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "liboculus/SimplePingResult.h"
+#include "liboculus/OculusStructs.h"
 
 namespace liboculus {
 
 bool SimplePingResult::valid() const {
-  if (!MessageHeader::valid()) {
+  MessageHeader hdr(_buffer);
+  if (!hdr.valid()) {
     return false;
   }
 
-  int num_pixels = oculusPing()->nRanges * oculusPing()->nBeams;
-  size_t expected_size = SizeOfDataSize(oculusPing()->dataSize) * num_pixels;
+  int num_pixels = ping()->nRanges * ping()->nBeams;
+  size_t expected_size = SizeOfDataSize(ping()->dataSize) * num_pixels;
 
-  if (oculusPing()->imageSize != expected_size) {
-    LOG(WARNING) << "ImageSize size in header " << oculusPing()->imageSize
+  if (ping()->imageSize != expected_size) {
+    LOG(WARNING) << "ImageSize size in header " << ping()->imageSize
                  << " does not match expected data size of "
                  << expected_size;
     return false;
   }
 
-  // size_t totalSize = expected_size + _msg.imageOffset;
-  // if(_msg.messageSize != totalSize) {
-  //   LOG(WARNING) << "Message size " << _msg.messageSize << " does not match
-  //   expected message size of " << totalSize; return _valid;
-  // }
-
-  CHECK(oculusPing()->imageOffset > sizeof(OculusSimplePingResult));
+  CHECK(ping()->imageOffset > sizeof(OculusSimplePingResult));
   return true;
 }
 
 void SimplePingResult::dump() const {
   LOG(DEBUG) << "--------------";
-  LOG(DEBUG) << "        Mode: " << FreqModeToString(oculusFireMsg()->masterMode);
+  LOG(DEBUG) << "        Mode: " << FreqModeToString(fireMsg()->masterMode);
 
-  const int pingRate = PingRateToHz(oculusFireMsg()->pingRate);
+  const int pingRate = PingRateToHz(fireMsg()->pingRate);
   if( pingRate >= 0 ) {
     LOG(DEBUG) << "   Ping rate: " << pingRate;
   } else {
-    LOG(DEBUG) << "   Ping rate: (unknown) " << static_cast<int>(oculusFireMsg()->pingRate);
+    LOG(DEBUG) << "   Ping rate: (unknown) " << static_cast<int>(fireMsg()->pingRate);
   }
 
-  LOG(DEBUG) << "     Ping ID: " << oculusPing()->pingId;
-  LOG(DEBUG) << "      Status: " << oculusPing()->status;
-  LOG(DEBUG) << "   Ping start time: " << oculusPing()->pingStartTime;
+  LOG(DEBUG) << "     Ping ID: " << ping()->pingId;
+  LOG(DEBUG) << "      Status: " << ping()->status;
+  LOG(DEBUG) << "   Ping start time: " << ping()->pingStartTime;
 
-  LOG(DEBUG) << "   Frequency: " << oculusPing()->frequency;
-  LOG(DEBUG) << " Temperature: " << oculusPing()->temperature;
-  LOG(DEBUG) << "    Pressure: " << oculusPing()->pressure;
-  LOG(DEBUG) << "Spd of Sound: " << oculusPing()->speedOfSoundUsed;
-  LOG(DEBUG) << "   Range res: " << oculusPing()->rangeResolution << " m";
+  LOG(DEBUG) << "   Frequency: " << ping()->frequency;
+  LOG(DEBUG) << " Temperature: " << ping()->temperature;
+  LOG(DEBUG) << "    Pressure: " << ping()->pressure;
+  LOG(DEBUG) << "Spd of Sound: " << ping()->speedOfSoundUsed;
+  LOG(DEBUG) << "   Range res: " << ping()->rangeResolution << " m";
 
-  LOG(DEBUG) << "   Num range: " << oculusPing()->nRanges;
-  LOG(DEBUG) << "   Num beams: " << oculusPing()->nBeams;
+  LOG(DEBUG) << "   Num range: " << ping()->nRanges;
+  LOG(DEBUG) << "   Num beams: " << ping()->nBeams;
 
-  LOG(DEBUG) << "  Image size: " << oculusPing()->imageSize;
-  LOG(DEBUG) << "Image offset: " << oculusPing()->imageOffset;
-  LOG(DEBUG) << "   Data size: " << DataSizeToString(oculusPing()->dataSize);
-  LOG(DEBUG) << "Message size: " << oculusPing()->messageSize;
+  LOG(DEBUG) << "  Image size: " << ping()->imageSize;
+  LOG(DEBUG) << "Image offset: " << ping()->imageOffset;
+  LOG(DEBUG) << "   Data size: " << DataSizeToString(ping()->dataSize);
+  LOG(DEBUG) << "Message size: " << ping()->messageSize;
   LOG(DEBUG) << "--------------";
 }
 

@@ -32,23 +32,22 @@
 
 #pragma once
 
-#include "DataTypes.h"
-#include "Oculus/Oculus.h"
-
 #include <iostream>
 
 #include <g3log/g3log.hpp>  // needed for CHECK macro
+
+#include "DataTypes.h"
+#include "Oculus/Oculus.h"
 
 namespace liboculus {
 
 class ImageData {
  public:
-  // \TODO get rid of this when the base constructor for SimplePingResult goes away
-  ImageData()
-      : _ptr(nullptr), _numRanges(0), _numBeams(0), _dataSz(0) {}
+  ImageData() = delete;
 
-  ImageData( OculusSimplePingResult *ping )
-    : _ptr( &(reinterpret_cast<uint8_t *>(ping)[ping->imageOffset]) ),
+  ImageData( const OculusSimplePingResult *ping )
+    : _ptr( reinterpret_cast<const uint8_t *>(ping)+ping->imageOffset ),
+      _imageSize( ping->imageSize ),
       _numRanges( ping->nRanges ),
       _numBeams( ping->nBeams ),
       _dataSz( SizeOfDataSize(ping->dataSize) ) {}
@@ -68,9 +67,10 @@ class ImageData {
   }
 
  private:
-  uint8_t *_ptr;
+  const uint8_t *_ptr;
+
   uint16_t _numRanges, _numBeams;
-  uint8_t _dataSz;
+  uint8_t _dataSz, _imageSize;
 };  // class ImageData
 
 }  // namespace liboculus

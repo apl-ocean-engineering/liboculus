@@ -66,7 +66,7 @@ else()
               ${catkin_INCLUDE_DIRS} )
 
   set(oculus_SRCS
-              lib/SimplePingResult.cpp
+              lib/OculusStructs.cpp
               lib/DataRx.cpp
               lib/SonarConfiguration.cpp
               lib/SonarStatus.cpp

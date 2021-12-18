@@ -27,6 +27,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <boost/bind.hpp>
+
 #include "liboculus/DataRx.h"
 
 namespace liboculus {
@@ -88,10 +90,10 @@ void DataRx::sendSimpleFireMessage(const SonarConfiguration &msg) {
 void DataRx::scheduleHeaderRead() {
 
   LOG(INFO) << "== Back to start of state machine ==";
-  _buffer.resize(sizeof(OculusMessageHeader));
+  _buffer.resize(sizeof(uint16_t));
 
   async_read(_socket,
-              asio::buffer(_buffer, sizeof(uint16_t)),
+              asio::buffer(_buffer),
               boost::bind(&DataRx::rxOculusId, this, _1, _2));
 }
 
@@ -105,15 +107,20 @@ void DataRx::rxOculusId(const boost::system::error_code& ec,
     scheduleHeaderRead();
   }
 
-  LOG(WARNING) << "Buffer has " << _buffer.size() << " bytes";
+  if (bytes_transferred != sizeof(uint16_t)) {
+    scheduleHeaderRead();
+  }
+
+  LOG(WARNING) << "Read " << bytes_transferred << " bytes";
   LOG(DEBUG) << std::hex << static_cast<int>(_buffer[0]) << " : " << static_cast<int>(_buffer[1]);
 
   if ((_buffer.data()[0] == 0x53) && (_buffer.data()[1] == 0x4f)) {
-    LOG(WARNING) << "Got header";
+    LOG(WARNING) << "Got OculusId at start of packet";
 
+    _buffer.resize(sizeof(OculusMessageHeader));
     const auto offset = bytes_transferred;
-    const auto sz = sizeof(OculusMessageHeader)-offset;
-    auto buffer_view = asio::buffer(_buffer, sz)+offset;
+    const auto sz = sizeof(OculusMessageHeader);
+    auto buffer_view = asio::buffer(_buffer)+offset;
 
     async_read(_socket,
               buffer_view,
@@ -134,31 +141,34 @@ void DataRx::rxHeader(const boost::system::error_code& ec,
 
  // _dataRxCallback(header.buffer());
 
-  // if (bytes_transferred != sizeof(OculusMessageHeader)) {
-  //   LOG(WARNING) << "Received short header of " << bytes_transferred
-  //                << " expected " << sizeof(OculusMessageHeader);
-  //   return;
-  // }
+if (bytes_transferred != (sizeof(OculusMessageHeader)-sizeof(uint16_t))) {
+     LOG(WARNING) << "Received short header of " << bytes_transferred
+                  << " expected " << sizeof(OculusMessageHeader);
+    scheduleHeaderRead();
+  }
+
+  MessageHeader hdr(_buffer);
+
+  LOG(WARNING) << "Validating OculusMessageHeader...";
+
+  if (!hdr.valid()) {
+    LOG(WARNING) << "Incoming header invalid";
+    return;
+  }
+
+  LOG(INFO) << "Got message ID " <<  static_cast<int>(hdr.msgId()) << " (" << MessageTypeToString(hdr.msgId()) << ")";
+  // Possible options for msgId() are:
+  // * messageSimpleFire
+  // * messagePingResult
+  // * messageSimplePingResult
+  // * messageUserConfig
+  // * messageLogs
+  // * messageDummy
+
+  hdr.dump();
 
   scheduleHeaderRead();
 
-//  LOG(WARNING) << "Validating OculusMessageHeader...";
-
-//   if (!hdr.valid()) {
-//     LOG(WARNING) << "Incoming header invalid";
-//     return;
-//   }
-
-//   LOG(INFO) << "Got message ID " <<  static_cast<int>(hdr.msgId()) << " (" << MessageTypeToString(hdr.msgId()) << ")";
-//   // Possible options for msgId() are:
-//   // * messageSimpleFire
-//   // * messagePingResult
-//   // * messageSimplePingResult
-//   // * messageUserConfig
-//   // * messageLogs
-//   // * messageDummy
-
-//   // hdr.dump();
 
 //   // TODO(lindzey): This seems to guarantee a buffer overrun if we just continue here.
 //   if (hdr.msgId() == messageSimplePingResult) {
