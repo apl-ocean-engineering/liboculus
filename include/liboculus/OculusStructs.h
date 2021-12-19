@@ -69,6 +69,7 @@ class MessageHeader {
   uint16_t dstDeviceId() const { return hdr()->dstDeviceId; }
   uint16_t msgVersion() const  { return hdr()->msgVersion; }
   uint32_t payloadSize() const { return hdr()->payloadSize; }
+  uint32_t packetSize() const  { return payloadSize() + sizeof(OculusMessageHeader); }
 
   virtual bool valid() const {
     return hdr()->oculusId == OCULUS_CHECK_ID;  // 0x4f53
@@ -105,8 +106,9 @@ class SimplePingResult : public MessageHeader {
 
   explicit SimplePingResult(const ByteVector &buffer)
       : MessageHeader(buffer),
-        _bearings(buffer, reinterpret_cast<const OculusSimplePingResult *>(_buffer.data())->nBeams),
-        _image(reinterpret_cast<const OculusSimplePingResult *>(_buffer.data())) {
+        _bearings(buffer, reinterpret_cast<const OculusSimplePingResult *>(_buffer.data())->nBeams)
+        //_image(reinterpret_cast<const OculusSimplePingResult *>(_buffer.data())) 
+      {
         assert(buffer.size() >= sizeof(OculusSimplePingResult));
       }
 
@@ -121,7 +123,7 @@ class SimplePingResult : public MessageHeader {
   }
 
   const BearingData &bearings() const { return _bearings; }
-  const ImageData &image() const      { return _image; }
+  //const ImageData &image() const      { return _image; }
 
   // QUESTION(lindzey): Why aren't these override?
   bool valid() const override;
@@ -130,7 +132,7 @@ class SimplePingResult : public MessageHeader {
  private:
   // Objects which overlay the MessageHeader's _buffer for easier interpretation
   BearingData _bearings;
-  ImageData _image;
+  //ImageData _image;
 
 };  // class SimplePingResult
 

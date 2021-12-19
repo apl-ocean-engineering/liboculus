@@ -28,9 +28,7 @@
  */
 
 #include "liboculus/SonarStatus.h"
-
 #include "g3log/g3log.hpp"
-
 
 namespace liboculus {
 

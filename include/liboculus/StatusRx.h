@@ -66,7 +66,7 @@ class StatusRx {
  private:
   void doConnect();
 
-  void startReader();
+  void scheduleRead();
   void handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred );
 
   bool parseStatus();
@@ -75,6 +75,8 @@ class StatusRx {
 
   // "Scratch" copy, network operations write directly to this copy
   OculusStatusMsg _osm;
+
+  std::vector<uint8_t> _buffer;
 
   // This is the "usable" status, based on the most recently received packet
   SonarStatus _status;

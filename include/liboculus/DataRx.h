@@ -76,15 +76,21 @@ class DataRx {
  private:
   void onConnect(const boost::system::error_code& error);
  
+
+  void readUpTo(size_t bytes,
+                std::function<void(const boost::system::error_code&,std::size_t)> callback);
+
   // This function is essentially "reset the state machine"
   void scheduleHeaderRead();
-
 
   // Callback for when header bytes have been received.
   // NOTE(lindzey): Given how much trouble the rest of this driver goes to
   //   to avoid copying data, it seems odd that the MessageHeaders are being
   //   passed around by value.
-  void rxOculusId(const boost::system::error_code& ec,
+  void rxFirstByteOculusId(const boost::system::error_code& ec,
+                  std::size_t bytes_transferred);
+
+  void rxSecondByteOculusId(const boost::system::error_code& ec,
                   std::size_t bytes_transferred);
 
   void rxHeader(const boost::system::error_code& ec,
@@ -93,12 +99,15 @@ class DataRx {
   // Callback for when payload bytes have been received for a message known
   // to be a simplePingResult. Stuff them into a SimplePingResult and pass
   // it along to the registered callback.
-  void readSimplePingResult(const boost::system::error_code& ec,
+  void rxSimplePingResult(const boost::system::error_code& ec,
                             std::size_t bytes_transferred);
 
-  // We got severe linkage issues if the IoServiceThread wasn't
-  // instantiated within an object in the liboculus shared library.  
-  // (shrug)
+  void rxIgnoredData(const boost::system::error_code& ec,
+                            std::size_t bytes_transferred);
+
+  void rxMessageLogs(const boost::system::error_code& ec,
+                            std::size_t bytes_transferred);
+
   boost::asio::ip::tcp::socket _socket;
 
   //

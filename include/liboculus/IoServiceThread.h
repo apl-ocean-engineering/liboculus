@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2020 University of Washingon
+ * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +33,7 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
-
+#include "g3log/g3log.hpp"
 
 namespace liboculus {
 
@@ -41,33 +42,58 @@ class IoServiceThread {
  public:
   IoServiceThread()
       : _context(),
+        _work_guard(make_work_guard(_context)),
         _thread() {}
 
-  ~IoServiceThread() {}
+  ~IoServiceThread() {
+    LOG(WARNING) << "Destructor";
+  }
 
   void start() {
     if (_thread) return; // running
 
-    _thread.reset(new std::thread(boost::bind(&boost::asio::io_context::run,
-                                              &_context)));
+    LOG(WARNING) << "Starting IoServiceThread";
+    // _thread.reset(new std::thread(boost::bind(&boost::asio::io_context::run,
+    //                                           &_context)));
+    _thread.reset(new std::thread(boost::bind(&IoServiceThread::threadExec,
+                                               this)));
   }
 
   void stop() {
-    if (!_thread) return; // stopped
+    if (!_thread) return;
+    LOG(WARNING) << "Stopping IoServiceThread";
+    _work_guard.reset();
     _context.stop();
   }
 
   void join() {
-    if (!_thread) return; // stopped
+    if (!_thread) return;
     _thread->join();
     _context.reset();
     _thread.reset();
+  }
+
+  void threadExec() {
+    LOG(WARNING) << "threadExec begin";
+    for (;;) {
+      try {
+        _context.restart();
+        _context.run();
+        LOG(WARNING) << "Context " << (_context.stopped() ? "is" : "is not") << " stopped";
+        break; // run() exited normally
+      } catch (...) {
+        LOG(WARNING) << "Exception in io_context";
+      }
+    }
+    LOG(WARNING) << "threadExec end";
   }
 
   boost::asio::io_context &context() { return _context; }
 
  private:
   boost::asio::io_context _context;
+  boost::asio::executor_work_guard<boost::asio::io_context::executor_type> _work_guard;
+  
   std::unique_ptr<std::thread> _thread;
 };
 

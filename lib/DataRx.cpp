@@ -60,13 +60,13 @@ void DataRx::connect(const asio::ip::address &addr) {
 
 
 void DataRx::onConnect(const boost::system::error_code& ec) {
-  if (!ec) {
-    LOG(INFO) << "Connected to sonar!";
-    scheduleHeaderRead();
-    _onConnectCallback();
-  } else {
+  if (ec) {
     LOG(WARNING) << "Error on connect: " << ec.message();
   }
+
+  LOG(INFO) << "Connected to sonar!";
+  scheduleHeaderRead();
+  _onConnectCallback();
 }
 
 //== Data writers
@@ -87,43 +87,70 @@ void DataRx::sendSimpleFireMessage(const SonarConfiguration &msg) {
   
 
 //=== Readers
+void DataRx::readUpTo(size_t bytes,
+                    std::function<void(const boost::system::error_code&,std::size_t)> callback) {
+  const size_t current_sz = _buffer.size();
+  _buffer.resize(bytes);
+
+  LOG(INFO) << " Socket " << (_socket.is_open() ? "open" : "closed") << " with " << _socket.available();
+  LOG(INFO) << "Resizing buffer to " << _buffer.size() << " bytes";
+  asio::mutable_buffer buffer_view = asio::buffer(_buffer)+current_sz;
+  LOG(INFO) <<" Waiting for " << buffer_size(buffer_view) << " bytes";
+  //async_read(_socket, buffer_view, boost::asio::transfer_all(), callback);
+  asio::async_read(_socket, buffer_view, boost::asio::transfer_exactly(bytes-current_sz), callback);
+}
+
 void DataRx::scheduleHeaderRead() {
-
   LOG(INFO) << "== Back to start of state machine ==";
-  _buffer.resize(sizeof(uint16_t));
 
-  async_read(_socket,
-              asio::buffer(_buffer),
-              boost::bind(&DataRx::rxOculusId, this, _1, _2));
+  _buffer.clear();
+
+  readUpTo(sizeof(uint8_t),
+          boost::bind(&DataRx::rxFirstByteOculusId, this, _1, _2));
 }
 
 
 //==== States in the state machine... ====
 
-void DataRx::rxOculusId(const boost::system::error_code& ec,
+void DataRx::rxFirstByteOculusId(const boost::system::error_code& ec,
                         std::size_t bytes_transferred) {  
   if (ec) {
     LOG(WARNING) << "Error on receive of header: " << ec.message();
     scheduleHeaderRead();
   }
 
-  if (bytes_transferred != sizeof(uint16_t)) {
+  if (bytes_transferred != sizeof(uint8_t)) {
     scheduleHeaderRead();
   }
 
-  LOG(WARNING) << "Read " << bytes_transferred << " bytes";
-  LOG(DEBUG) << std::hex << static_cast<int>(_buffer[0]) << " : " << static_cast<int>(_buffer[1]);
+  LOG(WARNING) << "Read " << bytes_transferred << " bytes : " << std::hex << static_cast<int>(_buffer[0]);
 
-  if ((_buffer.data()[0] == 0x53) && (_buffer.data()[1] == 0x4f)) {
+  if (_buffer.data()[0] == 0x53) {
+    readUpTo(sizeof(uint16_t),
+              boost::bind(&DataRx::rxSecondByteOculusId, this, _1, _2));
+    return;
+  }
+
+  scheduleHeaderRead();
+}
+
+void DataRx::rxSecondByteOculusId(const boost::system::error_code& ec,
+                        std::size_t bytes_transferred) {  
+  if (ec) {
+    LOG(WARNING) << "Error on receive of header: " << ec.message();
+    scheduleHeaderRead();
+  }
+
+  if (bytes_transferred != sizeof(uint8_t)) {
+    scheduleHeaderRead();
+  }
+
+  LOG(WARNING) << "Read " << bytes_transferred << " bytes : " << std::hex << static_cast<int>(_buffer[1]);
+
+  if (_buffer.data()[1] == 0x4f) {
     LOG(WARNING) << "Got OculusId at start of packet";
 
-    _buffer.resize(sizeof(OculusMessageHeader));
-    const auto offset = bytes_transferred;
-    const auto sz = sizeof(OculusMessageHeader);
-    auto buffer_view = asio::buffer(_buffer)+offset;
-
-    async_read(_socket,
-              buffer_view,
+    readUpTo(sizeof(OculusMessageHeader),
               boost::bind(&DataRx::rxHeader, this, _1, _2));
     return;
   }
@@ -153,6 +180,7 @@ if (bytes_transferred != (sizeof(OculusMessageHeader)-sizeof(uint16_t))) {
 
   if (!hdr.valid()) {
     LOG(WARNING) << "Incoming header invalid";
+    scheduleHeaderRead();
     return;
   }
 
@@ -167,7 +195,28 @@ if (bytes_transferred != (sizeof(OculusMessageHeader)-sizeof(uint16_t))) {
 
   hdr.dump();
 
-  scheduleHeaderRead();
+  const auto packetSize = hdr.packetSize();
+  const auto id = hdr.msgId();
+  if ((id == messageSimpleFire) || 
+      (id == messagePingResult) ||
+      (id == messageUserConfig) ||
+      (id == messageDummy)) {
+    // I think these messages are exclusively user -> sonar
+    // so we should never receive them
+    readUpTo(packetSize,
+              boost::bind(&DataRx::rxIgnoredData, this, _1, _2));
+  } else if (id == messageSimplePingResult) {
+    readUpTo(packetSize,
+              boost::bind(&DataRx::rxSimplePingResult, this, _1, _2));
+  } else if (id == messageLogs) {
+    readUpTo(packetSize,
+              boost::bind(&DataRx::rxMessageLogs, this, _1, _2));
+  } else {
+    LOG(WARNING) << "Not sure how to handle message ID " << static_cast<int>(hdr.msgId());
+    scheduleHeaderRead();
+  }
+
+  // If all else fails, just start again
 
 
 //   // TODO(lindzey): This seems to guarantee a buffer overrun if we just continue here.
@@ -235,14 +284,17 @@ if (bytes_transferred != (sizeof(OculusMessageHeader)-sizeof(uint16_t))) {
 //   }
 }
 
-void DataRx::readSimplePingResult(const boost::system::error_code& ec,
+void DataRx::rxSimplePingResult(const boost::system::error_code& ec,
                                   std::size_t bytes_transferred) {
-  // if (ec) {
-  //   LOG(WARNING) << "Error on receive of simplePingResult: " << ec.message();
-  //   return;
-  // }
-  // LOG(INFO) << "Got " << bytes_transferred
-  //            << " bytes of SimplePingResult from sonar";
+  LOG(WARNING) << "Got simple ping result!!";
+
+  if (ec) {
+    LOG(WARNING) << "Error on receive of simplePingResult: " << ec.message();
+    scheduleHeaderRead();
+  }
+
+  LOG(INFO) << "Got " << bytes_transferred
+            << " bytes of SimplePingResult from sonar";
 
   // if (bytes_transferred != hdr.payloadSize()) {
   //   LOG(WARNING) << "Received short header of " << bytes_transferred
@@ -250,17 +302,54 @@ void DataRx::readSimplePingResult(const boost::system::error_code& ec,
   //   return;
   // }
 
-  // SimplePingResult ping(hdr);
+  SimplePingResult ping(_buffer);
 
-  // if (ping.valid()) {
-  //   LOG(DEBUG) << "Data valid!";
+  ping.dump();
+
+
+  if (ping.valid()) {
+    LOG(INFO) << "Header valid!";
+
+    if (bytes_transferred < ping.payloadSize()) {
+      LOG(WARNING) << "Did not read full data packet, resetting...";
+      // readUpTo(ping.payloadSize(),
+      //   boost::bind(&DataRx::rxSimplePingResult, this, _1, _2));
+      // return;
+    }
   //   _simplePingCallback(ping);
 
-  //   // And return to the home state
-  //   scheduleHeaderRead();
-  // } else {
-  //   LOG(WARNING) << "Incoming packet invalid";
-  // }
+  // And return to the home state
+  } else {
+    LOG(WARNING) << "Incoming packet invalid";
+  }
+
+  scheduleHeaderRead();
+}
+
+void DataRx::rxMessageLogs(const boost::system::error_code& ec,
+                                  std::size_t bytes_transferred) {
+  if (ec) {
+    LOG(WARNING) << "Error on receive of rxMessageLogs: " << ec.message();
+    scheduleHeaderRead();
+  }
+
+  LOG(INFO) << "Received " << bytes_transferred << " of LogMessage data";
+
+  LOG(INFO) << "Buffer is " << _buffer.size() << " bytes in length";
+
+  LOG(INFO) << std::string(_buffer.begin()+sizeof(OculusMessageHeader), _buffer.end());
+  scheduleHeaderRead();
+}
+
+void DataRx::rxIgnoredData(const boost::system::error_code& ec,
+                                  std::size_t bytes_transferred) {
+  if (ec) {
+    LOG(WARNING) << "Error on receive of rxIgnoredData: " << ec.message();
+    scheduleHeaderRead();
+  }
+
+  LOG(INFO) << "Ignoring " << bytes_transferred << " of data";
+  scheduleHeaderRead();
 }
 
 }  // namespace liboculus

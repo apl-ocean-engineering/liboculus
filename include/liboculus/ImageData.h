@@ -41,36 +41,36 @@
 
 namespace liboculus {
 
-class ImageData {
- public:
-  ImageData() = delete;
+// class ImageData {
+//  public:
+//   ImageData() {};
 
-  ImageData( const OculusSimplePingResult *ping )
-    : _ptr( reinterpret_cast<const uint8_t *>(ping)+ping->imageOffset ),
-      _imageSize( ping->imageSize ),
-      _numRanges( ping->nRanges ),
-      _numBeams( ping->nBeams ),
-      _dataSz( SizeOfDataSize(ping->dataSize) ) {}
+//   ImageData( const OculusSimplePingResult *ping )
+//     : _ptr( reinterpret_cast<const uint8_t *>(ping)+ping->imageOffset ),
+//       _imageSize( ping->imageSize ),
+//       _numRanges( ping->nRanges ),
+//       _numBeams( ping->nBeams ),
+//       _dataSz( SizeOfDataSize(ping->dataSize) ) {}
 
-  // TODO.  Deal with non-8-bit data somehow
-  uint8_t at(unsigned int bearing, unsigned int range) const {
-    CHECK(_dataSz == 1) << "Sorry, can only handle 8-bit data right now";
-    if (_ptr == nullptr) {
-      return 0;
-    }
+//   // TODO.  Deal with non-8-bit data somehow
+//   uint8_t at(unsigned int bearing, unsigned int range) const {
+//     CHECK(_dataSz == 1) << "Sorry, can only handle 8-bit data right now";
+//     if (_ptr == nullptr) {
+//       return 0;
+//     }
 
-    // TODO range check
-    const unsigned int index = range * _numBeams + bearing;
-    CHECK(index < (unsigned int)(_numRanges * _numBeams));
+//     // TODO range check
+//     const unsigned int index = range * _numBeams + bearing;
+//     CHECK(index < (unsigned int)(_numRanges * _numBeams));
 
-    return ((uint8_t *)_ptr)[range * _numBeams + bearing];
-  }
+//     return ((uint8_t *)_ptr)[range * _numBeams + bearing];
+//   }
 
- private:
-  const uint8_t *_ptr;
+//  private:
+//   const uint8_t *_ptr;
 
-  uint16_t _numRanges, _numBeams;
-  uint8_t _dataSz, _imageSize;
-};  // class ImageData
+//   uint16_t _numRanges, _numBeams;
+//   uint8_t _dataSz, _imageSize;
+// };  // class ImageData
 
 }  // namespace liboculus
