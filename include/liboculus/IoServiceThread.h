@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2020 University of Washingon
+ * Copyright (c) 2017-2022 University of Washington
  * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *

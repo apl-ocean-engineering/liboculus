@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2022 University of Washington
+ * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,11 +37,6 @@
 
 namespace liboculus {
 
-struct BearingDataLocator {
-  OculusSimplePingResult ping;
-  short BearingData[];
-};
-
 class BearingData {
  public:
   BearingData()
@@ -49,7 +45,7 @@ class BearingData {
 
   BearingData(const BearingData &other)  = default;
 
-  BearingData(const short *data, int nBeams)
+  BearingData(const int16_t *data, int nBeams)
       : _data(data),
         _numBeams(nBeams) {}
 
@@ -62,7 +58,6 @@ class BearingData {
   //
   float at(unsigned int i) const {
     CHECK(i < _numBeams) << "Requested beam " << i << " out of range";
-
     return _data[i] / 100.0;
   }
 
@@ -71,9 +66,8 @@ class BearingData {
   }
 
  private:
-
   uint16_t _numBeams;
-  const short *_data;
+  const int16_t *_data;
 };
 
 }  // namespace liboculus

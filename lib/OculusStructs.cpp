@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2022 University of Washington
+ * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,15 +35,13 @@ namespace liboculus {
 SimplePingResult::SimplePingResult(const ByteVector &buffer)
   : MessageHeader(buffer),
     _bearings(),
-    _image() 
-{
+    _image() {
   assert(buffer.size() >= sizeof(OculusSimplePingResult));
 
   // Bearing data is packed into an array of shorts at the end of the
   // OculusSimpleFireMessage
-  const short *bearingData = reinterpret_cast<const short*>(buffer.data() + sizeof(OculusSimplePingResult));
-  _bearings = BearingData(bearingData, 
-                        ping()->nBeams);
+  const int16_t *bearingData = reinterpret_cast<const short*>(buffer.data() + sizeof(OculusSimplePingResult));
+  _bearings = BearingData(bearingData, ping()->nBeams);
 
   const uint8_t *imageData = reinterpret_cast<const uint8_t*>(buffer.data() + ping()->imageOffset);
   _image = ImageData(imageData,
@@ -79,7 +78,7 @@ void SimplePingResult::dump() const {
   LOG(INFO) << "        Mode: " << FreqModeToString(fireMsg()->masterMode);
 
   const int pingRate = PingRateToHz(fireMsg()->pingRate);
-  if( pingRate >= 0 ) {
+  if (pingRate >= 0 ) {
     LOG(INFO) << "   Ping rate: " << pingRate;
   } else {
     LOG(INFO) << "   Ping rate: (unknown) " << static_cast<int>(fireMsg()->pingRate);
