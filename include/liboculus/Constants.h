@@ -34,6 +34,7 @@
 #include <cstddef>  // for size_t
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "Oculus/Oculus.h"
 
@@ -41,4 +42,19 @@ namespace liboculus {
 
     const uint16_t StatusBroadcastPort = 52102;
 
+    namespace Oculus_1200MHz {
+        const float ElevationBeamwidthDeg = 20.0;
+        const float ElevationBeamwidthRad = 20.0*M_PI/180.0;
+
+        const float AzimuthBeamwidthDeg = 0.6;
+        const float AzimuthBeamwidthRad = 0.6*M_PI/180.0;
+    };
+
+    namespace Oculus_2100MHz {
+         const float ElevationBeamwidthDeg = 12.0;
+         const float ElevationBeamwidthRad = 12.0*M_PI/180.0;
+
+         const float AzimuthBeamwidthDeg = 0.4;
+         const float AzimuthBeamwidthRad = 0.4*M_PI/180.0;
+    };
 }  // namespace liboculus

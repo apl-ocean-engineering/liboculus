@@ -44,22 +44,22 @@ boost::asio::ip::address SonarStatus::ipAddr() const {
 }
 
 void SonarStatus::dump() const {
-  LOG(INFO) << "Device id " << msg()->deviceId << " ; type: " <<  (uint16_t)msg()->deviceType << " ; part num: " << (uint16_t)msg()->partNumber;
+  LOG(DEBUG) << "Device id " << msg()->deviceId << " ; type: " <<  (uint16_t)msg()->deviceType << " ; part num: " << (uint16_t)msg()->partNumber;
 
-  //LOG(INFO) << "        Received at: " << _msgTime;
-  LOG(INFO) << "             Status: " << std::hex << msg()->status;
-  LOG(INFO) << "      Sonar ip addr: " << boost::asio::ip::address_v4(ntohl(msg()->ipAddr));
-  LOG(INFO) << " Sonar connected to: " << boost::asio::ip::address_v4(ntohl(msg()->connectedIpAddr));
+  //LOG(DEBUG) << "        Received at: " << _msgTime;
+  LOG(DEBUG) << "             Status: " << std::hex << msg()->status;
+  LOG(DEBUG) << "      Sonar ip addr: " << boost::asio::ip::address_v4(ntohl(msg()->ipAddr));
+  LOG(DEBUG) << " Sonar connected to: " << boost::asio::ip::address_v4(ntohl(msg()->connectedIpAddr));
 
-  LOG(INFO) << "Versions:";
-  LOG(INFO) << "   firmwareVersion0: " << std::hex << msg()->versionInfo.firmwareVersion0;
-  LOG(INFO) << "      firmwareDate0: " << std::hex << msg()->versionInfo.firmwareDate0;
+  LOG(DEBUG) << "Versions:";
+  LOG(DEBUG) << "   firmwareVersion0: " << std::hex << msg()->versionInfo.firmwareVersion0;
+  LOG(DEBUG) << "      firmwareDate0: " << std::hex << msg()->versionInfo.firmwareDate0;
 
-  LOG(INFO) << "   firmwareVersion1: " << std::hex << msg()->versionInfo.firmwareVersion1;
-  LOG(INFO) << "      firmwareDate1: " << std::hex << msg()->versionInfo.firmwareDate1;
+  LOG(DEBUG) << "   firmwareVersion1: " << std::hex << msg()->versionInfo.firmwareVersion1;
+  LOG(DEBUG) << "      firmwareDate1: " << std::hex << msg()->versionInfo.firmwareDate1;
 
-  LOG(INFO) << "   firmwareVersion2: " << std::hex << msg()->versionInfo.firmwareVersion2;
-  LOG(INFO) << "      firmwareDate2: " << std::hex << msg()->versionInfo.firmwareDate2;
+  LOG(DEBUG) << "   firmwareVersion2: " << std::hex << msg()->versionInfo.firmwareVersion2;
+  LOG(DEBUG) << "      firmwareDate2: " << std::hex << msg()->versionInfo.firmwareDate2;
 }
 
 }  // namespace liboculus

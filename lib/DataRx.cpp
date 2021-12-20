@@ -48,7 +48,7 @@ DataRx::~DataRx() {
 void DataRx::connect(const asio::ip::address &addr) {
   if (isConnected()) return;
 
-  uint16_t port = 52100;
+  uint16_t port =  liboculus::DataPort;
 
   boost::asio::ip::tcp::endpoint sonarEndpoint(addr, port);
   LOG(INFO) << "Connecting to sonar at " << sonarEndpoint;
@@ -85,7 +85,7 @@ void DataRx::sendSimpleFireMessage(const SonarConfiguration &msg) {
 
 //=== Readers
 void DataRx::readUpTo(size_t bytes,
-                    std::function<void(const boost::system::error_code&,std::size_t)> callback) {
+                    StateMachineCallback callback) {
   const size_t current_sz = _buffer.size();
   _buffer.resize(bytes);
   asio::mutable_buffer buffer_view = asio::buffer(_buffer)+current_sz;
@@ -95,7 +95,7 @@ void DataRx::readUpTo(size_t bytes,
 void DataRx::restartReceiveCycle() {
   LOG(DEBUG) << "== Back to start of state machine ==";
 
-  // Before abandoning data, post that it's been received
+  // Before abandoning the current data, post that it's been received
   haveRead(_buffer);
 
   _buffer.clear();
@@ -235,12 +235,15 @@ void DataRx::rxMessageLogs(const boost::system::error_code& ec,
                                   std::size_t bytes_transferred) {
   if (ec) {
     LOG(WARNING) << "Error on receive of rxMessageLogs: " << ec.message();
-    restartReceiveCycle();
+    goto exit;
   }
 
   LOG(INFO) << "Received " << bytes_transferred << " of LogMessage data";
   LOG(INFO) << std::string(_buffer.begin()+sizeof(OculusMessageHeader), _buffer.end());
+
+exit:
   restartReceiveCycle();
+
 }
 
 void DataRx::rxIgnoredData(const boost::system::error_code& ec,

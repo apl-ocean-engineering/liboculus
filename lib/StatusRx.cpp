@@ -52,7 +52,6 @@ StatusRx::StatusRx(const std::shared_ptr<boost::asio::io_context> &iosrv)
       _socket(*iosrv),
       _deadline(*iosrv),
       _sonarStatusCallback([](const SonarStatus &, bool){}) {
-  // Create and setup a broadcast listening socket
   doConnect();
 }
 

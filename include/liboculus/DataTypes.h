@@ -34,12 +34,16 @@
 #include <cstddef>  // for size_t
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "Oculus/Oculus.h"
 
 namespace liboculus {
 
 typedef std::vector<uint8_t> ByteVector;
+
+template <typename T>
+T deg2rad(const T &value) { return M_PI/180.0 * value; }
 
 inline const char *DataSizeToString( DataSizeType d ) {
   switch(d) {

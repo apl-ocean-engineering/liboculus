@@ -67,22 +67,23 @@ class DataRx {
   void sendSimpleFireMessage(const SonarConfiguration &config);
 
   // Implement data read / data written hooks as virtual functions rather
-  // rather than callbacks
-  // The override *must* call this function for the data to be written
-  // to the network
+  // rather than callbacks.
   virtual void haveWritten(const std::vector<uint8_t> &bytes) {;}
   virtual void haveRead(const std::vector<uint8_t> &bytes) {;}
 
  private:
   void onConnect(const boost::system::error_code& error);
  
-
+  // Initiates another network read.
+  // Note this function reads until the **total number of bytes
+  // in _buffer == bytes**   The actual number of bytes requested
+  // from the network depends on the size of _buffer at the start
+  // of the function and is tpically less than bytes.
   void readUpTo(size_t bytes,
                 std::function<void(const boost::system::error_code&,std::size_t)> callback);
 
   // This function is "reset the receive state machine"
   void restartReceiveCycle();
-
 
   // All rx* functions are states in the receive state machine
   void rxFirstByteOculusId(const boost::system::error_code& ec,

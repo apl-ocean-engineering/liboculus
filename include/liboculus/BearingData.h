@@ -56,10 +56,18 @@ class BearingData {
   int size() const { return _numBeams; }
 
   // Returns bearing in degrees
+  //
+  // From Oculus.h:
+  //   "The bearings to each of the beams in 0.01 degree resolution"
+  //
   float at(unsigned int i) const {
     CHECK(i < _numBeams) << "Requested beam " << i << " out of range";
 
     return _data[i] / 100.0;
+  }
+
+  float at_rad(unsigned int i) const {
+    return deg2rad(at(i));
   }
 
  private:
