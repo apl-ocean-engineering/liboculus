@@ -58,7 +58,7 @@ SonarConfiguration::SonarConfiguration() {
   // bit 3: 0 = send full return message, 1 = send simple return message
   // bit 4: "gain assistance"?
   // bit 6: use 512 beams (vs 256): email from Blueprint said to set flags |= 0x40
-  _sfm.flags = 0x59;  // 0x59 = 0b1011001. Send simple return msg; range in meters; 512 beams
+  _sfm.flags = 0x5B;  // 0x59 = 0b1011001. Send simple return msg; range in meters; 512 beams
 
   _sfm.range = 2;  // 2 m; can be percent or meters, flag controlled
   _sfm.gainPercent = 50;

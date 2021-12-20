@@ -63,19 +63,33 @@ class ImageData {
       _numBeams( nBeams ),
       _dataSize( dataSize ) {}
 
-  // TODO.  Deal with non-8-bit data somehow
-  uint8_t at(unsigned int bearing, unsigned int range) const {
-    CHECK(_dataSize == 1) << "Sorry, can only handle 8-bit data right now";
-    if (_data == nullptr) {
-      return 0;
-    }
 
-    // TODO range check
-    const unsigned int index = range * _numBeams + bearing;
+  uint8_t at_uint8(unsigned int bearing, unsigned int range) const {
+    CHECK(_dataSize == 1) << "This function can only handle 8-bit data, use at_uint16()";
+    if ((_data == nullptr) || (bearing >= _numBeams) || (range >= _numRanges)) return 0;
+
+    const size_t index = range * _numBeams + bearing;
     CHECK(index < (unsigned int)(_numRanges * _numBeams));
 
     return ((uint8_t *)_data)[range * _numBeams + bearing];
   }
+
+    // This function works for either 1 or 2byte data.  
+    // For 1-byte data, it's stored in the lower bytes, and the
+    // upper byte is always 0
+    uint16_t at_uint16(unsigned int bearing, unsigned int range) const {
+        if ((_data == nullptr) || (bearing >= _numBeams) || (range >= _numRanges)) return 0;
+
+        const size_t index = range * _numBeams + bearing;
+        if(_dataSize == 1) {
+            return at_uint8(bearing,range);
+        } else if (_dataSize == 2) {
+            const size_t offset = index * _dataSize;
+            return (_data[offset] | _data[offset+1] << 8);
+        }
+
+    return 0;
+    }
 
  private:
   const uint8_t *_data;

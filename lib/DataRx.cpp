@@ -77,10 +77,8 @@ void DataRx::sendSimpleFireMessage(const SonarConfiguration &msg) {
   }
 
   std::vector<std::uint8_t> data = msg.serialize();
-
   auto result = _socket.send(asio::buffer(data));
-  LOG(INFO) << "Sent " << result << " bytes to sonar";
-
+  LOG(DEBUG) << "Sent " << result << " bytes to sonar";
   haveWritten(data);
 }
   
@@ -95,7 +93,10 @@ void DataRx::readUpTo(size_t bytes,
 }
 
 void DataRx::restartReceiveCycle() {
-  LOG(INFO) << "== Back to start of state machine ==";
+  LOG(DEBUG) << "== Back to start of state machine ==";
+
+  // Before abandoning data, post that it's been received
+  haveRead(_buffer);
 
   _buffer.clear();
   readUpTo(sizeof(uint8_t),
@@ -109,14 +110,12 @@ void DataRx::rxFirstByteOculusId(const boost::system::error_code& ec,
                         std::size_t bytes_transferred) {  
   if (ec) {
     LOG(WARNING) << "Error on receive of header: " << ec.message();
-    restartReceiveCycle();
+    goto exit;
   }
 
   if (bytes_transferred != sizeof(uint8_t)) {
-    restartReceiveCycle();
+    goto exit;
   }
-
-  LOG(WARNING) << "Read " << bytes_transferred << " bytes : " << std::hex << static_cast<int>(_buffer[0]);
 
   if (_buffer.data()[0] == 0x53) {
     readUpTo(sizeof(uint16_t),
@@ -124,6 +123,7 @@ void DataRx::rxFirstByteOculusId(const boost::system::error_code& ec,
     return;
   }
 
+exit:
   restartReceiveCycle();
 }
 
@@ -131,14 +131,12 @@ void DataRx::rxSecondByteOculusId(const boost::system::error_code& ec,
                         std::size_t bytes_transferred) {  
   if (ec) {
     LOG(WARNING) << "Error on receive of header: " << ec.message();
-    restartReceiveCycle();
+    goto exit;
   }
 
   if (bytes_transferred != sizeof(uint8_t)) {
-    restartReceiveCycle();
+    goto exit;
   }
-
-  //LOG(DEBUG) << "Read " << bytes_transferred << " bytes : " << std::hex << static_cast<int>(_buffer[1]);
 
   if (_buffer.data()[1] == 0x4f) {
     LOG(DEBUG) << "Received good OculusId at start of packet";
@@ -148,6 +146,7 @@ void DataRx::rxSecondByteOculusId(const boost::system::error_code& ec,
     return;
   }
 
+exit:
   restartReceiveCycle();
 }
 
@@ -222,7 +221,7 @@ void DataRx::rxSimplePingResult(const boost::system::error_code& ec,
         goto exit;
       }
     
-      //_simplePingCallback(ping);
+      _simplePingCallback(ping);
     } else {
       LOG(WARNING) << "Incoming packet invalid";
     }

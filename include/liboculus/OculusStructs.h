@@ -119,6 +119,8 @@ class SimplePingResult : public MessageHeader {
   const BearingData &bearings() const { return _bearings; }
   const ImageData &image() const      { return _image; }
 
+  uint8_t dataSize() const { return SizeOfDataSize(ping()->dataSize); }
+
   bool valid() const override;
   void dump() const override;
 
