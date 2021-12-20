@@ -30,6 +30,7 @@
 #include <boost/bind.hpp>
 
 #include "liboculus/DataRx.h"
+#include "liboculus/Constants.h"
 
 namespace liboculus {
 
@@ -117,7 +118,7 @@ void DataRx::rxFirstByteOculusId(const boost::system::error_code& ec,
     goto exit;
   }
 
-  if (_buffer.data()[0] == 0x53) {
+  if (_buffer.data()[0] == liboculus::PacketHeaderLSB) {
     readUpTo(sizeof(uint16_t),
               boost::bind(&DataRx::rxSecondByteOculusId, this, _1, _2));
     return;
@@ -138,7 +139,7 @@ void DataRx::rxSecondByteOculusId(const boost::system::error_code& ec,
     goto exit;
   }
 
-  if (_buffer.data()[1] == 0x4f) {
+  if (_buffer.data()[1] == liboculus::PacketHeaderMSB) {
     LOG(DEBUG) << "Received good OculusId at start of packet";
 
     readUpTo(sizeof(OculusMessageHeader),

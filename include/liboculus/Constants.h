@@ -39,8 +39,11 @@
 #include "Oculus/Oculus.h"
 
 namespace liboculus {
-
     const uint16_t StatusBroadcastPort = 52102;
+    const uint16_t DataPort = 52100;
+
+    const uint8_t PacketHeaderLSB = (OCULUS_CHECK_ID & 0x00FF);
+    const uint8_t PacketHeaderMSB = (OCULUS_CHECK_ID & 0xFF00) >> 8;
 
     namespace Oculus_1200MHz {
         const float ElevationBeamwidthDeg = 20.0;

@@ -79,8 +79,9 @@ class DataRx {
   // in _buffer == bytes**   The actual number of bytes requested
   // from the network depends on the size of _buffer at the start
   // of the function and is tpically less than bytes.
+  typedef std::function<void(const boost::system::error_code&, std::size_t)> StateMachineCallback;
   void readUpTo(size_t bytes,
-                std::function<void(const boost::system::error_code&,std::size_t)> callback);
+                StateMachineCallback callback);
 
   // This function is "reset the receive state machine"
   void restartReceiveCycle();
