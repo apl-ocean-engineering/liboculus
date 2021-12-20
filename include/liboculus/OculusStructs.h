@@ -104,13 +104,7 @@ class SimplePingResult : public MessageHeader {
   SimplePingResult() = delete;
   SimplePingResult(const SimplePingResult &other) = delete;
 
-  explicit SimplePingResult(const ByteVector &buffer)
-      : MessageHeader(buffer),
-        _bearings(buffer, reinterpret_cast<const OculusSimplePingResult *>(_buffer.data())->nBeams)
-        //_image(reinterpret_cast<const OculusSimplePingResult *>(_buffer.data())) 
-      {
-        assert(buffer.size() >= sizeof(OculusSimplePingResult));
-      }
+  explicit SimplePingResult(const ByteVector &buffer);
 
   ~SimplePingResult() {}
 
@@ -123,16 +117,15 @@ class SimplePingResult : public MessageHeader {
   }
 
   const BearingData &bearings() const { return _bearings; }
-  //const ImageData &image() const      { return _image; }
+  const ImageData &image() const      { return _image; }
 
-  // QUESTION(lindzey): Why aren't these override?
   bool valid() const override;
   void dump() const override;
 
  private:
-  // Objects which overlay the MessageHeader's _buffer for easier interpretation
+  // Objects which create OOI overlays the _buffer for  easier interpretation
   BearingData _bearings;
-  //ImageData _image;
+  ImageData _image;
 
 };  // class SimplePingResult
 

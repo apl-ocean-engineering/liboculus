@@ -41,36 +41,48 @@
 
 namespace liboculus {
 
-// class ImageData {
-//  public:
-//   ImageData() {};
+class ImageData {
+ public:
+  ImageData() 
+    : _data(nullptr),
+      _imageSize(0),
+      _numRanges(0),
+      _numBeams(0),
+      _dataSize(0) {}
 
-//   ImageData( const OculusSimplePingResult *ping )
-//     : _ptr( reinterpret_cast<const uint8_t *>(ping)+ping->imageOffset ),
-//       _imageSize( ping->imageSize ),
-//       _numRanges( ping->nRanges ),
-//       _numBeams( ping->nBeams ),
-//       _dataSz( SizeOfDataSize(ping->dataSize) ) {}
+  ImageData(const ImageData &other) = default;
 
-//   // TODO.  Deal with non-8-bit data somehow
-//   uint8_t at(unsigned int bearing, unsigned int range) const {
-//     CHECK(_dataSz == 1) << "Sorry, can only handle 8-bit data right now";
-//     if (_ptr == nullptr) {
-//       return 0;
-//     }
+  ImageData( const uint8_t *data,
+            uint32_t imageSize,
+            uint16_t nRanges,
+            uint16_t nBeams,
+            uint8_t dataSize )
+    : _data(data), 
+      _imageSize( imageSize ),
+      _numRanges( nRanges ),
+      _numBeams( nBeams ),
+      _dataSize( dataSize ) {}
 
-//     // TODO range check
-//     const unsigned int index = range * _numBeams + bearing;
-//     CHECK(index < (unsigned int)(_numRanges * _numBeams));
+  // TODO.  Deal with non-8-bit data somehow
+  uint8_t at(unsigned int bearing, unsigned int range) const {
+    CHECK(_dataSize == 1) << "Sorry, can only handle 8-bit data right now";
+    if (_data == nullptr) {
+      return 0;
+    }
 
-//     return ((uint8_t *)_ptr)[range * _numBeams + bearing];
-//   }
+    // TODO range check
+    const unsigned int index = range * _numBeams + bearing;
+    CHECK(index < (unsigned int)(_numRanges * _numBeams));
 
-//  private:
-//   const uint8_t *_ptr;
+    return ((uint8_t *)_data)[range * _numBeams + bearing];
+  }
 
-//   uint16_t _numRanges, _numBeams;
-//   uint8_t _dataSz, _imageSize;
-// };  // class ImageData
+ private:
+  const uint8_t *_data;
+
+  uint16_t _numRanges, _numBeams;
+  uint8_t _dataSize;
+  uint32_t _imageSize;
+};  // class ImageData
 
 }  // namespace liboculus

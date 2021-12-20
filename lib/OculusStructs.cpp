@@ -31,6 +31,27 @@
 
 namespace liboculus {
 
+SimplePingResult::SimplePingResult(const ByteVector &buffer)
+  : MessageHeader(buffer),
+    _bearings(),
+    _image() 
+{
+  assert(buffer.size() >= sizeof(OculusSimplePingResult));
+
+  // Bearing data is packed into an array of shorts at the end of the
+  // OculusSimpleFireMessage
+  const short *bearingData = reinterpret_cast<const short*>(buffer.data() + sizeof(OculusSimplePingResult));
+  _bearings = BearingData(bearingData, 
+                        ping()->nBeams);
+
+  const uint8_t *imageData = reinterpret_cast<const uint8_t*>(buffer.data() + ping()->imageOffset);
+  _image = ImageData(imageData,
+                        ping()->imageSize,
+                        ping()->nRanges,
+                        ping()->nBeams,
+                        SizeOfDataSize(ping()->dataSize));
+}
+
 bool SimplePingResult::valid() const {
   MessageHeader hdr(_buffer);
   if (!hdr.valid()) {

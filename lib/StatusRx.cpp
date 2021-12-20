@@ -35,97 +35,88 @@
 #include <boost/bind.hpp>
 
 #include "liboculus/StatusRx.h"
+#include "liboculus/Constants.h"
 #include "g3log/g3log.hpp"
 
 namespace liboculus {
 
-  using std::string;
-  using boost::asio::ip::address_v4;
+using std::string;
+using boost::asio::ip::address_v4;
 
-  // ----------------------------------------------------------------------------
-  // StatusRx - a listening socket for oculus status messages
+// ----------------------------------------------------------------------------
+// StatusRx - a listening socket for oculus status messages
 
-  StatusRx::StatusRx(const std::shared_ptr<boost::asio::io_context> &iosrv)
-      : _status(),
-        _port(52102),  // fixed port for status messages
-        _valid(0), 
-        _invalid(0),
-        _socket(*iosrv),
-        _inputBuffer(sizeof(OculusStatusMsg)),
-        _deadline(*iosrv),
-        _sonarStatusCallback([](const SonarStatus &, bool){}) {
-    // Create and setup a broadcast listening socket
-    doConnect();
-  }
+StatusRx::StatusRx(const std::shared_ptr<boost::asio::io_context> &iosrv)
+    : _num_valid_rx(0), 
+      _num_invalid_rx(0),
+      _socket(*iosrv),
+      _deadline(*iosrv),
+      _sonarStatusCallback([](const SonarStatus &, bool){}) {
+  // Create and setup a broadcast listening socket
+  doConnect();
+}
 
-  void StatusRx::doConnect() {
-    boost::asio::ip::udp::endpoint local(boost::asio::ip::address_v4::any(),
-                                         _port);
+void StatusRx::doConnect() {
+  boost::asio::ip::udp::endpoint local(boost::asio::ip::address_v4::any(),
+                                        StatusBroadcastPort);
 
-    boost::system::error_code error;
-    _socket.open(boost::asio::ip::udp::v4(), error);
+  boost::system::error_code error;
+  _socket.open(boost::asio::ip::udp::v4(), error);
 
-    boost::asio::socket_base::broadcast option(true);
-    _socket.set_option(option);
+  boost::asio::socket_base::broadcast option(true);
+  _socket.set_option(option);
 
-    if(!error) {
-      _socket.bind(local);
+  if(!error) {
+    _socket.bind(local);
 
-      scheduleRead();
-    } else {
-      LOG(WARNING) << "Unable to start reader";
-    }
-  }
-
-  void StatusRx::scheduleRead() {
-    // Start an asynchronous receive
-    _buffer.resize(sizeof(OculusStatusMsg));
-    LOG(INFO) << "Waiting for status packet...";
-    _socket.async_receive(boost::asio::buffer(_buffer),
-                          boost::bind(&StatusRx::handleRead, this, _1, _2));
-  }
-
-  void StatusRx::handleRead(const boost::system::error_code& ec,
-                            std::size_t bytes_transferred) {
-    if (ec) {
-      LOG(WARNING) << "Error on receive: " << ec.message();
-      scheduleRead();
-    }
-
-    LOG(WARNING) << "Read " << bytes_transferred << " bytes";
-
-    _valid++;
     scheduleRead();
-
-      // Extract the newline-delimited message from the buffer.
-
-      // if (bytes_transferred != sizeof(OculusStatusMsg)) {
-      //   LOG(WARNING) << "Got " << bytes_transferred
-      //                << " bytes, expected OculusStatusMsg of size "
-      //                << sizeof(OculusStatusMsg);
-      //   return;
-      // }
-
-      // LOG(DEBUG) << "Got status message.  Updating!";
-      // _status.update(_osm);
-      // auto is_good = parseStatus();
-
-      // if (_sonarStatusCallback) {
-      //   _sonarStatusCallback(_status, is_good);
-      // }
-
-      //_valid++;
-
-      // Schedule another read
-      //scheduleRead();
-
+  } else {
+    LOG(WARNING) << "Unable to start reader";
   }
+}
+
+void StatusRx::scheduleRead() {
+  // Start an asynchronous receive
+  _buffer.resize(sizeof(OculusStatusMsg));
+  LOG(INFO) << "Waiting for status packet...";
+  _socket.async_receive(boost::asio::buffer(_buffer),
+                        boost::bind(&StatusRx::handleRead, this, _1, _2));
+}
+
+void StatusRx::handleRead(const boost::system::error_code& ec,
+                          std::size_t bytes_transferred) {
+  if (ec) {
+    LOG(WARNING) << "Error on receive: " << ec.message();
+    scheduleRead();
+  }
+
+  LOG(WARNING) << "Read " << bytes_transferred << " bytes";
+
+  if (bytes_transferred != sizeof(OculusStatusMsg)) {
+      LOG(WARNING) << "Got " << bytes_transferred
+                    << " bytes, expected OculusStatusMsg of size "
+                    << sizeof(OculusStatusMsg);
+      _num_invalid_rx++;
+      return;
+    }
+
+  SonarStatus status(_buffer);
+  status.dump();
+  auto is_good = parseStatus(status);
+
+  if (_sonarStatusCallback) {
+    _sonarStatusCallback(status, is_good);
+  }
+
+  _num_valid_rx++;
+  scheduleRead();
+}
 
 // TODO(lindzey): Should any of these get surfaced to ROS?
-bool StatusRx::parseStatus() {
+bool StatusRx::parseStatus(const SonarStatus &status) {
   // Always check the sonar status
   {
-    uint32_t status_flags = _status.status();
+    uint32_t status_flags = status.status();
 
     // Lifted from the example SDK
     OculusMasterStatusType mst = (OculusMasterStatusType)(status_flags & 0x07);

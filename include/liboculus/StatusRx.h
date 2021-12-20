@@ -54,9 +54,6 @@ class StatusRx {
   explicit StatusRx(const std::shared_ptr<boost::asio::io_context> &iosrv);
   ~StatusRx() {}
 
-  const SonarStatus &status() const
-    { return _status; }
-
   typedef std::function< void(const SonarStatus &, bool) > SonarStatusCallback;
 
   void setCallback( SonarStatusCallback callback ) { 
@@ -69,25 +66,16 @@ class StatusRx {
   void scheduleRead();
   void handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred );
 
-  bool parseStatus();
-
-//  void doReceiveStatusMessage();
-
-  // "Scratch" copy, network operations write directly to this copy
-  OculusStatusMsg _osm;
+  bool parseStatus(const SonarStatus &status);
 
   std::vector<uint8_t> _buffer;
 
-  // This is the "usable" status, based on the most recently received packet
-  SonarStatus _status;
-
-  uint16_t     _port;       // Port to listen on
-  uint16_t     _valid;      // Number of valid status messages
-  uint16_t     _invalid;    // Number of invalid status messages
+  //uint16_t     _port;       // Port to listen on
+  uint16_t     _num_valid_rx;      // Number of valid status messages
+  uint16_t     _num_invalid_rx;    // Number of invalid status messages
 
   udp::socket _socket;
 
-  boost::asio::streambuf _inputBuffer;
   deadline_timer _deadline;
 
   SonarStatusCallback _sonarStatusCallback;

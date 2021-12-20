@@ -80,13 +80,11 @@ class DataRx {
   void readUpTo(size_t bytes,
                 std::function<void(const boost::system::error_code&,std::size_t)> callback);
 
-  // This function is essentially "reset the state machine"
-  void scheduleHeaderRead();
+  // This function is "reset the receive state machine"
+  void restartReceiveCycle();
 
-  // Callback for when header bytes have been received.
-  // NOTE(lindzey): Given how much trouble the rest of this driver goes to
-  //   to avoid copying data, it seems odd that the MessageHeaders are being
-  //   passed around by value.
+
+  // All rx* functions are states in the receive state machine
   void rxFirstByteOculusId(const boost::system::error_code& ec,
                   std::size_t bytes_transferred);
 
@@ -96,9 +94,6 @@ class DataRx {
   void rxHeader(const boost::system::error_code& ec,
                   std::size_t bytes_transferred);
 
-  // Callback for when payload bytes have been received for a message known
-  // to be a simplePingResult. Stuff them into a SimplePingResult and pass
-  // it along to the registered callback.
   void rxSimplePingResult(const boost::system::error_code& ec,
                             std::size_t bytes_transferred);
 

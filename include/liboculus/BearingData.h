@@ -43,12 +43,15 @@ struct BearingDataLocator {
 
 class BearingData {
  public:
-  // \TODO get rid of this when the base constructor for SimplePingResult goes away
-  BearingData() = delete;
+  BearingData()
+    : _data(nullptr), _numBeams(0)
+    {;}
 
-  BearingData(const ByteVector &buffer, int nBeams)
-      : _buffer(buffer),
-        _numBeams( nBeams ) {}
+  BearingData(const BearingData &other)  = default;
+
+  BearingData(const short *data, int nBeams)
+      : _data(data),
+        _numBeams(nBeams) {}
 
   int size() const { return _numBeams; }
 
@@ -56,17 +59,13 @@ class BearingData {
   float at(unsigned int i) const {
     CHECK(i < _numBeams) << "Requested beam " << i << " out of range";
 
-    return bearings()[i] / 100.0;
+    return _data[i] / 100.0;
   }
 
-  private:
-
-  const short *bearings() const  {
-    return reinterpret_cast<const BearingDataLocator *>(_buffer.data())->BearingData;
-  }
+ private:
 
   uint16_t _numBeams;
-  const ByteVector &_buffer;
+  const short *_data;
 };
 
 }  // namespace liboculus
