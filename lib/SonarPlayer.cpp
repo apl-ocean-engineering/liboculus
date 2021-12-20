@@ -115,7 +115,6 @@ bool RawSonarPlayer::nextPacket( MessageHeader &header ) {
 }
 
 bool RawSonarPlayer::nextPing( SimplePingResult &ping ) {
-
   // MessageHeader header;
   // if(!nextPacket(header) ) return false;
 

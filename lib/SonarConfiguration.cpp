@@ -42,7 +42,7 @@ SonarConfiguration::SonarConfiguration() {
   // Fill in OculusMessageHeader _sfm.head
   _sfm.head.oculusId    = OCULUS_CHECK_ID;  // 0x4f53
   _sfm.head.srcDeviceId = 0;
-  _sfm.head.dstDeviceId = 7892;             // Q(lindzey): Where does this come from?
+  _sfm.head.dstDeviceId = 0;                // n.b. ignored by device
   _sfm.head.msgId       = messageSimpleFire;
   _sfm.head.msgVersion  = 0;
   _sfm.head.payloadSize = sizeof(OculusSimpleFireMessage) - sizeof(OculusMessageHeader);
@@ -109,7 +109,7 @@ void SonarConfiguration::setFreqMode(OculusFreqMode input) {
 
 std::vector<uint8_t> SonarConfiguration::serialize() const {
   std::vector<uint8_t> v;
-  const auto ptr=reinterpret_cast<const char*>(&_sfm);
+  const auto ptr = reinterpret_cast<const char*>(&_sfm);
   v.insert(v.end(), ptr, ptr + sizeof(OculusSimpleFireMessage));
   return v;
 }

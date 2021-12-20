@@ -48,7 +48,7 @@ using boost::asio::ip::address_v4;
 // StatusRx - a listening socket for oculus status messages
 
 StatusRx::StatusRx(const std::shared_ptr<boost::asio::io_context> &iosrv)
-    : _num_valid_rx(0), 
+    : _num_valid_rx(0),
       _num_invalid_rx(0),
       _socket(*iosrv),
       _deadline(*iosrv),
@@ -66,9 +66,8 @@ void StatusRx::doConnect() {
   boost::asio::socket_base::broadcast option(true);
   _socket.set_option(option);
 
-  if(!error) {
+  if (!error) {
     _socket.bind(local);
-
     scheduleRead();
   } else {
     LOG(WARNING) << "Unable to start reader";

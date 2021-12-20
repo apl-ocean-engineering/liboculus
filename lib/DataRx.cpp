@@ -83,7 +83,6 @@ void DataRx::sendSimpleFireMessage(const SonarConfiguration &msg) {
   LOG(DEBUG) << "Sent " << result << " bytes to sonar";
   haveWritten(data);
 }
-  
 
 //=== Readers
 void DataRx::readUpTo(size_t bytes,
@@ -98,7 +97,7 @@ void DataRx::restartReceiveCycle() {
   LOG(DEBUG) << "== Back to start of state machine ==";
 
   // Before abandoning the current data, post that it's been received
-  haveRead(_buffer);
+  if (_buffer.size() > 0) haveRead(_buffer);
 
   _buffer.clear();
   readUpTo(sizeof(uint8_t),
@@ -109,7 +108,7 @@ void DataRx::restartReceiveCycle() {
 //==== States in the state machine... ====
 
 void DataRx::rxFirstByteOculusId(const boost::system::error_code& ec,
-                        std::size_t bytes_transferred) {  
+                        std::size_t bytes_transferred) {
   if (ec) {
     LOG(WARNING) << "Error on receive of header: " << ec.message();
     goto exit;
@@ -130,7 +129,7 @@ exit:
 }
 
 void DataRx::rxSecondByteOculusId(const boost::system::error_code& ec,
-                        std::size_t bytes_transferred) {  
+                        std::size_t bytes_transferred) {
   if (ec) {
     LOG(WARNING) << "Error on receive of header: " << ec.message();
     goto exit;
@@ -153,7 +152,7 @@ exit:
 }
 
 void DataRx::rxHeader(const boost::system::error_code& ec,
-                        std::size_t bytes_transferred) {  
+                        std::size_t bytes_transferred) {
   if (ec) {
     LOG(WARNING) << "Error on receive of header: " << ec.message();
     return;
@@ -179,7 +178,7 @@ if (bytes_transferred != (sizeof(OculusMessageHeader)-sizeof(uint16_t))) {
 
   const auto packetSize = hdr.packetSize();
   const auto id = hdr.msgId();
-  if ((id == messageSimpleFire) || 
+  if ((id == messageSimpleFire) ||
       (id == messagePingResult) ||
       (id == messageUserConfig) ||
       (id == messageDummy)) {
@@ -222,7 +221,7 @@ void DataRx::rxSimplePingResult(const boost::system::error_code& ec,
         LOG(WARNING) << "Did not read full data packet, resetting...";
         goto exit;
       }
-    
+
       _simplePingCallback(ping);
     } else {
       LOG(WARNING) << "Incoming packet invalid";
