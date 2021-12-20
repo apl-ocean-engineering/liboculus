@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2017-2020 University of Washingon
- * Author: Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,37 +27,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
-#include "g3log/g3log.hpp"
+#include "liboculus/IoServiceThread.h"
 
 namespace liboculus {
 
-// Generic "worker thread" for boost::asio
-class IoServiceThread {
- public:
-  IoServiceThread();
+  IoServiceThread::IoServiceThread()
+      : _context(std::make_shared<boost::asio::io_context>()),
+        _work_guard(_context->get_executor()),
+        _thread() {}
 
-  ~IoServiceThread();
+  IoServiceThread::~IoServiceThread() {
+  }
 
-  void start();
+  void IoServiceThread::start() {
+    if (_thread) return; // running
+    _thread.reset(new std::thread(boost::bind(&IoServiceThread::threadExec,
+                                               this)));
+  }
 
-  void stop();
-  void join();
+  void IoServiceThread::stop() {
+    if (!_thread) return;
+    _work_guard.reset();
+    _context->stop();
+  }
 
-  const std::shared_ptr<boost::asio::io_context> &context() { return _context; }
+  void IoServiceThread::join() {
+    if (!_thread) return;
+    _thread->join();
+    _context->reset();
+    _thread.reset();
+  }
 
- private:
-  std::shared_ptr<boost::asio::io_context> _context;
-  using work_guard_type = boost::asio::executor_work_guard<boost::asio::io_context::executor_type>;
-  work_guard_type _work_guard;
-  
-  std::unique_ptr<std::thread> _thread;
+  void IoServiceThread::threadExec() {
+    _context->run();
+  }
 
-  void threadExec();
-};
 
-}
+}  // namespace liboculus

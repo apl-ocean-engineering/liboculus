@@ -41,7 +41,7 @@ namespace liboculus {
 
 class DataRx {
  public:
-  explicit DataRx(boost::asio::io_context &iosrv);
+  explicit DataRx(const std::shared_ptr<boost::asio::io_context> &iosrv);
 
   ~DataRx();
 

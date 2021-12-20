@@ -71,7 +71,8 @@ else()
               lib/SonarConfiguration.cpp
               lib/SonarStatus.cpp
               lib/StatusRx.cpp
-              lib/SonarPlayer.cpp )
+              lib/SonarPlayer.cpp
+              lib/IoServiceThread.cpp )
 
 
   add_library(liboculus_LIB ${oculus_SRCS})

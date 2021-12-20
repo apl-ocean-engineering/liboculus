@@ -36,11 +36,10 @@ namespace liboculus {
 namespace asio = boost::asio;
 
 
-DataRx::DataRx(boost::asio::io_context &iosrv)
-    : _socket(iosrv),
+DataRx::DataRx(const std::shared_ptr<boost::asio::io_context> &iosrv)
+    : _socket(*iosrv),
       _simplePingCallback([](const SimplePingResult &){}),
-      _onConnectCallback([](void){})
-{
+      _onConnectCallback([](void){}) {
 }
 
 DataRx::~DataRx() {
