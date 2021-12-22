@@ -89,7 +89,7 @@ void StatusRx::handleRead(const boost::system::error_code& ec,
     scheduleRead();
   }
 
-  LOG(WARNING) << "Read " << bytes_transferred << " bytes";
+  LOG(DEBUG) << "Read " << bytes_transferred << " bytes";
 
   if (bytes_transferred != sizeof(OculusStatusMsg)) {
       LOG(WARNING) << "Got " << bytes_transferred

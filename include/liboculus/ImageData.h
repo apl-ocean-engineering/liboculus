@@ -94,10 +94,9 @@ class ImageData {
 
  private:
   const uint8_t *_data;
-
+  uint32_t _imageSize;
   uint16_t _numRanges, _numBeams;
   uint8_t _dataSize;
-  uint32_t _imageSize;
 };  // class ImageData
 
 }  // namespace liboculus

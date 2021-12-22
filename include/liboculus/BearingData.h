@@ -66,8 +66,8 @@ class BearingData {
   }
 
  private:
-  uint16_t _numBeams;
   const int16_t *_data;
+  uint16_t _numBeams;
 };
 
 }  // namespace liboculus
