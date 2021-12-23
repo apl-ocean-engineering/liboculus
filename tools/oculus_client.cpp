@@ -17,26 +17,33 @@ using std::string;
 #include "liboculus/IoServiceThread.h"
 #include "liboculus/SonarPlayer.h"
 
-
-using namespace liboculus;
-
 using std::ofstream;
 using std::ios_base;
+using std::shared_ptr;
 
-int playbackSonarFile( const std::string &filename, ofstream &output, int stopAfter = -1 );
+using liboculus::SonarConfiguration;
+using liboculus::IoServiceThread;
+using liboculus::DataRx;
+using liboculus::StatusRx;
+using liboculus::SimplePingResult;
+using liboculus::SonarStatus;
+using liboculus::SonarPlayerBase;
+//using liboculus::SonarPlayer;
+
+int playbackSonarFile(const std::string &filename, ofstream &output,
+                      int stopAfter = -1);
 
 // Make these global so signal handler can access it
-std::unique_ptr< IoServiceThread > _io_thread;
+std::unique_ptr<liboculus::IoServiceThread> _io_thread;
 bool doStop = false;
 
 // Catch signals
-void signalHandler( int signo ) {
-  if( _io_thread ) _io_thread->stop();
+void signalHandler(int signo) {
+  if(_io_thread) _io_thread->stop();
   doStop = true;
 }
 
-int main( int argc, char **argv ) {
-
+int main(int argc, char **argv) {
   libg3logger::G3Logger logger("ocClient");
 
   CLI::App app{"Simple Oculus Sonar app"};
@@ -51,7 +58,8 @@ int main( int argc, char **argv ) {
   app.add_option("-o,--output", outputFilename, "Saves raw sonar data to specified file.");
 
   string inputFilename("");
-  app.add_option("-i,--input", inputFilename, "Reads raw sonar data from specified file.   Plays file contents rather than contacting \"real\" sonar on network.");
+  app.add_option("-i,--input", inputFilename, 
+                  "Reads raw sonar data from specified file.   Plays file contents rather than contacting \"real\" sonar on network.");
 
   int stopAfter = -1;
   app.add_option("-n,--frames", stopAfter, "Stop after (n) frames.");
@@ -79,13 +87,13 @@ int main( int argc, char **argv ) {
 
   // If playing back an input file, run a different main loop ...
   if (!inputFilename.empty()) {
-     playbackSonarFile( inputFilename, output, stopAfter );
+     playbackSonarFile(inputFilename, output, stopAfter);
      return 0;
-   }
+  }
 
   int count = 0;
 
-  signal(SIGHUP, signalHandler );
+  signal(SIGHUP, signalHandler);
 
   LOG(DEBUG) << "Starting loop";
 
@@ -96,10 +104,10 @@ int main( int argc, char **argv ) {
   DataRx _data_rx(_io_thread->context());
   StatusRx _status_rx(_io_thread->context());
 
-  _data_rx.setSimplePingCallback( [&]( const SimplePingResult &ping ) {
-
-    auto valid = ping.valid();
-    LOG(WARNING) << "Got " << (valid ? "valid" : "invalid") << " ping with id " << ping.ping()->pingId;
+  _data_rx.setSimplePingCallback([&](const SimplePingResult &ping) {
+    const auto valid = ping.valid();
+    LOG(WARNING) << "Got " << (valid ? "valid" : "invalid")
+                 << " ping with id " << ping.ping()->pingId;
 
     if (!valid) {
       LOG(DEBUG) << "Got invalid ping";
@@ -109,12 +117,12 @@ int main( int argc, char **argv ) {
     ping.dump();
 
     if (output.is_open()) {
-      output.write(reinterpret_cast<const char *>(ping.buffer().data()), ping.buffer().size());
+      const char *cdata = reinterpret_cast<const char *>(ping.buffer().data());
+      output.write(cdata,ping.buffer().size());
     }
 
     count++;
-    if( (stopAfter>0) && (count >= stopAfter)) _io_thread->stop();
-
+    if ((stopAfter > 0) && (count >= stopAfter)) _io_thread->stop();
   });
 
   _data_rx.setOnConnectCallback([&]() {
@@ -154,8 +162,8 @@ int main( int argc, char **argv ) {
 }
 
 
-int playbackSonarFile( const std::string &filename, ofstream &output, int stopAfter ) {
-  std::shared_ptr<SonarPlayerBase> player( SonarPlayerBase::OpenFile(filename) );
+int playbackSonarFile(const std::string &filename, ofstream &output, int stopAfter) {
+  shared_ptr<SonarPlayerBase> player(SonarPlayerBase::OpenFile(filename));
 
   if( !player ) {
     LOG(WARNING) << "Unable to open sonar file";
@@ -178,7 +186,8 @@ int playbackSonarFile( const std::string &filename, ofstream &output, int stopAf
   //   ping.dump();
 
   //   if (output.is_open()) {
-  //     output.write(reinterpret_cast<const char *>(ping.buffer().data()), ping.buffer().size());
+  //const char *cdata = reinterpret_cast<const char *>(ping.buffer().data());
+  //     output.write(cdata, ping.buffer().size());
   //   }
 
   //   count++;
