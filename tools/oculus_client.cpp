@@ -14,29 +14,36 @@ using std::string;
 
 #include "liboculus/DataRx.h"
 #include "liboculus/StatusRx.h"
-#include "IoServiceThread.h"
+#include "liboculus/IoServiceThread.h"
 #include "liboculus/SonarPlayer.h"
-
-
-using namespace liboculus;
 
 using std::ofstream;
 using std::ios_base;
+using std::shared_ptr;
 
-int playbackSonarFile( const std::string &filename, ofstream &output, int stopAfter = -1 );
+using liboculus::SonarConfiguration;
+using liboculus::IoServiceThread;
+using liboculus::DataRx;
+using liboculus::StatusRx;
+using liboculus::SimplePingResult;
+using liboculus::SonarStatus;
+using liboculus::SonarPlayerBase;
+//using liboculus::SonarPlayer;
+
+int playbackSonarFile(const std::string &filename, ofstream &output,
+                      int stopAfter = -1);
 
 // Make these global so signal handler can access it
-std::unique_ptr< SonarClient > _client;
+std::unique_ptr<liboculus::IoServiceThread> _io_thread;
 bool doStop = false;
 
 // Catch signals
-void signalHandler( int signo ) {
-  if( _client ) _client->stop();
+void signalHandler(int signo) {
+  if(_io_thread) _io_thread->stop();
   doStop = true;
 }
 
-int main( int argc, char **argv ) {
-
+int main(int argc, char **argv) {
   libg3logger::G3Logger logger("ocClient");
 
   CLI::App app{"Simple Oculus Sonar app"};
@@ -51,7 +58,8 @@ int main( int argc, char **argv ) {
   app.add_option("-o,--output", outputFilename, "Saves raw sonar data to specified file.");
 
   string inputFilename("");
-  app.add_option("-i,--input", inputFilename, "Reads raw sonar data from specified file.   Plays file contents rather than contacting \"real\" sonar on network.");
+  app.add_option("-i,--input", inputFilename, 
+                  "Reads raw sonar data from specified file.   Plays file contents rather than contacting \"real\" sonar on network.");
 
   int stopAfter = -1;
   app.add_option("-n,--frames", stopAfter, "Stop after (n) frames.");
@@ -59,47 +67,47 @@ int main( int argc, char **argv ) {
 
   CLI11_PARSE(app, argc, argv);
 
-  if( verbosity == 1 ) {
-    logger.setLevel( INFO );
-  } else if (verbosity > 1 ) {
-    logger.setLevel( DEBUG );
+  if (verbosity == 1) {
+    logger.setLevel(INFO);
+  } else if (verbosity > 1) {
+    logger.setLevel(DEBUG);
   }
 
   ofstream output;
 
-  if( !outputFilename.empty() ) {
+  if (!outputFilename.empty()) {
     LOG(DEBUG) << "Opening output file " << outputFilename;
-    output.open( outputFilename, ios_base::binary | ios_base::out );
+    output.open(outputFilename, ios_base::binary | ios_base::out);
 
-    if( !output.is_open() ) {
+    if (!output.is_open()) {
       LOG(WARNING) << "Unable to open " << outputFilename << " for output.";
       exit(-1);
     }
   }
 
   // If playing back an input file, run a different main loop ...
-  if( !inputFilename.empty() ) {
-     playbackSonarFile( inputFilename, output, stopAfter );
+  if (!inputFilename.empty()) {
+     playbackSonarFile(inputFilename, output, stopAfter);
      return 0;
-   }
+  }
 
   int count = 0;
 
-  signal(SIGHUP, signalHandler );
+  signal(SIGHUP, signalHandler);
 
   LOG(DEBUG) << "Starting loop";
 
   SonarConfiguration config;
   config.setPingRate(pingRateNormal);
 
-  std::shared_ptr<IoServiceThread> ioSrv = std::make_shared<IoServiceThread>();
-  DataRx _client(ioSrv);
-  StatusRx _status(ioSrv);
+  _io_thread.reset(new IoServiceThread);
+  DataRx _data_rx(_io_thread->context());
+  StatusRx _status_rx(_io_thread->context());
 
-  _client->setDataRxCallback( [&]( const SimplePingResult &ping ) {
-
-    auto valid = ping.valid();
-    // LOG(INFO) << "Got " << (valid ? "valid" : "invalid") << " ping";
+  _data_rx.setSimplePingCallback([&](const SimplePingResult &ping) {
+    const auto valid = ping.valid();
+    LOG(WARNING) << "Got " << (valid ? "valid" : "invalid")
+                 << " ping with id " << ping.ping()->pingId;
 
     if (!valid) {
       LOG(DEBUG) << "Got invalid ping";
@@ -108,29 +116,29 @@ int main( int argc, char **argv ) {
 
     ping.dump();
 
-    if( output.is_open() ) {
-      output.write( (const char *)ping.ptr(), ping.size() );
+    if (output.is_open()) {
+      const char *cdata = reinterpret_cast<const char *>(ping.buffer().data());
+      output.write(cdata,ping.buffer().size());
     }
 
     count++;
-    if( (stopAfter>0) && (count >= stopAfter)) _client->stop();
-
+    if ((stopAfter > 0) && (count >= stopAfter)) _io_thread->stop();
   });
 
-  _client->onConnectCallback( [&]() {
-    _client->sendSimpleFireMessage(config);
+  _data_rx.setOnConnectCallback([&]() {
+    _data_rx.sendSimpleFireMessage(config);
   });
 
   // Connect client
   if (ipAddr == "auto") {
-    _status->setCallback( [&]( const SonarStatus &status, bool is_valid ){
-      if (!is_valid || _client->isConnected()) return;
-      _client->connect(status.ipAddr());
+    _status_rx.setCallback([&](const SonarStatus &status, bool is_valid){
+      if (!is_valid || _data_rx.isConnected()) return;
+      _data_rx.connect(status.ipAddr());
     });
   } else {
-    _client->connect(ipAddr);
+    _data_rx.connect(ipAddr);
   }
-  ioSrv->start();
+  _io_thread->start();
 
   // Imprecise statistic for now...
   int lastCount = 0;
@@ -143,10 +151,10 @@ int main( int argc, char **argv ) {
     sleep(1);
   }
 
-  ioSrv->stop();
-  ioSrv->join();
+  _io_thread->stop();
+  _io_thread->join();
 
-  if( output.is_open() ) output.close();
+  if (output.is_open()) output.close();
 
   LOG(INFO) << "At exit";
 
@@ -154,8 +162,8 @@ int main( int argc, char **argv ) {
 }
 
 
-int playbackSonarFile( const std::string &filename, ofstream &output, int stopAfter ) {
-  std::shared_ptr<SonarPlayerBase> player( SonarPlayerBase::OpenFile(filename) );
+int playbackSonarFile(const std::string &filename, ofstream &output, int stopAfter) {
+  shared_ptr<SonarPlayerBase> player(SonarPlayerBase::OpenFile(filename));
 
   if( !player ) {
     LOG(WARNING) << "Unable to open sonar file";
@@ -168,23 +176,23 @@ int playbackSonarFile( const std::string &filename, ofstream &output, int stopAf
   }
 
   int count = 0;
-  SimplePingResult ping;
-  while( player->nextPing(ping) && !player->eof() ) {
+  // SimplePingResult ping;
+  // while( player->nextPing(ping) && !player->eof() ) {
+  //   if (!ping.valid()) {
+  //     LOG(WARNING) << "Invalid ping";
+  //     continue;
+  //   }
 
-    if( !ping.valid() ) {
-      LOG(WARNING) << "Invalid ping";
-      continue;
-    }
+  //   ping.dump();
 
-    ping.dump();
+  //   if (output.is_open()) {
+  //const char *cdata = reinterpret_cast<const char *>(ping.buffer().data());
+  //     output.write(cdata, ping.buffer().size());
+  //   }
 
-    if( output.is_open() ) {
-      output.write( (const char *)ping.ptr(), ping.size() );
-    }
-
-    count++;
-    if( (stopAfter > 0) && (count >= stopAfter) ) break;
-  }
+  //   count++;
+  //   if( (stopAfter > 0) && (count >= stopAfter) ) break;
+  // }
 
   LOG(INFO) << count << " sonar packets decoded";
 
