@@ -40,7 +40,7 @@
 #include "ImageData.h"
 
 #include "Oculus/Oculus.h"
-
+#include "liboculus/MessageHeader.h"
 #include <g3log/g3log.hpp>
 
 namespace liboculus {
@@ -48,73 +48,25 @@ namespace liboculus {
 using std::shared_ptr;
 using std::vector;
 
-class MessageHeader {
- public:
-
-  MessageHeader() = delete;
-  MessageHeader( const MessageHeader & ) = delete;
-
-  explicit MessageHeader(const ByteVector &buffer)
-      : _buffer(buffer) {
-        assert(buffer.size() >= sizeof(OculusMessageHeader));
-      }
-
-  ~MessageHeader() {}
-
-  // Convenience accessors
-  OculusMessageType msgId() const {
-    return static_cast<OculusMessageType>(hdr()->msgId);
-  }
-  uint16_t oculusId() const    { return hdr()->oculusId; }
-  uint16_t srcDeviceId() const { return hdr()->srcDeviceId; }
-  uint16_t dstDeviceId() const { return hdr()->dstDeviceId; }
-  uint16_t msgVersion() const  { return hdr()->msgVersion; }
-  uint32_t payloadSize() const { return hdr()->payloadSize; }
-  uint32_t packetSize() const  { return payloadSize() + sizeof(OculusMessageHeader); }
-
-  virtual bool valid() const {
-    return hdr()->oculusId == OCULUS_CHECK_ID;  // 0x4f53
-  }
-
-  virtual void dump() const {
-    LOG(INFO) << "   Oculus Id: 0x" << std::hex << oculusId();
-    LOG(INFO) << "      Msg id: 0x" << std::hex << static_cast<uint16_t>(msgId());
-    LOG(INFO) << "      Dst ID: " << std::hex << dstDeviceId();
-    LOG(INFO) << "      Src ID: " << std::hex << srcDeviceId();
-    LOG(INFO) << "Payload size: " << payloadSize() << " bytes";
-  }
-
-  const OculusMessageHeader *hdr() const {
-    return reinterpret_cast<const OculusMessageHeader *>(_buffer.data());
-  }
-
-  const ByteVector &buffer(void) const { return _buffer; }
-
- protected:
-
-  const ByteVector &_buffer;
-};  // class MessageHeader
-
-
 // A single OculusSimplePingResult (msg) is actually three nested structs:
 //   OculusMessageHeader     (as msg.fireMessage.head)
 //   OculusSimpleFireMessage (as msg.fireMessage)
 //   then the rest of OculusSimplePingResult
 class SimplePingResult : public MessageHeader {
  public:
-  SimplePingResult() = delete;
-  SimplePingResult(const SimplePingResult &other) = delete;
+  SimplePingResult() = default;
+  SimplePingResult(const SimplePingResult &other) = default;
 
-  explicit SimplePingResult(const ByteVector &buffer);
+  explicit SimplePingResult(const std::shared_ptr<ByteVector> &buffer);
 
   ~SimplePingResult() {}
 
   const OculusSimpleFireMessage *fireMsg() const {
-      return reinterpret_cast<const OculusSimpleFireMessage *>(_buffer.data());
+      return reinterpret_cast<const OculusSimpleFireMessage *>(_buffer->data());
   }
 
   const OculusSimplePingResult *ping() const  {
-    return reinterpret_cast<const OculusSimplePingResult *>(_buffer.data());
+    return reinterpret_cast<const OculusSimplePingResult *>(_buffer->data());
   }
 
   const BearingData &bearings() const { return _bearings; }

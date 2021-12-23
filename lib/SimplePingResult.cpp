@@ -28,22 +28,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "liboculus/OculusStructs.h"
+#include "liboculus/SimplePingResult.h"
 
 namespace liboculus {
 
-SimplePingResult::SimplePingResult(const ByteVector &buffer)
+SimplePingResult::SimplePingResult(const std::shared_ptr<ByteVector> &buffer)
   : MessageHeader(buffer),
     _bearings(),
     _image() {
-  assert(buffer.size() >= sizeof(OculusSimplePingResult));
+  assert(buffer->size() >= sizeof(OculusSimplePingResult));
 
   // Bearing data is packed into an array of shorts at the end of the
   // OculusSimpleFireMessage
-  const int16_t *bearingData = reinterpret_cast<const short*>(buffer.data() + sizeof(OculusSimplePingResult));
+  const int16_t *bearingData = reinterpret_cast<const short*>(buffer->data() + sizeof(OculusSimplePingResult));
   _bearings = BearingData(bearingData, ping()->nBeams);
 
-  const uint8_t *imageData = reinterpret_cast<const uint8_t*>(buffer.data() + ping()->imageOffset);
+  const uint8_t *imageData = reinterpret_cast<const uint8_t*>(buffer->data() + ping()->imageOffset);
   _image = ImageData(imageData,
                         ping()->imageSize,
                         ping()->nRanges,
@@ -52,6 +52,9 @@ SimplePingResult::SimplePingResult(const ByteVector &buffer)
 }
 
 bool SimplePingResult::valid() const {
+  if (_buffer->size() < sizeof(OculusMessageHeader)) return false;
+  if (_buffer->size() < packetSize()) return false;
+
   MessageHeader hdr(_buffer);
   if (!hdr.valid()) {
     LOG(WARNING) << "Header not valid";

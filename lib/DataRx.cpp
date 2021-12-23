@@ -40,6 +40,7 @@ namespace asio = boost::asio;
 
 DataRx::DataRx(const std::shared_ptr<boost::asio::io_context> &iosrv)
     : _socket(*iosrv),
+      _buffer(std::make_shared<ByteVector>()),
       _simplePingCallback([](const SimplePingResult &){}),
       _onConnectCallback([](void){}) {
 }
@@ -87,9 +88,9 @@ void DataRx::sendSimpleFireMessage(const SonarConfiguration &msg) {
 //=== Readers
 void DataRx::readUpTo(size_t bytes,
                     StateMachineCallback callback) {
-  const size_t current_sz = _buffer.size();
-  _buffer.resize(bytes);
-  asio::mutable_buffer buffer_view = asio::buffer(_buffer)+current_sz;
+  const size_t current_sz = _buffer->size();
+  _buffer->resize(bytes);
+  asio::mutable_buffer buffer_view = asio::buffer(*_buffer)+current_sz;
   asio::async_read(_socket, buffer_view, callback);
 }
 
@@ -97,9 +98,13 @@ void DataRx::restartReceiveCycle() {
   LOG(DEBUG) << "== Back to start of state machine ==";
 
   // Before abandoning the current data, post that it's been received
-  if (_buffer.size() > 0) haveRead(_buffer);
+  if (_buffer->size() > 0) haveRead(*_buffer);
 
-  _buffer.clear();
+  if (_buffer.use_count() > 1) {
+    _buffer = std::make_shared<ByteVector>();
+  } else {
+    _buffer->clear();
+  }
   readUpTo(sizeof(uint8_t),
           boost::bind(&DataRx::rxFirstByteOculusId, this, _1, _2));
 }
@@ -118,7 +123,7 @@ void DataRx::rxFirstByteOculusId(const boost::system::error_code& ec,
     goto exit;
   }
 
-  if (_buffer.data()[0] == liboculus::PacketHeaderLSB) {
+  if (_buffer->data()[0] == liboculus::PacketHeaderLSB) {
     readUpTo(sizeof(uint16_t),
               boost::bind(&DataRx::rxSecondByteOculusId, this, _1, _2));
     return;
@@ -139,7 +144,7 @@ void DataRx::rxSecondByteOculusId(const boost::system::error_code& ec,
     goto exit;
   }
 
-  if (_buffer.data()[1] == liboculus::PacketHeaderMSB) {
+  if (_buffer->data()[1] == liboculus::PacketHeaderMSB) {
     LOG(DEBUG) << "Received good OculusId at start of packet";
 
     readUpTo(sizeof(OculusMessageHeader),
@@ -240,7 +245,7 @@ void DataRx::rxMessageLogs(const boost::system::error_code& ec,
   }
 
   LOG(INFO) << "Received " << bytes_transferred << " of LogMessage data";
-  LOG(INFO) << std::string(_buffer.begin()+sizeof(OculusMessageHeader), _buffer.end());
+  LOG(INFO) << std::string(_buffer->begin()+sizeof(OculusMessageHeader), _buffer->end());
 
 exit:
   restartReceiveCycle();
