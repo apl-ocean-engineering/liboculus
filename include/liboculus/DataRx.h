@@ -35,10 +35,12 @@
 #include <vector>
 #include <memory>
 
-#include "liboculus/OculusStructs.h"
+#include "liboculus/SimplePingResult.h"
 #include "liboculus/SonarConfiguration.h"
 
 namespace liboculus {
+
+using std::shared_ptr;
 
 class DataRx {
  public:
@@ -69,8 +71,8 @@ class DataRx {
 
   // Implement data read / data written hooks as virtual functions rather
   // rather than callbacks.
-  virtual void haveWritten(const std::vector<uint8_t> &bytes) {;}
-  virtual void haveRead(const std::vector<uint8_t> &bytes) {;}
+  virtual void haveWritten(const ByteVector &bytes) {;}
+  virtual void haveRead(const ByteVector &bytes) {;}
 
  private:
   void onConnect(const boost::system::error_code& error);
@@ -109,7 +111,7 @@ class DataRx {
   boost::asio::ip::tcp::socket _socket;
 
   //
-  ByteVector _buffer;
+  shared_ptr<ByteVector> _buffer;
 
   SimplePingCallback _simplePingCallback;
   OnConnectCallback _onConnectCallback;

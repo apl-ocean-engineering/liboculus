@@ -22,7 +22,7 @@ find_package( Boost REQUIRED COMPONENTS system )
 
 if (FIPS_CONFIG)
   #== fips-specific section ==========================================
-  add_compile_options(-std=c++11)
+  add_compile_options(-std=c++17)
 
   ## Set global include paths
   fips_include_directories(
@@ -66,7 +66,7 @@ else()
               ${catkin_INCLUDE_DIRS} )
 
   set(oculus_SRCS
-              lib/OculusStructs.cpp
+              lib/SimplePingResult.cpp
               lib/DataRx.cpp
               lib/SonarConfiguration.cpp
               lib/SonarStatus.cpp

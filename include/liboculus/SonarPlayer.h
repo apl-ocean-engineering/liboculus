@@ -31,13 +31,17 @@
 #pragma once
 
 #include <fstream>
+#include <memory>
 
-#include "liboculus/OculusStructs.h"
+#include "liboculus/SimplePingResult.h"
+#include "liboculus/expected.hpp"
 
 namespace liboculus {
 
 class SonarPlayerBase {
 public:
+  typedef tl::expected<SimplePingResult, bool> SonarPlayerResult_t;
+
   SonarPlayerBase()           {;}
   virtual ~SonarPlayerBase()  {;}
 
@@ -51,7 +55,7 @@ public:
   virtual void rewind()
     { _input.seekg(0); }
 
-  virtual bool nextPing( SimplePingResult &ping ) = 0;
+  virtual SonarPlayerResult_t nextPing() = 0;
 
   static std::shared_ptr<SonarPlayerBase> OpenFile(const std::string &filename);
 
@@ -69,14 +73,16 @@ protected:
 ///
 ///
 class RawSonarPlayer : public SonarPlayerBase {
-public:
-  RawSonarPlayer();
-  virtual ~RawSonarPlayer();
+ public:
+  RawSonarPlayer()
+    : SonarPlayerBase() {;}
 
-  bool nextPacket( MessageHeader &header );
-  virtual bool nextPing( SimplePingResult &ping );
+  virtual ~RawSonarPlayer()
+    {;}
 
-private:
+  SonarPlayerBase::SonarPlayerResult_t nextPing() override;
+
+ private:
 };
 
 

@@ -117,8 +117,8 @@ int main(int argc, char **argv) {
     ping.dump();
 
     if (output.is_open()) {
-      const char *cdata = reinterpret_cast<const char *>(ping.buffer().data());
-      output.write(cdata,ping.buffer().size());
+      const char *cdata = reinterpret_cast<const char *>(ping.buffer()->data());
+      output.write(cdata,ping.buffer()->size());
     }
 
     count++;
