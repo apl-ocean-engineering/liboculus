@@ -52,25 +52,12 @@ SonarConfiguration::SonarConfiguration() {
   _sfm.networkSpeed = 0xff;  // uint8_t; can reduce network speed for bad links
   _sfm.gammaCorrection = 127;  // uint8_t; for 127, gamma = 0.5
 
-  // uint8_t flags;
-  // bit 0: 0 = interpret range as percent, 1 = interpret range as meters
-  // bit 1: 0 = 8 bit data, 1 = 16 bit data
-  // bit 2: 0 = won't send gain, 1 = send gain
-  // bit 3: 0 = send full return message, 1 = send simple return message
-  // bit 4: "gain assistance"?
-  // bit 6: use 512 beams (vs 256): email from Blueprint said to set flags |= 0x40
-  _sfm.flags = 0x5B;  // 0x59 = 0b1011001. Send simple return msg; range in meters; 512 beams
+  _sfm.flags = _flags();   // Set to defaults
 
   _sfm.range = 2;  // 2 m; can be percent or meters, flag controlled
   _sfm.gainPercent = 50;
   _sfm.speedOfSound = 0.0;  // m/s  0 to calculate SoS from salinity
   _sfm.salinity = 0.0;  // ppt; 0 for freshwater, 35 for seawater
-}
-
-// TODO(lindzey): I don't love that the driver knows how to
-//   convert bools to flags. Better to do that here ...
-void SonarConfiguration::setFlags(uint8_t flags) {
-  _sfm.flags = flags;
 }
 
 void SonarConfiguration::setRange(double input) {
@@ -108,10 +95,71 @@ void SonarConfiguration::setFreqMode(OculusFreqMode input) {
 }
 
 std::vector<uint8_t> SonarConfiguration::serialize() const {
+  _sfm.flags = _flags();
+
   std::vector<uint8_t> v;
   const auto ptr = reinterpret_cast<const char*>(&_sfm);
   v.insert(v.end(), ptr, ptr + sizeof(OculusSimpleFireMessage));
   return v;
 }
+
+// ====  ====
+
+OculusSimpleFireFlags::OculusSimpleFireFlags()
+  : _rangeAsMeters(true),
+    _16bitData(false),
+    _sendGain(true),
+    _simpleReturn(true),
+    _gainAssistance(true),
+    _512beams(true)
+{}
+
+OculusSimpleFireFlags::OculusSimpleFireFlags(uint8_t flags) {
+  setRangeAsMeters(flags & RangeAsMeters);
+  setData16Bit(flags & Data16Bits);
+  setSendGain(flags & DoSendGain);
+  setSimpleReturn(flags & SimpleReturn);
+  setGainAssistance(flags & GainAssistance);
+  set512Beams(flags & Do512Beams);
+}
+
+uint8_t OculusSimpleFireFlags::operator()() const {
+  return (_rangeAsMeters ? RangeAsMeters : 0 ) |
+         (_16bitData     ? Data16Bits : 0) |
+         (_sendGain      ? DoSendGain : 0) |
+         (_simpleReturn  ? SimpleReturn : 0) |
+         (_gainAssistance ? GainAssistance : 0) |
+         (_512beams      ? Do512Beams : 0);
+}
+
+  OculusSimpleFireFlags &OculusSimpleFireFlags::setRangeAsMeters(bool v) {
+    _rangeAsMeters = v;
+    return *this;
+  }
+
+  OculusSimpleFireFlags &OculusSimpleFireFlags::setData16Bit(bool v) {
+    _16bitData = v;
+    return *this;
+  }
+
+  OculusSimpleFireFlags &OculusSimpleFireFlags::setSendGain(bool v) {
+    _sendGain = v;
+    return *this;
+  }
+
+  OculusSimpleFireFlags &OculusSimpleFireFlags::setSimpleReturn(bool v) {
+    _simpleReturn = v;
+    return *this;
+  }
+
+  OculusSimpleFireFlags &OculusSimpleFireFlags::setGainAssistance(bool v) {
+    _gainAssistance = v;
+    return *this;
+  }
+
+  OculusSimpleFireFlags &OculusSimpleFireFlags::set512Beams(bool v) {
+    _512beams = v;
+    return *this;
+  }
 
 }  // namespace liboculus
