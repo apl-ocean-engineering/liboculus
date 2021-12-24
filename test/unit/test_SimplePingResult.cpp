@@ -7,12 +7,11 @@
 using namespace liboculus;
 
 void ValidateOneRawPing( const SimplePingResult &ping ) {
-  ASSERT_TRUE( ping.valid() );
+  ASSERT_TRUE(ping.valid());
 }
 
 TEST( SimplePingResult, ConstructorFromBuffer ) {
-  MessageHeader header( Oculus_TestData::LoadMessageBuffer( ONE_RAW_PING ) );
-  SimplePingResult ping( header );
-  
+  SimplePingResult ping(Oculus_TestData::Load(ONE_RAW_PING));
+
   ValidateOneRawPing( ping );
 }
