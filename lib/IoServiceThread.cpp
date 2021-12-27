@@ -35,8 +35,12 @@
 namespace liboculus {
 
   IoServiceThread::IoServiceThread()
+#if BOOST_VERSION >= 106600
       : _context(std::make_shared<boost::asio::io_context>()),
         _work_guard(_context->get_executor()),
+#else
+      : _context(std::make_shared<boost::asio::io_service>()),
+#endif
         _thread() {}
 
   IoServiceThread::~IoServiceThread() {
@@ -50,7 +54,9 @@ namespace liboculus {
 
   void IoServiceThread::stop() {
     if (!_thread) return;
+#if BOOST_VERSION >= 106600
     _work_guard.reset();
+#endif
     _context->stop();
   }
 

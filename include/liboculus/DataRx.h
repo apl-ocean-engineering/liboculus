@@ -44,7 +44,11 @@ using std::shared_ptr;
 
 class DataRx {
  public:
+#if BOOST_VERSION >= 106600
   explicit DataRx(const std::shared_ptr<boost::asio::io_context> &iosrv);
+#else
+  explicit DataRx(const std::shared_ptr<boost::asio::io_service> &iosrv);
+#endif
 
   ~DataRx();
 

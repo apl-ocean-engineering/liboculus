@@ -37,8 +37,11 @@ namespace liboculus {
 
 namespace asio = boost::asio;
 
-
+#if BOOST_VERSION >= 106600
 DataRx::DataRx(const std::shared_ptr<boost::asio::io_context> &iosrv)
+#else
+DataRx::DataRx(const std::shared_ptr<boost::asio::io_service> &iosrv)
+#endif
     : _socket(*iosrv),
       _buffer(std::make_shared<ByteVector>()),
       _simplePingCallback([](const SimplePingResult &){}),
@@ -91,7 +94,11 @@ void DataRx::readUpTo(size_t bytes,
   const size_t current_sz = _buffer->size();
   _buffer->resize(bytes);
   asio::mutable_buffer buffer_view = asio::buffer(*_buffer)+current_sz;
+#if BOOST_VERSION >= 106600
   asio::async_read(_socket, buffer_view, callback);
+#else
+  asio::async_read(_socket, asio::mutable_buffers_1(buffer_view), callback);
+#endif
 }
 
 void DataRx::restartReceiveCycle() {

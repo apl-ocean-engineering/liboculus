@@ -52,13 +52,18 @@ using boost::asio::deadline_timer;
 //
 class StatusRx {
  public:
+#if BOOST_VERSION >= 106600
   explicit StatusRx(const std::shared_ptr<boost::asio::io_context> &iosrv);
+#else
+  explicit StatusRx(const std::shared_ptr<boost::asio::io_service> &iosrv);
+#endif
+
   ~StatusRx() {}
 
   typedef std::function< void(const SonarStatus &, bool) > SonarStatusCallback;
 
-  void setCallback( SonarStatusCallback callback ) { 
-    _sonarStatusCallback = callback; 
+  void setCallback( SonarStatusCallback callback ) {
+    _sonarStatusCallback = callback;
   }
 
  private:
