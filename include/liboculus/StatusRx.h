@@ -52,11 +52,7 @@ using boost::asio::deadline_timer;
 //
 class StatusRx {
  public:
-#if BOOST_VERSION >= 106600
-  explicit StatusRx(const std::shared_ptr<boost::asio::io_context> &iosrv);
-#else
-  explicit StatusRx(const std::shared_ptr<boost::asio::io_service> &iosrv);
-#endif
+  explicit StatusRx(const IoServiceThread::IoContextPtr &iosrv);
 
   ~StatusRx() {}
 

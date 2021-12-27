@@ -47,11 +47,7 @@ using boost::asio::ip::address_v4;
 // ----------------------------------------------------------------------------
 // StatusRx - a listening socket for oculus status messages
 
-#if BOOST_VERSION >= 106600
-StatusRx::StatusRx(const std::shared_ptr<boost::asio::io_context> &iosrv)
-#else
-StatusRx::StatusRx(const std::shared_ptr<boost::asio::io_service> &iosrv)
-#endif
+StatusRx::StatusRx(const IoServiceThread::IoContextPtr &iosrv)
     : _num_valid_rx(0),
       _num_invalid_rx(0),
       _socket(*iosrv),

@@ -35,6 +35,7 @@
 #include <vector>
 #include <memory>
 
+#include "liboculus/IoServiceThread.h"
 #include "liboculus/SimplePingResult.h"
 #include "liboculus/SonarConfiguration.h"
 
@@ -44,12 +45,7 @@ using std::shared_ptr;
 
 class DataRx {
  public:
-#if BOOST_VERSION >= 106600
-  explicit DataRx(const std::shared_ptr<boost::asio::io_context> &iosrv);
-#else
-  explicit DataRx(const std::shared_ptr<boost::asio::io_service> &iosrv);
-#endif
-
+  explicit DataRx(const IoServiceThread::IoContextPtr &iosrv);
   ~DataRx();
 
   void connect(const boost::asio::ip::address &addr);

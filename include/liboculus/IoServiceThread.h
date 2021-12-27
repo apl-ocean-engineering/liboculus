@@ -40,15 +40,16 @@
 
 namespace liboculus {
 
-#if BOOST_VERSION >= 106600
-using boost::asio::io_context;
-#else
-using boost::asio::io_service;
-#endif
-
 // Generic "worker thread" for boost::asio
 class IoServiceThread {
  public:
+#if BOOST_VERSION >= 106600
+  typedef boost::asio::io_context IoContext;
+#else
+  typedef boost::asio::io_service IoContext;
+#endif
+  typedef std::shared_ptr<IoContext> IoContextPtr;
+
   IoServiceThread();
 
   ~IoServiceThread();
@@ -58,22 +59,16 @@ class IoServiceThread {
   void stop();
   void join();
 
-#if BOOST_VERSION >= 106600
-  const std::shared_ptr<io_context> &context() { return _context; }
-#else
-  const std::shared_ptr<io_service> &context() { return _context; }
-#endif
+  const IoContextPtr &context() { return _context; }
 
  private:
-#if BOOST_VERSION >= 106600
-  std::shared_ptr<io_context> _context;
+  IoContextPtr _context;
 
+#if BOOST_VERSION >= 106600
   // This class was added in later version of Boost;  not present in 1.65,
   // the version currently installed for 18.04 / ROS Melodic
-  using work_guard_type = boost::asio::executor_work_guard<io_context::executor_type>;
+  using work_guard_type = boost::asio::executor_work_guard<boost::asio::io_context::executor_type>;
   work_guard_type _work_guard;
-#else
-  std::shared_ptr<io_service> _context;
 #endif
 
   std::unique_ptr<std::thread> _thread;
