@@ -76,35 +76,35 @@ bool SimplePingResult::valid() const {
 }
 
 void SimplePingResult::dump() const {
-  LOG(INFO) << "--------------";
+  LOG(DEBUG) << "--------------";
   MessageHeader::dump();
-  LOG(INFO) << "        Mode: " << FreqModeToString(fireMsg()->masterMode);
+  LOG(DEBUG) << "        Mode: " << FreqModeToString(fireMsg()->masterMode);
 
   const int pingRate = PingRateToHz(fireMsg()->pingRate);
   if (pingRate >= 0 ) {
-    LOG(INFO) << "   Ping rate: " << pingRate;
+    LOG(DEBUG) << "   Ping rate: " << pingRate;
   } else {
-    LOG(INFO) << "   Ping rate: (unknown) " << static_cast<int>(fireMsg()->pingRate);
+    LOG(DEBUG) << "   Ping rate: (unknown) " << static_cast<int>(fireMsg()->pingRate);
   }
 
-  LOG(INFO) << "     Ping ID: " << ping()->pingId;
-  LOG(INFO) << "      Status: " << ping()->status;
-  LOG(INFO) << "   Ping start time: " << ping()->pingStartTime;
+  LOG(DEBUG) << "     Ping ID: " << ping()->pingId;
+  LOG(DEBUG) << "      Status: " << ping()->status;
+  LOG(DEBUG) << "   Ping start time: " << ping()->pingStartTime;
 
-  LOG(INFO) << "   Frequency: " << ping()->frequency;
-  LOG(INFO) << " Temperature: " << ping()->temperature;
-  LOG(INFO) << "    Pressure: " << ping()->pressure;
-  LOG(INFO) << "Spd of Sound: " << ping()->speedOfSoundUsed;
-  LOG(INFO) << "   Range res: " << ping()->rangeResolution << " m";
+  LOG(DEBUG) << "   Frequency: " << ping()->frequency;
+  LOG(DEBUG) << " Temperature: " << ping()->temperature;
+  LOG(DEBUG) << "    Pressure: " << ping()->pressure;
+  LOG(DEBUG) << "Spd of Sound: " << ping()->speedOfSoundUsed;
+  LOG(DEBUG) << "   Range res: " << ping()->rangeResolution << " m";
 
-  LOG(INFO) << "   Num range: " << ping()->nRanges;
-  LOG(INFO) << "   Num beams: " << ping()->nBeams;
+  LOG(DEBUG) << "   Num range: " << ping()->nRanges;
+  LOG(DEBUG) << "   Num beams: " << ping()->nBeams;
 
-  LOG(INFO) << "  Image size: " << ping()->imageSize;
-  LOG(INFO) << "Image offset: " << ping()->imageOffset;
-  LOG(INFO) << "   Data size: " << DataSizeToString(ping()->dataSize);
-  LOG(INFO) << "Message size: " << ping()->messageSize;
-  LOG(INFO) << "--------------";
+  LOG(DEBUG) << "  Image size: " << ping()->imageSize;
+  LOG(DEBUG) << "Image offset: " << ping()->imageOffset;
+  LOG(DEBUG) << "   Data size: " << DataSizeToString(ping()->dataSize);
+  LOG(DEBUG) << "Message size: " << ping()->messageSize;
+  LOG(DEBUG) << "--------------";
 }
 
 } // namespace liboculus
