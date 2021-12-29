@@ -77,7 +77,7 @@ void StatusRx::doConnect() {
 void StatusRx::scheduleRead() {
   // Start an asynchronous receive
   _buffer.resize(sizeof(OculusStatusMsg));
-  LOG(INFO) << "Waiting for status packet...";
+  LOG(DEBUG) << "Waiting for status packet...";
   _socket.async_receive(boost::asio::buffer(_buffer),
                         boost::bind(&StatusRx::handleRead, this, _1, _2));
 }
