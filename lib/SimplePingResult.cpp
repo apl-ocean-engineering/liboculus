@@ -29,6 +29,7 @@
  */
 
 #include "liboculus/SimplePingResult.h"
+#include "liboculus/SonarConfiguration.h"
 
 namespace liboculus {
 
@@ -64,8 +65,13 @@ bool SimplePingResult::valid() const {
   int num_pixels = ping()->nRanges * ping()->nBeams;
   size_t expected_size = SizeOfDataSize(ping()->dataSize) * num_pixels;
 
+  OculusSimpleFireFlags flags(fireMsg()->flags);
+  if (flags.getSendGain()) {
+    expected_size += sizeof(uint32_t) * ping()->nRanges;
+  }
+
   if (ping()->imageSize != expected_size) {
-    LOG(WARNING) << "ImageSize size in header " << ping()->imageSize
+    LOG(WARNING) << "ImageSize in header " << ping()->imageSize
                  << " does not match expected data size of "
                  << expected_size;
     return false;

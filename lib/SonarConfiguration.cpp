@@ -29,6 +29,8 @@
  */
 
 
+#include <iomanip>
+
 #include "liboculus/SonarConfiguration.h"
 
 #include <boost/asio.hpp>
@@ -102,6 +104,20 @@ std::vector<uint8_t> SonarConfiguration::serialize() const {
   v.insert(v.end(), ptr, ptr + sizeof(OculusSimpleFireMessage));
   return v;
 }
+
+void SonarConfiguration::dump() const {
+    LOG(INFO) << "Setting flags: 0x"
+            << std::hex << std::setw(2) << std::setfill('0')
+            << static_cast<unsigned int>(flags()())
+            << std::dec << std::setw(0)
+            << "\n   range is meters " << flags().getRangeAsMeters()
+            << "\n   data is 16 bit  " << flags().getData16Bit()
+            << "\n   send gain       " << flags().getSendGain()
+            << "\n   simple return   " << flags().getSimpleReturn()
+            << "\n   gain assistance " << flags().getGainAssistance()
+            << "\n   use 512 beams   " << flags().get512Beams();
+}
+
 
 // ====  ====
 

@@ -121,6 +121,10 @@ class SonarConfiguration {
   void setFreqMode(OculusFreqMode input);
 
   OculusSimpleFireFlags &flags() { return _flags; }
+  const OculusSimpleFireFlags &flags() const { return _flags; }
+
+
+  void dump() const;
 
  private:
   OculusSimpleFireFlags _flags;

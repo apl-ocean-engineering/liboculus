@@ -65,7 +65,7 @@ void DataRx::onConnect(const boost::system::error_code& ec) {
     LOG(WARNING) << "Error on connect: " << ec.message();
   }
 
-  LOG(INFO) << "Connected to sonar!";
+  LOG(DEBUG) << "Connected to sonar!";
   restartReceiveCycle();
   _onConnectCallback();
 }
@@ -98,7 +98,7 @@ void DataRx::readUpTo(size_t bytes,
 }
 
 void DataRx::restartReceiveCycle() {
-  LOG(DEBUG) << "== Back to start of state machine ==";
+  LOG(DEBUG) << "== Restarting DataRx state machine ==";
 
   // Before abandoning the current data, post that it's been received
   if (_buffer->size() > 0) haveRead(*_buffer);
@@ -180,7 +180,7 @@ if (bytes_transferred != (sizeof(OculusMessageHeader)-sizeof(uint16_t))) {
     return;
   }
 
-  LOG(INFO) << "Got message ID " <<  static_cast<int>(hdr.msgId()) << " (" << MessageTypeToString(hdr.msgId()) << ")";
+  LOG(DEBUG) << "Got message ID " <<  static_cast<int>(hdr.msgId()) << " (" << MessageTypeToString(hdr.msgId()) << ")";
 
   hdr.dump();
 
@@ -222,8 +222,6 @@ void DataRx::rxSimplePingResult(const boost::system::error_code& ec,
   {
     SimplePingResult ping(_buffer);
 
-    ping.dump();
-
     if (ping.valid()) {
       if (bytes_transferred < ping.payloadSize()) {
         LOG(WARNING) << "Did not read full data packet, resetting...";
@@ -247,7 +245,7 @@ void DataRx::rxMessageLogs(const boost::system::error_code& ec,
     goto exit;
   }
 
-  LOG(INFO) << "Received " << bytes_transferred << " of LogMessage data";
+  LOG(DEBUG) << "Received " << bytes_transferred << " of LogMessage data";
   LOG(INFO) << std::string(_buffer->begin()+sizeof(OculusMessageHeader), _buffer->end());
 
 exit:
@@ -262,7 +260,7 @@ void DataRx::rxIgnoredData(const boost::system::error_code& ec,
     goto exit;
   }
 
-  LOG(INFO) << "Ignoring " << bytes_transferred << " of data";
+  LOG(DEBUG) << "Ignoring " << bytes_transferred << " of data";
 
 exit:
   restartReceiveCycle();

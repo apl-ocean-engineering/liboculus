@@ -72,6 +72,7 @@ else()
               lib/SonarStatus.cpp
               lib/StatusRx.cpp
               lib/SonarPlayer.cpp
+              lib/PingAgreesWithConfig.cpp
               lib/IoServiceThread.cpp )
 
 

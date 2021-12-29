@@ -16,6 +16,7 @@ using std::string;
 #include "liboculus/StatusRx.h"
 #include "liboculus/IoServiceThread.h"
 #include "liboculus/SonarPlayer.h"
+#include "liboculus/PingAgreesWithConfig.h"
 
 using std::ofstream;
 using std::ios_base;
@@ -99,26 +100,27 @@ int main(int argc, char **argv) {
 
   SonarConfiguration config;
   config.setPingRate(pingRateNormal);
+  config.flags().use256Beams();
 
   _io_thread.reset(new IoServiceThread);
   DataRx _data_rx(_io_thread->context());
   StatusRx _status_rx(_io_thread->context());
 
   _data_rx.setSimplePingCallback([&](const SimplePingResult &ping) {
-    const auto valid = ping.valid();
-    LOG(WARNING) << "Got " << (valid ? "valid" : "invalid")
-                 << " ping with id " << ping.ping()->pingId;
+    // Pings send to the callback are always valid
 
-    if (!valid) {
-      LOG(DEBUG) << "Got invalid ping";
-      return;
+    {
+      const auto valid = checkPingAgreesWithConfig(ping, config);
+      if (!valid) {
+        LOG(WARNING) << "Mismatch between requested config and ping";
+      }
     }
 
     ping.dump();
 
     if (output.is_open()) {
       const char *cdata = reinterpret_cast<const char *>(ping.buffer()->data());
-      output.write(cdata,ping.buffer()->size());
+      output.write(cdata, ping.buffer()->size());
     }
 
     count++;
@@ -126,6 +128,7 @@ int main(int argc, char **argv) {
   });
 
   _data_rx.setOnConnectCallback([&]() {
+    config.dump();
     _data_rx.sendSimpleFireMessage(config);
   });
 
