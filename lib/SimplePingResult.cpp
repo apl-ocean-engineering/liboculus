@@ -35,7 +35,9 @@ namespace liboculus {
 
 SimplePingResult::SimplePingResult(const std::shared_ptr<ByteVector> &buffer)
   : MessageHeader(buffer),
+    _flags(fireMsg()->flags),
     _bearings(),
+    _gains(),
     _image() {
   assert(buffer->size() >= sizeof(OculusSimplePingResult));
 
@@ -50,6 +52,15 @@ SimplePingResult::SimplePingResult(const std::shared_ptr<ByteVector> &buffer)
                         ping()->nRanges,
                         ping()->nBeams,
                         SizeOfDataSize(ping()->dataSize));
+
+  if (flags().getSendGain()) {
+    int num_pixels = ping()->nRanges * ping()->nBeams;
+    size_t expected_size = SizeOfDataSize(ping()->dataSize) * num_pixels;
+    const auto *gainData = reinterpret_cast<const GainData_t::DataType *>(buffer->data() + ping()->imageOffset);
+
+    _gains = GainData_t(gainData, ping()->nRanges);
+  }
+
 }
 
 bool SimplePingResult::valid() const {
@@ -65,9 +76,9 @@ bool SimplePingResult::valid() const {
   int num_pixels = ping()->nRanges * ping()->nBeams;
   size_t expected_size = SizeOfDataSize(ping()->dataSize) * num_pixels;
 
-  OculusSimpleFireFlags flags(fireMsg()->flags);
-  if (flags.getSendGain()) {
+  if (flags().getSendGain()) {
     expected_size += sizeof(uint32_t) * ping()->nRanges;
+    //reinterpret_cast<OculusSimplePingResult *>(_buffer->data())->nBeams += 4;
   }
 
   if (ping()->imageSize != expected_size) {
@@ -109,6 +120,7 @@ void SimplePingResult::dump() const {
   LOG(DEBUG) << "  Image size: " << ping()->imageSize;
   LOG(DEBUG) << "Image offset: " << ping()->imageOffset;
   LOG(DEBUG) << "   Data size: " << DataSizeToString(ping()->dataSize);
+  LOG(DEBUG) << "   Send gain: " << (flags().getSendGain() ? "Yes" : "No");
   LOG(DEBUG) << "Message size: " << ping()->messageSize;
   LOG(DEBUG) << "--------------";
 }

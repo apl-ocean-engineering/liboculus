@@ -118,6 +118,12 @@ int main(int argc, char **argv) {
 
     ping.dump();
 
+    if (ping.gains().size() > 0) {
+      for(int i = 0; i < 10; i++) {
+        LOG(INFO) << i << " : " << ping.gains().at(i);
+      }
+    }
+
     if (output.is_open()) {
       const char *cdata = reinterpret_cast<const char *>(ping.buffer()->data());
       output.write(cdata, ping.buffer()->size());
