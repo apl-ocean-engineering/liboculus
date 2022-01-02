@@ -47,20 +47,32 @@ SimplePingResult::SimplePingResult(const std::shared_ptr<ByteVector> &buffer)
   _bearings = BearingData(bearingData, ping()->nBeams);
 
   const uint8_t *imageData = reinterpret_cast<const uint8_t*>(buffer->data() + ping()->imageOffset);
-  _image = ImageData(imageData,
-                        ping()->imageSize,
-                        ping()->nRanges,
-                        ping()->nBeams,
-                        SizeOfDataSize(ping()->dataSize));
 
-  if (flags().getSendGain()) {
-    int num_pixels = ping()->nRanges * ping()->nBeams;
-    size_t expected_size = SizeOfDataSize(ping()->dataSize) * num_pixels;
-    const auto *gainData = reinterpret_cast<const GainData_t::DataType *>(buffer->data() + ping()->imageOffset);
+  if (_flags.getSendGain()) { 
+    // If sent, the gain is included as the first 4 bytes in each "row" of data 
+    const uint16_t offsetBytes = 4;
 
-    _gains = GainData_t(gainData, ping()->nRanges);
+    // The size of one "row" of data in bytes
+    const uint16_t strideBytes = SizeOfDataSize(ping()->dataSize)*ping()->nBeams + offsetBytes;
+    _image = ImageData(imageData,
+                          ping()->imageSize,
+                          ping()->nRanges,
+                          ping()->nBeams,
+                          SizeOfDataSize(ping()->dataSize),
+                          strideBytes,
+                          offsetBytes);
+
+    _gains = GainData_t(reinterpret_cast<const GainData_t::DataType *>(imageData),
+                          ping()->imageSize,
+                          strideBytes, 
+                          ping()->nRanges);
+  } else {
+    _image = ImageData(imageData,
+                          ping()->imageSize,
+                          ping()->nRanges,
+                          ping()->nBeams,
+                          SizeOfDataSize(ping()->dataSize));
   }
-
 }
 
 bool SimplePingResult::valid() const {
@@ -78,7 +90,6 @@ bool SimplePingResult::valid() const {
 
   if (flags().getSendGain()) {
     expected_size += sizeof(uint32_t) * ping()->nRanges;
-    //reinterpret_cast<OculusSimplePingResult *>(_buffer->data())->nBeams += 4;
   }
 
   if (ping()->imageSize != expected_size) {

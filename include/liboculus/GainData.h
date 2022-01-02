@@ -37,31 +37,43 @@
 
 namespace liboculus {
 
+// \todo  A long-term TODO: ImageData, GainData and BearingData are all
+// fairly similar in functionality, could reduce the DRY?
 template <typename T>
 class GainData {
  public:
   typedef T DataType;
 
   GainData()
-    : _data(nullptr), _numBeams(0)
+    : _data(nullptr), 
+      _stride(0),
+      _numRanges(0),
+      _imageSize(0)
     {;}
 
   GainData(const GainData &other)  = default;
 
-  GainData(const T *data, int nBeams)
+  GainData(const T *data, uint32_t imageSz, size_t strideBytes, size_t nRanges)
       : _data(data),
-        _numBeams(nBeams) {}
+        _stride(strideBytes/sizeof(T)),
+        _numRanges(nRanges),
+        _imageSize(imageSz) {}
 
-  int size() const { return _numBeams; }
+  int size() const { return _numRanges; }
 
   T at(unsigned int i) const {
-    CHECK(i < _numBeams) << "Requested gain " << i << "; out of range";
-    return _data[i];
+    CHECK(i < _numRanges) << "Requested gain " << i << " out of range";
+
+    const size_t index = i*_stride;
+    CHECK(index*sizeof(T) < _imageSize);
+
+    return _data[index];
   }
 
  private:
   const T *_data;
-  size_t _numBeams;
+  size_t _stride, _numRanges;
+  uint32_t _imageSize;
 };
 
 }  // namespace liboculus
