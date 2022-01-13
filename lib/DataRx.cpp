@@ -63,6 +63,9 @@ void DataRx::connect(const asio::ip::address &addr) {
 void DataRx::onConnect(const boost::system::error_code& ec) {
   if (ec) {
     LOG(WARNING) << "Error on connect: " << ec.message();
+    _socket.close();
+
+    return;
   }
 
   LOG(DEBUG) << "Connected to sonar!";
