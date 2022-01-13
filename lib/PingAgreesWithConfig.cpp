@@ -28,59 +28,26 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <mutex>
-#include <chrono>
-#include <memory>
-
-#include <boost/asio.hpp>
-
-#include "Oculus/Oculus.h"
-
-#include "liboculus/IoServiceThread.h"
-#include "liboculus/SonarStatus.h"
+#include "liboculus/PingAgreesWithConfig.h"
 
 namespace liboculus {
 
-using boost::asio::ip::udp;
-using boost::asio::deadline_timer;
+bool checkPingAgreesWithConfig(const SimplePingResult &ping,
+                               const SonarConfiguration &config) {
+    OculusSimpleFireFlags flags(ping.fireMsg()->flags);
 
-// ----------------------------------------------------------------------------
-// StatusRx - a listening socket for oculus status messages
-//
-//
-class StatusRx {
- public:
-  explicit StatusRx(const IoServiceThread::IoContextPtr &iosrv);
+    const auto nBeams = ping.ping()->nBeams;
+    const auto nRanges = ping.ping()->nRanges;
 
-  ~StatusRx() {}
+    if (config.flags().get512Beams() && (nBeams != 512)) {
+        LOG(WARNING) << "Config expects 512 beams, ping has " << nBeams;
+    } else if (nBeams != 256) {
+        LOG(WARNING) << "Config expects 256 beams, ping has " << nBeams;
+    }
 
-  typedef std::function< void(const SonarStatus &, bool) > SonarStatusCallback;
+    /// etc
 
-  void setCallback( SonarStatusCallback callback ) {
-    _sonarStatusCallback = callback;
-  }
-
- private:
-  void doConnect();
-
-  void scheduleRead();
-  void handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred );
-
-  bool parseStatus(const SonarStatus &status);
-
-  std::vector<uint8_t> _buffer;
-
-  //uint16_t     _port;       // Port to listen on
-  uint16_t     _num_valid_rx;      // Number of valid status messages
-  uint16_t     _num_invalid_rx;    // Number of invalid status messages
-
-  udp::socket _socket;
-
-  deadline_timer _deadline;
-
-  SonarStatusCallback _sonarStatusCallback;
-};
+    return true;
+}
 
 }  // namespace liboculus

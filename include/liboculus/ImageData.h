@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2022 University of Washington
+ * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,45 +33,70 @@
 
 #pragma once
 
-#include "DataTypes.h"
-#include "Oculus/Oculus.h"
-
 #include <iostream>
 
 #include <g3log/g3log.hpp>  // needed for CHECK macro
+
+#include "DataTypes.h"
+#include "Oculus/Oculus.h"
 
 namespace liboculus {
 
 class ImageData {
  public:
-  // \TODO get rid of this when the base constructor for SimplePingResult goes away
-  ImageData()
-      : _ptr(nullptr), _numRanges(0), _numBeams(0), _dataSz(0) {}
+  ImageData() 
+    : _data(nullptr),
+      _imageSize(0),
+      _numRanges(0),
+      _numBeams(0),
+      _dataSize(0) {}
 
-  ImageData( OculusSimplePingResult *ping )
-    : _ptr( &(reinterpret_cast<uint8_t *>(ping)[ping->imageOffset]) ),
-      _numRanges( ping->nRanges ),
-      _numBeams( ping->nBeams ),
-      _dataSz( SizeOfDataSize(ping->dataSize) ) {}
+  ImageData(const ImageData &other) = default;
 
-  // TODO.  Deal with non-8-bit data somehow
-  uint8_t at(unsigned int bearing, unsigned int range) const {
-    CHECK(_dataSz == 1) << "Sorry, can only handle 8-bit data right now";
-    if (_ptr == nullptr) {
-      return 0;
-    }
+  ImageData( const uint8_t *data,
+            uint32_t imageSize,
+            uint16_t nRanges,
+            uint16_t nBeams,
+            uint8_t dataSize )
+    : _data(data), 
+      _imageSize( imageSize ),
+      _numRanges( nRanges ),
+      _numBeams( nBeams ),
+      _dataSize( dataSize ) {}
 
-    // TODO range check
-    const unsigned int index = range * _numBeams + bearing;
+
+  uint8_t at_uint8(unsigned int bearing, unsigned int range) const {
+    CHECK(_dataSize == 1) << "This function can only handle 8-bit data, use at_uint16()";
+    if ((_data == nullptr) || (bearing >= _numBeams) || (range >= _numRanges)) return 0;
+
+    const size_t index = range * _numBeams + bearing;
     CHECK(index < (unsigned int)(_numRanges * _numBeams));
 
-    return ((uint8_t *)_ptr)[range * _numBeams + bearing];
+    return ((uint8_t *)_data)[range * _numBeams + bearing];
   }
 
+    // This function works for either 1 or 2byte data.  
+    // For 1-byte data, it's stored in the lower bytes, and the
+    // upper byte is always 0
+    uint16_t at_uint16(unsigned int bearing, unsigned int range) const {
+        if ((_data == nullptr) || (bearing >= _numBeams) || (range >= _numRanges)) return 0;
+
+        const size_t index = range * _numBeams + bearing;
+        if(_dataSize == 1) {
+            return at_uint8(bearing,range);
+        } else if (_dataSize == 2) {
+            const size_t offset = index * _dataSize;
+            return (_data[offset] | _data[offset+1] << 8);
+        }
+
+    return 0;
+    }
+
  private:
-  uint8_t *_ptr;
+  const uint8_t *_data;
+  uint32_t _imageSize;
   uint16_t _numRanges, _numBeams;
-  uint8_t _dataSz;
+  uint8_t _dataSize;
 };  // class ImageData
 
 }  // namespace liboculus

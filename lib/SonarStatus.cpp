@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2022 University of Washington
+ * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,9 +29,7 @@
  */
 
 #include "liboculus/SonarStatus.h"
-
 #include "g3log/g3log.hpp"
-
 
 namespace liboculus {
 
@@ -38,53 +37,30 @@ using std::string;
 
 using boost::asio::ip::address_v4;
 
-SonarStatus::SonarStatus()
-    : _statusMutex(),
-      _valid(false) {}
-
-OculusStatusMsg SonarStatus::operator()(void) const {
-  std::lock_guard<std::mutex> lock(_statusMutex);
-
-  return _osm;
-}
+SonarStatus::SonarStatus(const ByteVector &buffer)
+    : _buffer(buffer) {}
 
 boost::asio::ip::address SonarStatus::ipAddr() const {
-  std::lock_guard<std::mutex> lock(_statusMutex);
-  return address_v4(ntohl(_osm.ipAddr));
-}
-
-void SonarStatus::update(const OculusStatusMsg &msg, sys_time_point msgTime) {
-  {
-    std::lock_guard<std::mutex> lock(_statusMutex);
-    memcpy((void *)&_osm, (void *)&msg, sizeof(OculusStatusMsg));
-
-    _valid = true;  // TODO:  Should actually validate contents
-    _msgTime = msgTime;
-  }
-
-  // Dump must be outside of the lock_guard or you get a race condition
-  //dump();
+  return address_v4(ntohl(msg()->ipAddr));
 }
 
 void SonarStatus::dump() const {
-  std::lock_guard<std::mutex> lock(_statusMutex);
-
-  LOG(DEBUG) << "Device id " << _osm.deviceId << " ; type: " <<  (uint16_t)_osm.deviceType << " ; part num: " << (uint16_t)_osm.partNumber;
+  LOG(DEBUG) << "Device id " << msg()->deviceId << " ; type: " <<  (uint16_t)msg()->deviceType << " ; part num: " << (uint16_t)msg()->partNumber;
 
   //LOG(DEBUG) << "        Received at: " << _msgTime;
-  LOG(DEBUG) << "             Status: " << std::hex << _osm.status;
-  LOG(DEBUG) << "      Sonar ip addr: " << boost::asio::ip::address_v4(ntohl(_osm.ipAddr));
-  LOG(DEBUG) << " Sonar connected to: " << boost::asio::ip::address_v4(ntohl(_osm.connectedIpAddr));
+  LOG(DEBUG) << "             Status: " << std::hex << msg()->status;
+  LOG(DEBUG) << "      Sonar ip addr: " << boost::asio::ip::address_v4(ntohl(msg()->ipAddr));
+  LOG(DEBUG) << " Sonar connected to: " << boost::asio::ip::address_v4(ntohl(msg()->connectedIpAddr));
 
   LOG(DEBUG) << "Versions:";
-  LOG(DEBUG) << "   firmwareVersion0: " << std::hex << _osm.versionInfo.firmwareVersion0;
-  LOG(DEBUG) << "      firmwareDate0: " << std::hex << _osm.versionInfo.firmwareDate0;
+  LOG(DEBUG) << "   firmwareVersion0: " << std::hex << msg()->versionInfo.firmwareVersion0;
+  LOG(DEBUG) << "      firmwareDate0: " << std::hex << msg()->versionInfo.firmwareDate0;
 
-  LOG(DEBUG) << "   firmwareVersion1: " << std::hex << _osm.versionInfo.firmwareVersion1;
-  LOG(DEBUG) << "      firmwareDate1: " << std::hex << _osm.versionInfo.firmwareDate1;
+  LOG(DEBUG) << "   firmwareVersion1: " << std::hex << msg()->versionInfo.firmwareVersion1;
+  LOG(DEBUG) << "      firmwareDate1: " << std::hex << msg()->versionInfo.firmwareDate1;
 
-  LOG(DEBUG) << "   firmwareVersion2: " << std::hex << _osm.versionInfo.firmwareVersion2;
-  LOG(DEBUG) << "      firmwareDate2: " << std::hex << _osm.versionInfo.firmwareDate2;
+  LOG(DEBUG) << "   firmwareVersion2: " << std::hex << msg()->versionInfo.firmwareVersion2;
+  LOG(DEBUG) << "      firmwareDate2: " << std::hex << msg()->versionInfo.firmwareDate2;
 }
 
 }  // namespace liboculus

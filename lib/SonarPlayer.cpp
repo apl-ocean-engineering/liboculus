@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2022 University of Washington
+ * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,16 +36,21 @@
 #include "g3log/g3log.hpp"
 
 #include "liboculus/DataTypes.h"
+#include "liboculus/MessageHeader.h"
 #include "liboculus/SimplePingResult.h"
 #include "liboculus/SonarPlayer.h"
+#include "liboculus/Constants.h"
 
 namespace liboculus {
 
-using namespace std;
+using std::shared_ptr;
+using std::ios_base;
 
+using liboculus::MessageHeader;
+using liboculus::SimplePingResult;
 
 /// Static function which automatically detects file type
-shared_ptr<SonarPlayerBase> SonarPlayerBase::OpenFile(const string &filename) {
+shared_ptr<SonarPlayerBase> SonarPlayerBase::OpenFile(const std::string &filename) {
   std::ifstream f(filename);
 
   if (!f.is_open())
@@ -53,7 +59,6 @@ shared_ptr<SonarPlayerBase> SonarPlayerBase::OpenFile(const string &filename) {
   char c;
   f.get(c);
   if (c == 0x44) {
-
     char d;
     f.get(d);
 
@@ -75,58 +80,40 @@ shared_ptr<SonarPlayerBase> SonarPlayerBase::OpenFile(const string &filename) {
 
 bool SonarPlayerBase::open(const std::string &filename) {
   _input.open(filename, ios_base::binary | ios_base::in);
-
   return _input.is_open();
 }
 
 //--- RawSonarPlayer --
 
-RawSonarPlayer::RawSonarPlayer() : SonarPlayerBase() { ; }
-
-RawSonarPlayer::~RawSonarPlayer() { ; }
-
-bool RawSonarPlayer::nextPacket( MessageHeader &header ) {
-
-  // Advance to the next header byte (actually LSB of header since we're
-  // little-endian)
-  while (_input.peek() != 0x53) {
+SonarPlayerBase::SonarPlayerResult_t RawSonarPlayer::nextPing() {
+  unsigned int skipped_bytes = 0;
+  while (_input.peek() != PacketHeaderLSB) {
     char c;
     _input.get(c);
+    skipped_bytes++;
     if (_input.eof()) {
       LOG(DEBUG) << "No packets before the end of the file";
-      return false;
+      return tl::make_unexpected(false);
     }
   }
 
-  // Read header
-  header.reset();
-  _input.read( (char *)header.ptr(), sizeof(OculusMessageHeader));
+  LOG_IF(INFO, skipped_bytes > 0) << "Skipped " << skipped_bytes << " before reading start of header";
 
-  if (!header.valid()) {
-    LOG(WARNING) << "Read invalid header";
-    return false;
-  }
+  std::shared_ptr<ByteVector> buffer = std::make_shared<ByteVector>(sizeof(MessageHeader));
+  _input.get(reinterpret_cast<char *>(buffer->data()), sizeof(MessageHeader));
 
-  header.expandForPayload();
-  _input.read( (char *)header.payloadPtr(), header.payloadSize() );
-
-  return true;
-}
-
-bool RawSonarPlayer::nextPing( SimplePingResult &ping ) {
-
-  MessageHeader header;
-  if(!nextPacket(header) ) return false;
+  MessageHeader header(buffer);
+  if (!header.valid()) return tl::make_unexpected(false);
 
   if (header.msgId() != messageSimplePingResult) {
     LOG(DEBUG) << "Skipping message of type " << MessageTypeToString(header.msgId());
-    return false;
+    tl::make_unexpected(true);
   }
 
-  ping = SimplePingResult(header);
-  return true;
-
-
+  // Read the rest of the data
+  buffer->resize(header.packetSize());
+  _input.get(reinterpret_cast<char *>(buffer->data()[sizeof(MessageHeader)]),header.payloadSize());
+  return SimplePingResult(buffer);
 }
 
 

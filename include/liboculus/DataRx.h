@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2022 University of Washington
+ * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,82 +30,91 @@
 
 #pragma once
 
-#include "SimplePingResult.h"
-#include "SonarConfiguration.h"
-
+#include <string>
+#include <thread>
+#include <vector>
 #include <memory>
 
-#include <boost/asio.hpp>
-#include <boost/asio/steady_timer.hpp>
-
-#include "Oculus/Oculus.h"
-
+#include "liboculus/IoServiceThread.h"
+#include "liboculus/SimplePingResult.h"
+#include "liboculus/SonarConfiguration.h"
 
 namespace liboculus {
 
 using std::shared_ptr;
-using boost::asio::ip::tcp;
-
-// ----------------------------------------------------------------------------
-// DataRx - a state machine for receiving sonar data over the network
 
 class DataRx {
  public:
-  // n.b. takes IP in __NETWORK__ byte order
-  explicit DataRx(boost::asio::io_service &context);
+  explicit DataRx(const IoServiceThread::IoContextPtr &iosrv);
+  ~DataRx();
 
-  // NB: The config is NOT const. This is how the driver's configuration
-  //     is hooked up to the instrument (so DataRx to call setCallback)
-  // TODO(lindzey): This architecture is very ugly. Consider rewriting
-  //     so the config's callback is a function in the client, who in
-  //     turn directly calls the function in DataRx, which it owns.
-  DataRx(boost::asio::io_service &context, uint32_t ip,
-         SonarConfiguration &config);
+  void connect(const boost::asio::ip::address &addr);
+  void connect(const std::string &strAddr) {
+       auto addr(boost::asio::ip::address_v4::from_string(strAddr));
+       //LOG_IF(FATAL,addr.is_unspecified()) << "Couldn't parse IP address" << ipAddr;  
+       connect(addr);
+  }
 
-  DataRx(boost::asio::io_service &context,
-         const boost::asio::ip::address &addr,
-         SonarConfiguration &config);
-
-  virtual ~DataRx() {}
-
-  void connect(uint32_t ip, SonarConfiguration &config);
-  void connect(const boost::asio::ip::address &addr,
-               SonarConfiguration &config);
-
-  bool connected() const { return _socket.is_open(); }
+  bool isConnected() const { return _socket.is_open(); }
 
   typedef std::function< void(const SimplePingResult &) > SimplePingCallback;
-  void setCallback(SimplePingCallback callback);
+  void setSimplePingCallback(SimplePingCallback callback) {
+    _simplePingCallback = callback;
+  }
+
+  typedef std::function< void() > OnConnectCallback;
+  void setOnConnectCallback(OnConnectCallback callback) {
+    _onConnectCallback = callback;
+  }
+
+  void sendSimpleFireMessage(const SonarConfiguration &config);
+
+  // Implement data read / data written hooks as virtual functions rather
+  // rather than callbacks.
+  virtual void haveWritten(const ByteVector &bytes) {;}
+  virtual void haveRead(const ByteVector &bytes) {;}
 
  private:
-  // Callback for when the socket is connected. Schedule the first header read
-  // and send the first configuration to the sensor.
-  void onConnect(const boost::system::error_code& error,
-                 const SonarConfiguration &config);
+  void onConnect(const boost::system::error_code& error);
+ 
+  // Initiates another network read.
+  // Note this function reads until the **total number of bytes
+  // in _buffer == bytes**   The actual number of bytes requested
+  // from the network depends on the size of _buffer at the start
+  // of the function and is tpically less than bytes.
+  typedef std::function<void(const boost::system::error_code&, std::size_t)> StateMachineCallback;
+  void readUpTo(size_t bytes,
+                StateMachineCallback callback);
 
-  // Request bytes from the socket, set up readHeader as callback
-  void scheduleHeaderRead();
-  // Callback for when header bytes have been received.
-  // NOTE(lindzey): Given how much trouble the rest of this driver goes to
-  //   to avoid copying data, it seems odd that the MessageHeaders are being
-  //   passed around by value.
-  void readHeader(MessageHeader hdr,
-                  const boost::system::error_code& ec,
+  // This function is "reset the receive state machine"
+  void restartReceiveCycle();
+
+  // All rx* functions are states in the receive state machine
+  void rxFirstByteOculusId(const boost::system::error_code& ec,
                   std::size_t bytes_transferred);
-  // Callback for when payload bytes have been received for a message known
-  // to be a simplePingResult. Stuff them into a SimplePingResult and pass
-  // it along to the registered callback.
-  void readSimplePingResult(MessageHeader hdr,
-                            const boost::system::error_code& ec,
+
+  void rxSecondByteOculusId(const boost::system::error_code& ec,
+                  std::size_t bytes_transferred);
+
+  void rxHeader(const boost::system::error_code& ec,
+                  std::size_t bytes_transferred);
+
+  void rxSimplePingResult(const boost::system::error_code& ec,
                             std::size_t bytes_transferred);
 
-  // Immediately send configuration update to the sonar
-  void sendConfiguration(const SonarConfiguration &config);
+  void rxIgnoredData(const boost::system::error_code& ec,
+                            std::size_t bytes_transferred);
 
-  boost::asio::io_service  &_ioService;
-  tcp::socket _socket;
+  void rxMessageLogs(const boost::system::error_code& ec,
+                            std::size_t bytes_transferred);
+
+  boost::asio::ip::tcp::socket _socket;
+
+  //
+  shared_ptr<ByteVector> _buffer;
 
   SimplePingCallback _simplePingCallback;
-};
+  OnConnectCallback _onConnectCallback;
 
+};  // class DataRx
 }  // namespace liboculus

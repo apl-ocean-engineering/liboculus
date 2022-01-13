@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2022 University of Washington
+ * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,55 +28,37 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Utility conversions for data types defined in Oculus.h
+
 #pragma once
 
+#include <cstddef>  // for size_t
 #include <string>
-#include <thread>
-#include "liboculus/IoServiceThread.h"
+#include <vector>
+#include <cmath>
 
-#include "liboculus/StatusRx.h"
-#include "liboculus/DataRx.h"
+#include "Oculus/Oculus.h"
 
 namespace liboculus {
+    const uint16_t StatusBroadcastPort = 52102;
+    const uint16_t DataPort = 52100;
 
-class SonarClient {
- public:
-  SonarClient(SonarConfiguration &config, const std::string &ipAddr = "");
+    const uint8_t PacketHeaderLSB = (OCULUS_CHECK_ID & 0x00FF);
+    const uint8_t PacketHeaderMSB = (OCULUS_CHECK_ID & 0xFF00) >> 8;
 
-  ~SonarClient();
+    namespace Oculus_1200MHz {
+        const float ElevationBeamwidthDeg = 20.0;
+        const float ElevationBeamwidthRad = 20.0*M_PI/180.0;
 
-  void start();
-  void join();
-  void stop();
+        const float AzimuthBeamwidthDeg = 0.6;
+        const float AzimuthBeamwidthRad = 0.6*M_PI/180.0;
+    };
 
-  void updateConfiguration(const SonarConfiguration &msg);
-  const SonarConfiguration &configuration() const;
+    namespace Oculus_2100MHz {
+         const float ElevationBeamwidthDeg = 12.0;
+         const float ElevationBeamwidthRad = 12.0*M_PI/180.0;
 
-  // Simple passthrough
-  void setDataRxCallback(DataRx::SimplePingCallback callback) {
-    _dataRx.setCallback(callback);
-  }
-
- protected:
-  void receiveStatus(const SonarStatus& status);
-
- private:
-  std::string _ipAddr;
-
-  IoServiceThread _ioSrv;
-  // Status and Data messages come in on different ports, so they're
-  // handled separately.
-  StatusRx _statusRx;
-  DataRx _dataRx;
-
-  // unfortunately, need to have a copy when receiveStatus is called...
-  // (We want the driver to be able to connect to the instrument whenever
-  // it becomes available, which requires the SonarClient to know the
-  // most recent configuration state, not just the state at startup.
-  // Additionally, when _config is passed to DataRx, the configuration's
-  // callback is bound to the proper member function for DataRx to update
-  // the instrument's configuration.)
-  SonarConfiguration &_config;
-
-};  // class SonarClient
+         const float AzimuthBeamwidthDeg = 0.4;
+         const float AzimuthBeamwidthRad = 0.4*M_PI/180.0;
+    };
 }  // namespace liboculus

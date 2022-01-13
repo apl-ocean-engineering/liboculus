@@ -23,12 +23,12 @@
 namespace Oculus_TestData {
 
   using std::vector;
+  using liboculus::ByteVector;
 
-  inline vector<uint8_t> Load( const std::string &filename ) {
+  inline std::shared_ptr<ByteVector> Load(const std::string &filename) {
+    std::ifstream inf(filename);
 
-    std::ifstream inf( filename );
-
-    if( !inf.is_open() ) return vector<uint8_t>();
+    if( !inf.is_open() ) return std::make_shared<ByteVector>();
 
     // This feels a little ... wrong
     inf.seekg(0, std::ios::end);
@@ -39,12 +39,7 @@ namespace Oculus_TestData {
     inf.seekg(0, std::ios::beg);
     inf.read( &out[0], sz );
 
-    return vector<uint8_t>(out.begin(), out.end());
-  }
-
-  inline liboculus::MessageHeader LoadMessageBuffer( const std::string &filename ) {
-    std::vector<uint8_t> pingData = Load( filename );
-    return liboculus::MessageHeader( pingData );
+    return std::make_shared<ByteVector>(out.begin(), out.end());
   }
 
 

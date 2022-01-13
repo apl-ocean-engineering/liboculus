@@ -14,9 +14,6 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-## C++ flags applied to all builds
-set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-
 find_package( Boost REQUIRED COMPONENTS system )
 
 # Actually not using full SDK, just the header files
@@ -25,6 +22,7 @@ find_package( Boost REQUIRED COMPONENTS system )
 
 if (FIPS_CONFIG)
   #== fips-specific section ==========================================
+  add_compile_options(-std=c++17)
 
   ## Set global include paths
   fips_include_directories(
@@ -60,17 +58,22 @@ else()
             INCLUDE_DIRS include thirdparty
             LIBRARIES liboculus_LIB )
 
-
-  ## C++ flags applied to all builds
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  add_compile_options(-std=c++14)
 
   include_directories(
               include
               thirdparty
               ${catkin_INCLUDE_DIRS} )
 
-  file(GLOB oculus_SRCS
-              lib/*cpp )
+  set(oculus_SRCS
+              lib/SimplePingResult.cpp
+              lib/DataRx.cpp
+              lib/SonarConfiguration.cpp
+              lib/SonarStatus.cpp
+              lib/StatusRx.cpp
+              lib/SonarPlayer.cpp
+              lib/PingAgreesWithConfig.cpp
+              lib/IoServiceThread.cpp )
 
 
   add_library(liboculus_LIB ${oculus_SRCS})

@@ -28,59 +28,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <mutex>
-#include <chrono>
-#include <memory>
-
-#include <boost/asio.hpp>
-
-#include "Oculus/Oculus.h"
+#include <boost/bind.hpp>
 
 #include "liboculus/IoServiceThread.h"
-#include "liboculus/SonarStatus.h"
 
 namespace liboculus {
 
-using boost::asio::ip::udp;
-using boost::asio::deadline_timer;
+  IoServiceThread::IoServiceThread()
+#if BOOST_VERSION >= 106600
+      : _context(std::make_shared<boost::asio::io_context>()),
+        _work_guard(_context->get_executor()),
+#else
+      : _context(std::make_shared<boost::asio::io_service>()),
+#endif
+        _thread() {}
 
-// ----------------------------------------------------------------------------
-// StatusRx - a listening socket for oculus status messages
-//
-//
-class StatusRx {
- public:
-  explicit StatusRx(const IoServiceThread::IoContextPtr &iosrv);
-
-  ~StatusRx() {}
-
-  typedef std::function< void(const SonarStatus &, bool) > SonarStatusCallback;
-
-  void setCallback( SonarStatusCallback callback ) {
-    _sonarStatusCallback = callback;
+  IoServiceThread::~IoServiceThread() {
   }
 
- private:
-  void doConnect();
+  void IoServiceThread::start() {
+    if (_thread) return; // running
+    _thread.reset(new std::thread(boost::bind(&IoServiceThread::threadExec,
+                                               this)));
+  }
 
-  void scheduleRead();
-  void handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void IoServiceThread::stop() {
+    if (!_thread) return;
+#if BOOST_VERSION >= 106600
+    _work_guard.reset();
+#endif
+    _context->stop();
+  }
 
-  bool parseStatus(const SonarStatus &status);
+  void IoServiceThread::join() {
+    if (!_thread) return;
+    _thread->join();
+    _context->reset();
+    _thread.reset();
+  }
 
-  std::vector<uint8_t> _buffer;
+  void IoServiceThread::threadExec() {
+    _context->run();
+  }
 
-  //uint16_t     _port;       // Port to listen on
-  uint16_t     _num_valid_rx;      // Number of valid status messages
-  uint16_t     _num_invalid_rx;    // Number of invalid status messages
-
-  udp::socket _socket;
-
-  deadline_timer _deadline;
-
-  SonarStatusCallback _sonarStatusCallback;
-};
 
 }  // namespace liboculus

@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2022 University of Washington
+ * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,13 +31,17 @@
 #pragma once
 
 #include <fstream>
+#include <memory>
 
 #include "liboculus/SimplePingResult.h"
+#include "liboculus/expected.hpp"
 
 namespace liboculus {
 
 class SonarPlayerBase {
 public:
+  typedef tl::expected<SimplePingResult, bool> SonarPlayerResult_t;
+
   SonarPlayerBase()           {;}
   virtual ~SonarPlayerBase()  {;}
 
@@ -50,7 +55,7 @@ public:
   virtual void rewind()
     { _input.seekg(0); }
 
-  virtual bool nextPing( SimplePingResult &ping ) = 0;
+  virtual SonarPlayerResult_t nextPing() = 0;
 
   static std::shared_ptr<SonarPlayerBase> OpenFile(const std::string &filename);
 
@@ -68,14 +73,16 @@ protected:
 ///
 ///
 class RawSonarPlayer : public SonarPlayerBase {
-public:
-  RawSonarPlayer();
-  virtual ~RawSonarPlayer();
+ public:
+  RawSonarPlayer()
+    : SonarPlayerBase() {;}
 
-  bool nextPacket( MessageHeader &header );
-  virtual bool nextPing( SimplePingResult &ping );
+  virtual ~RawSonarPlayer()
+    {;}
 
-private:
+  SonarPlayerBase::SonarPlayerResult_t nextPing() override;
+
+ private:
 };
 
 

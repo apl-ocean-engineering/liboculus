@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2022 University of Washington
+ * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,45 +30,50 @@
 
 #pragma once
 
+#include <memory>
+#include <thread>
+
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
+#include "g3log/g3log.hpp"
 
 namespace liboculus {
 
 // Generic "worker thread" for boost::asio
 class IoServiceThread {
  public:
-  IoServiceThread()
-      : _service(),
-        _thread() {}
+#if BOOST_VERSION >= 106600
+  typedef boost::asio::io_context IoContext;
+#else
+  typedef boost::asio::io_service IoContext;
+#endif
+  typedef std::shared_ptr<IoContext> IoContextPtr;
 
-  ~IoServiceThread() {}
+  IoServiceThread();
 
-  void fork() {
-    if (_thread) return; // running
+  ~IoServiceThread();
 
-    _thread.reset(new std::thread(boost::bind(&boost::asio::io_service::run,
-                                              &_service)));
-  }
+  void start();
 
-  void stop() {
-    if (!_thread) return; // stopped
-    _service.stop();
-  }
+  void stop();
+  void join();
 
-  void join() {
-    if (!_thread) return; // stopped
-    _thread->join();
-    _service.reset();
-    _thread.reset();
-  }
-
-  boost::asio::io_service &service() { return _service; }
+  const IoContextPtr &context() { return _context; }
 
  private:
-  boost::asio::io_service _service;
+  IoContextPtr _context;
+
+#if BOOST_VERSION >= 106600
+  // This class was added in later version of Boost;  not present in 1.65,
+  // the version currently installed for 18.04 / ROS Melodic
+  using work_guard_type = boost::asio::executor_work_guard<boost::asio::io_context::executor_type>;
+  work_guard_type _work_guard;
+#endif
+
   std::unique_ptr<std::thread> _thread;
+
+  void threadExec();
 };
 
 }
