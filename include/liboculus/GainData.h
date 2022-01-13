@@ -30,72 +30,50 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <vector>
-#include <cassert>
-
-#include <g3log/g3log.hpp>
-
-#include "liboculus/BearingData.h"
-#include "liboculus/GainData.h"
-#include "liboculus/DataTypes.h"
-#include "liboculus/ImageData.h"
+#include <g3log/g3log.hpp>  // needed for CHECK macro
 
 #include "Oculus/Oculus.h"
-#include "liboculus/MessageHeader.h"
-#include "liboculus/SonarConfiguration.h"
+#include "liboculus/DataTypes.h"
 
 namespace liboculus {
 
-using std::shared_ptr;
-using std::vector;
-
-// A single OculusSimplePingResult (msg) is actually three nested structs:
-//   OculusMessageHeader     (as msg.fireMessage.head)
-//   OculusSimpleFireMessage (as msg.fireMessage)
-//   then the rest of OculusSimplePingResult
-class SimplePingResult : public MessageHeader {
+// \todo  A long-term TODO: ImageData, GainData and BearingData are all
+// fairly similar in functionality, could reduce the DRY?
+template <typename T>
+class GainData {
  public:
-  typedef GainData<int32_t> GainData_t;
+  typedef T DataType;
 
-  SimplePingResult() = default;
-  SimplePingResult(const SimplePingResult &other) = default;
+  GainData()
+    : _data(nullptr), 
+      _stride(0),
+      _numRanges(0),
+      _imageSize(0)
+    {;}
 
-  explicit SimplePingResult(const std::shared_ptr<ByteVector> &buffer);
+  GainData(const GainData &other)  = default;
 
-  ~SimplePingResult() {}
+  GainData(const T *data, uint32_t imageSz, size_t strideBytes, size_t nRanges)
+      : _data(data),
+        _stride(strideBytes/sizeof(T)),
+        _numRanges(nRanges),
+        _imageSize(imageSz) {}
 
-  const OculusSimpleFireMessage *fireMsg() const {
-      return reinterpret_cast<const OculusSimpleFireMessage *>(_buffer->data());
+  int size() const { return _numRanges; }
+
+  T at(unsigned int i) const {
+    CHECK(i < _numRanges) << "Requested gain " << i << " out of range";
+
+    const size_t index = i*_stride;
+    CHECK(index*sizeof(T) < _imageSize);
+
+    return _data[index];
   }
-
-  const OculusSimplePingResult *ping() const  {
-    return reinterpret_cast<const OculusSimplePingResult *>(_buffer->data());
-  }
-
-  const OculusSimpleFireFlags &flags() const {
-    return _flags;
-  }
-
-  const BearingData &bearings() const { return _bearings; }
-  const GainData_t &gains() const { return _gains; }
-  const ImageData &image() const      { return _image; }
-
-  uint8_t dataSize() const { return SizeOfDataSize(ping()->dataSize); }
-
-  bool valid() const override;
-  void dump() const override;
 
  private:
-  OculusSimpleFireFlags _flags;
-
-  // Objects which create OOI overlays the _buffer for  easier interpretation
-  BearingData _bearings;
-
-  GainData_t _gains;
-  ImageData _image;
-
-};  // class SimplePingResult
+  const T *_data;
+  size_t _stride, _numRanges;
+  uint32_t _imageSize;
+};
 
 }  // namespace liboculus

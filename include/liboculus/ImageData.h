@@ -49,7 +49,9 @@ class ImageData {
       _imageSize(0),
       _numRanges(0),
       _numBeams(0),
-      _dataSize(0) {}
+      _dataSize(0),
+      _stride(0),
+      _offset(0) {}
 
   ImageData(const ImageData &other) = default;
 
@@ -57,37 +59,40 @@ class ImageData {
             uint32_t imageSize,
             uint16_t nRanges,
             uint16_t nBeams,
-            uint8_t dataSize )
+            uint8_t dataSize,
+            uint16_t stride = 0,
+            uint16_t offset = 0 )
     : _data(data), 
       _imageSize( imageSize ),
       _numRanges( nRanges ),
       _numBeams( nBeams ),
-      _dataSize( dataSize ) {}
+      _dataSize( dataSize ),
+      _stride( stride == 0 ? nBeams*dataSize : stride ),  // Stride is in _bytes_
+      _offset( offset ) {}
 
 
-  uint8_t at_uint8(unsigned int bearing, unsigned int range) const {
+  uint8_t at_uint8(unsigned int beam, unsigned int rangeBin) const {
     CHECK(_dataSize == 1) << "This function can only handle 8-bit data, use at_uint16()";
-    if ((_data == nullptr) || (bearing >= _numBeams) || (range >= _numRanges)) return 0;
+    if ((_data == nullptr) || (beam >= _numBeams) || (rangeBin >= _numRanges)) return 0;
 
-    const size_t index = range * _numBeams + bearing;
-    CHECK(index < (unsigned int)(_numRanges * _numBeams));
-
-    return ((uint8_t *)_data)[range * _numBeams + bearing];
+    // Simplified calculation assumes 1-byte data
+    const size_t index = rangeBin * _stride + beam + _offset;
+    CHECK(index < _imageSize);
+    return ((uint8_t *)_data)[index];
   }
 
-    // This function works for either 1 or 2byte data.  
-    // For 1-byte data, it's stored in the lower bytes, and the
-    // upper byte is always 0
-    uint16_t at_uint16(unsigned int bearing, unsigned int range) const {
-        if ((_data == nullptr) || (bearing >= _numBeams) || (range >= _numRanges)) return 0;
+    // This function works for either 1- or 2-byte sonar data
+    // For 1-byte, the 8-bit value is simply cast into the 16-bit return
+    uint16_t at_uint16(unsigned int beam, unsigned int rangeBin) const {
+    if ((_data == nullptr) || (beam >= _numBeams) || (rangeBin >= _numRanges)) return 0;
 
-        const size_t index = range * _numBeams + bearing;
-        if(_dataSize == 1) {
-            return at_uint8(bearing,range);
-        } else if (_dataSize == 2) {
-            const size_t offset = index * _dataSize;
-            return (_data[offset] | _data[offset+1] << 8);
-        }
+    if(_dataSize == 1) {
+        return at_uint8(beam,rangeBin);
+    } else if (_dataSize == 2) {
+        const size_t offset = (rangeBin * _stride) + (beam * _dataSize) + _offset;
+        CHECK(offset < (_imageSize-1));
+        return (_data[offset] | _data[offset+1] << 8);
+    }
 
     return 0;
     }
@@ -95,7 +100,7 @@ class ImageData {
  private:
   const uint8_t *_data;
   uint32_t _imageSize;
-  uint16_t _numRanges, _numBeams;
+  size_t _numRanges, _numBeams, _stride, _offset;
   uint8_t _dataSize;
 };  // class ImageData
 
