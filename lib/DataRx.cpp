@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2022 University of Washington
+ * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,247 +28,245 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "liboculus/DataRx.h"
-
-#include <string.h>
-#include <sstream>
-
 #include <boost/bind.hpp>
-#include <boost/asio/buffer.hpp>
-#include <chrono>
 
-#include "g3log/g3log.hpp"
+#include "liboculus/DataRx.h"
+#include "liboculus/Constants.h"
 
 namespace liboculus {
 
-using std::string;
-using std::shared_ptr;
-
 namespace asio = boost::asio;
 
-// ----------------------------------------------------------------------------
-// DataRx - a listening socket for oculus data messages
-
-DataRx::DataRx(boost::asio::io_service &context)
-    : _ioService(context),
-      _socket(_ioService),
-      _simplePingCallback() {}
-
-DataRx::DataRx(boost::asio::io_service &context, uint32_t ip,
-               SonarConfiguration &config)
-    : _ioService(context),
-      _socket(_ioService),
-      _simplePingCallback() {
-  connect(boost::asio::ip::address_v4(ip), config);
+DataRx::DataRx(const IoServiceThread::IoContextPtr &iosrv)
+    : _socket(*iosrv),
+      _buffer(std::make_shared<ByteVector>()),
+      _simplePingCallback([](const SimplePingResult &){}),
+      _onConnectCallback([](void){}) {
 }
 
-DataRx::DataRx(boost::asio::io_service &context,
-               const boost::asio::ip::address &addr, SonarConfiguration &config)
-    : _ioService(context),
-      _socket(_ioService),
-      _simplePingCallback() {
-  connect(addr, config);
+DataRx::~DataRx() {
 }
 
-// QUESTION(lindzey): Where is this actually called??
-//    Ah -- SonarClient renames this to setDataRxCallback, and
-//    the driver calls that.
-void DataRx::setCallback(SimplePingCallback callback) {
-  _simplePingCallback = callback;
-}
+void DataRx::connect(const asio::ip::address &addr) {
+  if (isConnected()) return;
 
-void DataRx::setDataRxCallback(DataRxCallback callback) {
-  _dataRxCallback = callback;
-}
+  uint16_t port =  liboculus::DataPort;
 
-void DataRx::setDataTxCallback(DataTxCallback callback) {
-  _dataTxCallback = callback;
-}
+  boost::asio::ip::tcp::endpoint sonarEndpoint(addr, port);
+  LOG(INFO) << "Connecting to sonar at " << sonarEndpoint;
 
-
-
-void DataRx::connect(uint32_t ip,  SonarConfiguration &config) {
-  connect(boost::asio::ip::address_v4(ip), config);
-}
-
-void DataRx::connect(const asio::ip::address &addr,
-                     SonarConfiguration &config) {
-  if (connected()) return;
-
-  uint16_t port = 52100;
-  asio::ip::address ipAddress = addr;
-
-  boost::asio::ip::tcp::endpoint sonarEndpoint(ipAddress, port);
-
-  LOG(DEBUG) << "Connecting to sonar at " << sonarEndpoint;
-
-  config.setCallback(std::bind(&DataRx::sendConfiguration, this,
-                               std::placeholders::_1));
-
-  // Schedule the first async_io connect task
   _socket.async_connect(sonarEndpoint,
-                        boost::bind(&DataRx::onConnect, this, _1, config));
+                        boost::bind(&DataRx::onConnect, this, _1));
 }
 
 
-void DataRx::onConnect(const boost::system::error_code& ec,
-                       const SonarConfiguration &config) {
-  if (!ec) {
-    scheduleHeaderRead();
-
-    // Send one SonarConfiguration immediately.
-    sendConfiguration(config);
-
-  } else {
+void DataRx::onConnect(const boost::system::error_code& ec) {
+  if (ec) {
     LOG(WARNING) << "Error on connect: " << ec.message();
+    _socket.close();
+
+    return;
   }
+
+  LOG(DEBUG) << "Connected to sonar!";
+  restartReceiveCycle();
+  _onConnectCallback();
 }
 
 //== Data writers
 
-void DataRx::sendConfiguration(const SonarConfiguration &msg) {
-  std::vector<std::uint8_t> vector_buffer = msg.serialize();
-  asio::const_buffer vector_buffer_view = asio::buffer(vector_buffer);
+void DataRx::sendSimpleFireMessage(const SonarConfiguration &msg) {
+  if (!isConnected()) {
+    LOG(WARNING) << "Can't send to sonar, not connected";
+    return;
+  }
 
-  auto result = _socket.send(vector_buffer_view);
+  std::vector<std::uint8_t> data = msg.serialize();
+  auto result = _socket.send(asio::buffer(data));
   LOG(DEBUG) << "Sent " << result << " bytes to sonar";
-
-  _dataTxCallback(vector_buffer);
+  haveWritten(data);
 }
 
 //=== Readers
-void DataRx::scheduleHeaderRead() {
-  MessageHeader header;
+void DataRx::readUpTo(size_t bytes,
+                    StateMachineCallback callback) {
+  const size_t current_sz = _buffer->size();
+  _buffer->resize(bytes);
+  asio::mutable_buffer buffer_view = asio::buffer(*_buffer)+current_sz;
+#if BOOST_VERSION >= 106600
+  asio::async_read(_socket, buffer_view, callback);
+#else
+  asio::async_read(_socket, asio::mutable_buffers_1(buffer_view), callback);
+#endif
+}
 
-  _socket.async_receive(boost::asio::buffer((void *)header.ptr(),
-                                            sizeof(OculusMessageHeader)),
-                        boost::bind(&DataRx::readHeader, this, header, _1, _2));
+void DataRx::restartReceiveCycle() {
+  LOG(DEBUG) << "== Restarting DataRx state machine ==";
+
+  // Before abandoning the current data, post that it's been received
+  if (_buffer->size() > 0) haveRead(*_buffer);
+
+  if (_buffer.use_count() > 1) {
+    _buffer = std::make_shared<ByteVector>();
+  } else {
+    _buffer->clear();
+  }
+  readUpTo(sizeof(uint8_t),
+          boost::bind(&DataRx::rxFirstByteOculusId, this, _1, _2));
 }
 
 
-void DataRx::readHeader(MessageHeader hdr, const boost::system::error_code& ec,
+//==== States in the state machine... ====
+
+void DataRx::rxFirstByteOculusId(const boost::system::error_code& ec,
+                        std::size_t bytes_transferred) {
+  if (ec) {
+    LOG(WARNING) << "Error on receive of header: " << ec.message();
+    goto exit;
+  }
+
+  if (bytes_transferred != sizeof(uint8_t)) {
+    goto exit;
+  }
+
+  if (_buffer->data()[0] == liboculus::PacketHeaderLSB) {
+    readUpTo(sizeof(uint16_t),
+              boost::bind(&DataRx::rxSecondByteOculusId, this, _1, _2));
+    return;
+  }
+
+exit:
+  restartReceiveCycle();
+}
+
+void DataRx::rxSecondByteOculusId(const boost::system::error_code& ec,
+                        std::size_t bytes_transferred) {
+  if (ec) {
+    LOG(WARNING) << "Error on receive of header: " << ec.message();
+    goto exit;
+  }
+
+  if (bytes_transferred != sizeof(uint8_t)) {
+    goto exit;
+  }
+
+  if (_buffer->data()[1] == liboculus::PacketHeaderMSB) {
+    LOG(DEBUG) << "Received good OculusId at start of packet";
+
+    readUpTo(sizeof(OculusMessageHeader),
+              boost::bind(&DataRx::rxHeader, this, _1, _2));
+    return;
+  }
+
+exit:
+  restartReceiveCycle();
+}
+
+void DataRx::rxHeader(const boost::system::error_code& ec,
                         std::size_t bytes_transferred) {
   if (ec) {
     LOG(WARNING) << "Error on receive of header: " << ec.message();
     return;
   }
-  LOG(DEBUG) << "Got " << bytes_transferred << " bytes of header from sonar";
 
- // _dataRxCallback(header.buffer());
-
-  if (bytes_transferred != sizeof(OculusMessageHeader)) {
-    LOG(WARNING) << "Received short header of " << bytes_transferred
-                 << " expected " << sizeof(OculusMessageHeader);
-    return;
+if (bytes_transferred != (sizeof(OculusMessageHeader)-sizeof(uint16_t))) {
+     LOG(WARNING) << "Received short header of " << bytes_transferred
+                  << " expected " << sizeof(OculusMessageHeader);
+    restartReceiveCycle();
   }
-  LOG(DEBUG) << "Validating...";
+
+  MessageHeader hdr(_buffer);
 
   if (!hdr.valid()) {
-    LOG(WARNING) << "Incoming header invalid";
+    LOG(WARNING) << "!!! Received invalid header...";
+    restartReceiveCycle();
     return;
   }
 
-  LOG(DEBUG) << "Got message ID " << static_cast<int>(hdr.msgId());
-  // Possible options for msgId() are:
-  // * messageSimpleFire
-  // * messagePingResult
-  // * messageSimplePingResult
-  // * messageUserConfig
-  // * messageLogs
-  // * messageDummy
+  LOG(DEBUG) << "Got message ID " <<  static_cast<int>(hdr.msgId()) << " (" << MessageTypeToString(hdr.msgId()) << ")";
 
-  // TODO(lindzey): This seems to guarantee a buffer overrun if we just continue here.
-  if (hdr.msgId() == messageSimplePingResult) {
-    if (!hdr.expandForPayload()) {
-      LOG(WARNING) << "Unable to expand for payload";
-    }
+  hdr.dump();
 
-    // Read the remainder of the packet
-    // QUESTION(lindzey): Why is this scheduled as an async_read, while the
-    //    others directly read?
-    auto b = boost::asio::buffer(hdr.payloadPtr(), hdr.payloadSize());
-    boost::asio::async_read(_socket, b,
-                            boost::bind(&DataRx::readSimplePingResult,
-                                        this, hdr, _1, _2));
-
-    // readSimplePingResult will call scheduleHeaderRead(), so don't
-    // call it here.
-    // QUESTION(LEL): However, scheduleHeaderRead is only called on a
-    //     *successful* read of a SimplePingResult (and in general, only
-    //     after successful parsing of the previous message ... will this
-    //     cause problems? Is it maybe why I have to restart the driver
-    //     twice to recover after getting it into a weird state?
-
+  const auto packetSize = hdr.packetSize();
+  const auto id = hdr.msgId();
+  if ((id == messageSimpleFire) ||
+      (id == messagePingResult) ||
+      (id == messageUserConfig) ||
+      (id == messageDummy)) {
+    // I think these messages are exclusively user -> sonar
+    // so we should never receive them from the sonar
+    readUpTo(packetSize,
+              boost::bind(&DataRx::rxIgnoredData, this, _1, _2));
+  } else if (id == messageSimplePingResult) {
+    readUpTo(packetSize,
+              boost::bind(&DataRx::rxSimplePingResult, this, _1, _2));
+  } else if (id == messageLogs) {
+    readUpTo(packetSize,
+              boost::bind(&DataRx::rxMessageLogs, this, _1, _2));
   } else {
-    // Always download the rest of the message.
-    auto payload_bytes = hdr.payloadSize();
-    uint32_t bytes_received;
-    boost::asio::streambuf junk_buffer(hdr.payloadSize());
-    if (payload_bytes > 0) {
-      LOG(DEBUG) << "Fetching " << payload_bytes << " bytes of payload";
-      // Q(lindzey): Is it OK for this NOT to be an async_read? It replaces
-      //   multiple calls, some of which were read and the rest async_read.
-      bytes_received = boost::asio::read(_socket, junk_buffer);
-      if (bytes_received != payload_bytes) {
-        LOG(WARNING) << "Requested " << payload_bytes << " payload bytes, "
-                     << "but only received " << bytes_received;
-      }
-    }
-
- // _dataRxCallback(junk_buffer.data());
-
-    // Message-specific handling
-    if (hdr.msgId() == messageLogs) {
-      // Actually want to log these!
-      LOG(DEBUG) << "Read " << bytes_received << " of logging info";
-      if (bytes_received > 0) {
-        std::string s((std::istreambuf_iterator<char>(&junk_buffer)),
-                      std::istreambuf_iterator<char>());
-        LOG(DEBUG) << s;
-      } else {
-        LOG(WARNING) << "Error on receive of payload for log message: "
-                     << ec.message();
-      }
-    } else if (hdr.msgId() == messageDummy) {
-      LOG(DEBUG) << "Ignoring dummy message";
-    } else {
-      // Unhandled values of the OculusMessageType enum:
-      // messagesSimpleFire, messagePingResult, messageUserConfig
-      LOG(INFO) << "Unknown message ID " << static_cast<int>(hdr.msgId());
-    }
-
-    // Finally, set up for the next round.
-    scheduleHeaderRead();
+    LOG(WARNING) << "Not sure how to handle message ID " << static_cast<int>(hdr.msgId());
+    restartReceiveCycle();
   }
+
 }
 
-void DataRx::readSimplePingResult(MessageHeader hdr,
-                                  const boost::system::error_code& ec,
+void DataRx::rxSimplePingResult(const boost::system::error_code& ec,
                                   std::size_t bytes_transferred) {
   if (ec) {
     LOG(WARNING) << "Error on receive of simplePingResult: " << ec.message();
-    return;
-  }
-  LOG(DEBUG) << "Got " << bytes_transferred
-             << " bytes of SimplePingResult from sonar";
-
-  if (bytes_transferred != hdr.payloadSize()) {
-    LOG(WARNING) << "Received short header of " << bytes_transferred
-                 << " expected " << hdr.payloadSize();
-    return;
+    goto exit;
   }
 
-  SimplePingResult ping(hdr);
-
-  if (ping.valid()) {
-    LOG(DEBUG) << "Data valid!";
-    _simplePingCallback(ping);
-
-    // And return to the home state
-    scheduleHeaderRead();
-  } else {
-    LOG(WARNING) << "Incoming packet invalid";
+  if (bytes_transferred <= (sizeof(SimplePingResult)-sizeof(OculusMessageHeader))) {
+    LOG(WARNING) << "Received short header of " << bytes_transferred;
+    goto exit;
   }
+
+  {
+    SimplePingResult ping(_buffer);
+
+    if (ping.valid()) {
+      if (bytes_transferred < ping.payloadSize()) {
+        LOG(WARNING) << "Did not read full data packet, resetting...";
+        goto exit;
+      }
+
+      _simplePingCallback(ping);
+    } else {
+      LOG(WARNING) << "Incoming packet invalid";
+    }
+  }
+
+exit:
+  restartReceiveCycle();
+}
+
+void DataRx::rxMessageLogs(const boost::system::error_code& ec,
+                                  std::size_t bytes_transferred) {
+  if (ec) {
+    LOG(WARNING) << "Error on receive of rxMessageLogs: " << ec.message();
+    goto exit;
+  }
+
+  LOG(DEBUG) << "Received " << bytes_transferred << " of LogMessage data";
+  LOG(INFO) << std::string(_buffer->begin()+sizeof(OculusMessageHeader), _buffer->end());
+
+exit:
+  restartReceiveCycle();
+
+}
+
+void DataRx::rxIgnoredData(const boost::system::error_code& ec,
+                                  std::size_t bytes_transferred) {
+  if (ec) {
+    LOG(WARNING) << "Error on receive of rxIgnoredData: " << ec.message();
+    goto exit;
+  }
+
+  LOG(DEBUG) << "Ignoring " << bytes_transferred << " of data";
+
+exit:
+  restartReceiveCycle();
 }
 
 }  // namespace liboculus

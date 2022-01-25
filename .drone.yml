@@ -10,14 +10,14 @@ steps:
 
 ## Run the fips "debug unittest" config
 - name: build-fips-unittest
-  image: amarburg/lsdslam-dev-host
+  image: amarburg/lsdslam-dev-host:latest
   commands:
     - ./fips set config linux-make-unittest
     - ./fips build
 
 ## Run the fips "release unittest" config
 - name: build-fips-release
-  image: amarburg/lsdslam-dev-host
+  image: amarburg/lsdslam-dev-host:latest
   commands:
     - ./fips set config linux-make-release-unittest
     - ./fips build

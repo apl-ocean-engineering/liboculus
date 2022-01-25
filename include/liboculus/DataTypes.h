@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2022 University of Washington
+ * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,12 +32,19 @@
 
 #pragma once
 
-#include "Oculus/Oculus.h"
-
 #include <cstddef>  // for size_t
 #include <string>
+#include <vector>
+#include <cmath>
+
+#include "Oculus/Oculus.h"
 
 namespace liboculus {
+
+typedef std::vector<uint8_t> ByteVector;
+
+template <typename T>
+T deg2rad(const T &value) { return M_PI/180.0 * value; }
 
 inline const char *DataSizeToString( DataSizeType d ) {
   switch(d) {

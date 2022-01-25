@@ -30,57 +30,68 @@
 
 #pragma once
 
-#include <mutex>
-#include <chrono>
 #include <memory>
+#include <string>
+#include <vector>
+#include <cassert>
 
-#include <boost/asio.hpp>
+#include "BearingData.h"
+#include "DataTypes.h"
+#include "ImageData.h"
 
 #include "Oculus/Oculus.h"
 
-#include "liboculus/IoServiceThread.h"
-#include "liboculus/SonarStatus.h"
+#include <g3log/g3log.hpp>
 
 namespace liboculus {
 
-using boost::asio::ip::udp;
-using boost::asio::deadline_timer;
+using std::shared_ptr;
+using std::vector;
 
-// ----------------------------------------------------------------------------
-// StatusRx - a listening socket for oculus status messages
-//
-//
-class StatusRx {
+class MessageHeader {
  public:
-  explicit StatusRx(const IoServiceThread::IoContextPtr &iosrv);
 
-  ~StatusRx() {}
+  MessageHeader() = default;
+  MessageHeader( const MessageHeader & ) = default;
 
-  typedef std::function< void(const SonarStatus &, bool) > SonarStatusCallback;
+  explicit MessageHeader(const std::shared_ptr<ByteVector> &buffer)
+      : _buffer(buffer) {
+        assert(buffer->size() >= sizeof(OculusMessageHeader));
+      }
 
-  void setCallback( SonarStatusCallback callback ) {
-    _sonarStatusCallback = callback;
+  ~MessageHeader() {}
+
+  // Convenience accessors
+  OculusMessageType msgId() const {
+    return static_cast<OculusMessageType>(hdr()->msgId);
+  }
+  uint16_t oculusId() const    { return hdr()->oculusId; }
+  uint16_t srcDeviceId() const { return hdr()->srcDeviceId; }
+  uint16_t dstDeviceId() const { return hdr()->dstDeviceId; }
+  uint16_t msgVersion() const  { return hdr()->msgVersion; }
+  uint32_t payloadSize() const { return hdr()->payloadSize; }
+  uint32_t packetSize() const  { return payloadSize() + sizeof(OculusMessageHeader); }
+
+  virtual bool valid() const {
+    return hdr()->oculusId == OCULUS_CHECK_ID;  // 0x4f53
   }
 
- private:
-  void doConnect();
+  virtual void dump() const {
+    LOG(DEBUG) << "   Oculus Id: 0x" << std::hex << oculusId();
+    LOG(DEBUG) << "      Msg id: 0x" << std::hex << static_cast<uint16_t>(msgId());
+    LOG(DEBUG) << "      Dst ID: " << std::hex << dstDeviceId();
+    LOG(DEBUG) << "      Src ID: " << std::hex << srcDeviceId();
+    LOG(DEBUG) << "Payload size: " << payloadSize() << " bytes";
+  }
 
-  void scheduleRead();
-  void handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred );
+  const OculusMessageHeader *hdr() const {
+    return reinterpret_cast<const OculusMessageHeader *>(_buffer->data());
+  }
 
-  bool parseStatus(const SonarStatus &status);
+  const std::shared_ptr<ByteVector> &buffer(void) const { return _buffer; }
 
-  std::vector<uint8_t> _buffer;
-
-  //uint16_t     _port;       // Port to listen on
-  uint16_t     _num_valid_rx;      // Number of valid status messages
-  uint16_t     _num_invalid_rx;    // Number of invalid status messages
-
-  udp::socket _socket;
-
-  deadline_timer _deadline;
-
-  SonarStatusCallback _sonarStatusCallback;
-};
+ protected:
+  std::shared_ptr<ByteVector> _buffer;
+};  // class MessageHeader
 
 }  // namespace liboculus

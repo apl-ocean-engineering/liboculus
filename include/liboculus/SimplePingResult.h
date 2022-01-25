@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2022 University of Washington
+ * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,157 +30,72 @@
 
 #pragma once
 
-#include "BearingData.h"
-#include "DataTypes.h"
-#include "ImageData.h"
-
-#include "Oculus/Oculus.h"
-
 #include <memory>
-#include <string.h>
+#include <string>
 #include <vector>
+#include <cassert>
 
 #include <g3log/g3log.hpp>
+
+#include "liboculus/BearingData.h"
+#include "liboculus/GainData.h"
+#include "liboculus/DataTypes.h"
+#include "liboculus/ImageData.h"
+
+#include "Oculus/Oculus.h"
+#include "liboculus/MessageHeader.h"
+#include "liboculus/SonarConfiguration.h"
 
 namespace liboculus {
 
 using std::shared_ptr;
 using std::vector;
 
-class MessageHeader {
- public:
-  typedef std::vector<uint8_t> ByteVector;
-
-  MessageHeader() : _buffer(new ByteVector(sizeof(OculusMessageHeader), 0)) {}
-
-  MessageHeader(const char *data, size_t len) : _buffer(new ByteVector(len)) {
-    memcpy(_buffer->data(), data, len);
-  }
-
-  explicit MessageHeader(const ByteVector &other)
-      : _buffer(new ByteVector(other)) {}
-
-  MessageHeader(const MessageHeader &other) : _buffer(other.buffer()) {}
-
-  ~MessageHeader() {}
-
-  void reset() {
-    _buffer.reset(new ByteVector(sizeof(OculusMessageHeader), 0));
-  }
-
-  bool expandForPayload() {
-    if (!valid()) return false;
-
-    const size_t dataSize = sizeof(OculusMessageHeader) + payloadSize();
-    _buffer->resize(dataSize);
-
-    return true;
-  }
-
-  // Convenience accessors
-  OculusMessageType msgId() const {
-    return static_cast<OculusMessageType>(hdr()->msgId);
-  }
-  uint16_t oculusId() const    { return hdr()->oculusId; }
-  uint16_t srcDeviceId() const { return hdr()->srcDeviceId; }
-  uint16_t dstDeviceId() const { return hdr()->dstDeviceId; }
-  uint16_t msgVersion() const  { return hdr()->msgVersion; }
-  uint32_t payloadSize() const { return hdr()->payloadSize; }
-
-  virtual bool valid() const {
-    return hdr()->oculusId == OCULUS_CHECK_ID;  // 0x4f53
-  }
-
-  std::shared_ptr<ByteVector> buffer() { return _buffer; }
-  const std::shared_ptr<ByteVector> &buffer() const { return _buffer; }
-
-  void *ptr() const {
-    return _buffer->data();
-  }
-
-  unsigned int size() const {
-    return _buffer->size();
-  }
-
-  void *payloadPtr() {
-    return _buffer->data() + sizeof(OculusMessageHeader);
-  }
-
-  void dump() const {
-    LOG(DEBUG) << "   Oculus Id: 0x" << std::hex << oculusId();
-    LOG(DEBUG) << "      Msg id: 0x" << std::hex << static_cast<uint16_t>(msgId());
-    LOG(DEBUG) << "      Dst ID: " << std::hex << dstDeviceId();
-    LOG(DEBUG) << "      Src ID: " << std::hex << srcDeviceId();
-    LOG(DEBUG) << "Payload size: " << payloadSize() << " bytes";
-  }
-
- protected:
-  OculusMessageHeader *hdr() {
-    return reinterpret_cast<OculusMessageHeader *>(_buffer->data());
-  }
-
-  const OculusMessageHeader *hdr() const {
-    return reinterpret_cast<const OculusMessageHeader *>(_buffer->data());
-  }
-
-  std::shared_ptr< ByteVector > _buffer;
-};  // class MessageHeader
-
-
 // A single OculusSimplePingResult (msg) is actually three nested structs:
 //   OculusMessageHeader     (as msg.fireMessage.head)
 //   OculusSimpleFireMessage (as msg.fireMessage)
 //   then the rest of OculusSimplePingResult
 class SimplePingResult : public MessageHeader {
-  friend class DataRx;
-
  public:
-  // TODO(amarburg?): Don't like having this here.
-  //     Only needed to handle cases in SonarClient which need to be
-  //     able either return a ping or a failure
-  SimplePingResult() : MessageHeader() {}
+  typedef GainData<int32_t> GainData_t;
 
-  SimplePingResult(const SimplePingResult &other)
-      : MessageHeader(other),
-        _bearings(reinterpret_cast< BearingDataLocator *>(other.ptr())),
-        _image(reinterpret_cast< OculusSimplePingResult *>(other.ptr())) {}
+  SimplePingResult() = default;
+  SimplePingResult(const SimplePingResult &other) = default;
 
-  explicit SimplePingResult(const MessageHeader &header)
-      : MessageHeader(header),
-        _bearings(reinterpret_cast< BearingDataLocator *>(header.ptr())),
-        _image(reinterpret_cast< OculusSimplePingResult *>(header.ptr())) {}
+  explicit SimplePingResult(const std::shared_ptr<ByteVector> &buffer);
 
   ~SimplePingResult() {}
 
-  // Because the message consists of nested structs, these are trivial
-  // QUESTION(lindzey): When do the non-const ones get used??
-  OculusSimpleFireMessage *oculusFireMsg()  {
-    return reinterpret_cast< OculusSimpleFireMessage *>(ptr());
+  const OculusSimpleFireMessage *fireMsg() const {
+      return reinterpret_cast<const OculusSimpleFireMessage *>(_buffer->data());
   }
 
-  const OculusSimpleFireMessage *oculusFireMsg() const {
-      return reinterpret_cast<const OculusSimpleFireMessage *>(ptr());
+  const OculusSimplePingResult *ping() const  {
+    return reinterpret_cast<const OculusSimplePingResult *>(_buffer->data());
   }
 
-  OculusSimplePingResult *oculusPing()  {
-    return reinterpret_cast< OculusSimplePingResult *>(ptr());
-  }
-
-  const OculusSimplePingResult *oculusPing() const  {
-    return reinterpret_cast<const OculusSimplePingResult *>(ptr());
+  const OculusSimpleFireFlags &flags() const {
+    return _flags;
   }
 
   const BearingData &bearings() const { return _bearings; }
+  const GainData_t &gains() const { return _gains; }
   const ImageData &image() const      { return _image; }
 
-  // QUESTION(lindzey): Why aren't these override?
-  virtual bool valid() const;
-  void dump() const;
+  uint8_t dataSize() const { return SizeOfDataSize(ping()->dataSize); }
+
+  bool valid() const override;
+  void dump() const override;
 
  private:
-  // Objects which overlay the MessageHeader's _buffer for easier interpretation
+  OculusSimpleFireFlags _flags;
+
+  // Objects which create OOI overlays the _buffer for  easier interpretation
   BearingData _bearings;
+
+  GainData_t _gains;
   ImageData _image;
+
 };  // class SimplePingResult
 
 }  // namespace liboculus

@@ -30,57 +30,50 @@
 
 #pragma once
 
-#include <mutex>
-#include <chrono>
-#include <memory>
-
-#include <boost/asio.hpp>
+#include <g3log/g3log.hpp>  // needed for CHECK macro
 
 #include "Oculus/Oculus.h"
-
-#include "liboculus/IoServiceThread.h"
-#include "liboculus/SonarStatus.h"
+#include "liboculus/DataTypes.h"
 
 namespace liboculus {
 
-using boost::asio::ip::udp;
-using boost::asio::deadline_timer;
-
-// ----------------------------------------------------------------------------
-// StatusRx - a listening socket for oculus status messages
-//
-//
-class StatusRx {
+// \todo  A long-term TODO: ImageData, GainData and BearingData are all
+// fairly similar in functionality, could reduce the DRY?
+template <typename T>
+class GainData {
  public:
-  explicit StatusRx(const IoServiceThread::IoContextPtr &iosrv);
+  typedef T DataType;
 
-  ~StatusRx() {}
+  GainData()
+    : _data(nullptr), 
+      _stride(0),
+      _numRanges(0),
+      _imageSize(0)
+    {;}
 
-  typedef std::function< void(const SonarStatus &, bool) > SonarStatusCallback;
+  GainData(const GainData &other)  = default;
 
-  void setCallback( SonarStatusCallback callback ) {
-    _sonarStatusCallback = callback;
+  GainData(const T *data, uint32_t imageSz, size_t strideBytes, size_t nRanges)
+      : _data(data),
+        _stride(strideBytes/sizeof(T)),
+        _numRanges(nRanges),
+        _imageSize(imageSz) {}
+
+  int size() const { return _numRanges; }
+
+  T at(unsigned int i) const {
+    CHECK(i < _numRanges) << "Requested gain " << i << " out of range";
+
+    const size_t index = i*_stride;
+    CHECK(index*sizeof(T) < _imageSize);
+
+    return _data[index];
   }
 
  private:
-  void doConnect();
-
-  void scheduleRead();
-  void handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred );
-
-  bool parseStatus(const SonarStatus &status);
-
-  std::vector<uint8_t> _buffer;
-
-  //uint16_t     _port;       // Port to listen on
-  uint16_t     _num_valid_rx;      // Number of valid status messages
-  uint16_t     _num_invalid_rx;    // Number of invalid status messages
-
-  udp::socket _socket;
-
-  deadline_timer _deadline;
-
-  SonarStatusCallback _sonarStatusCallback;
+  const T *_data;
+  size_t _stride, _numRanges;
+  uint32_t _imageSize;
 };
 
 }  // namespace liboculus

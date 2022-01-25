@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2022 University of Washington
+ * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,38 +30,43 @@
 
 #pragma once
 
-#include "Oculus/Oculus.h"
-
 #include <g3log/g3log.hpp>  // needed for CHECK macro
+
+#include "Oculus/Oculus.h"
+#include "liboculus/DataTypes.h"
 
 namespace liboculus {
 
-struct BearingDataLocator {
-  OculusSimplePingResult ping;
-  short BearingData[];
-};
-
 class BearingData {
  public:
-  // \TODO get rid of this when the base constructor for SimplePingResult goes away
-  BearingData() : _ptr(nullptr), _numBeams(0) {}
+  BearingData()
+    : _data(nullptr), _numBeams(0)
+    {;}
 
-  BearingData( BearingDataLocator *data )
-      : _ptr( data->BearingData ),
-        _numBeams( data->ping.nBeams ) {}
+  BearingData(const BearingData &other)  = default;
+
+  BearingData(const int16_t *data, int nBeams)
+      : _data(data),
+        _numBeams(nBeams) {}
 
   int size() const { return _numBeams; }
 
   // Returns bearing in degrees
+  //
+  // From Oculus.h:
+  //   "The bearings to each of the beams in 0.01 degree resolution"
+  //
   float at(unsigned int i) const {
     CHECK(i < _numBeams) << "Requested beam " << i << " out of range";
-
-    return _ptr[i] / 100.0;
+    return _data[i] / 100.0;
   }
 
+  float at_rad(unsigned int i) const {
+    return deg2rad(at(i));
+  }
 
  private:
-  short *_ptr;
+  const int16_t *_data;
   uint16_t _numBeams;
 };
 

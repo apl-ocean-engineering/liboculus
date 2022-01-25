@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2022 University of Washington
+ * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +38,7 @@
 #include <boost/asio.hpp>
 
 #include "g3log/g3log.hpp"
-
+#include "liboculus/DataTypes.h"
 #include "Oculus/Oculus.h"
 
 namespace liboculus {
@@ -45,30 +46,25 @@ namespace liboculus {
 /// Thin wrapper around OculusStatusMsg
 class SonarStatus {
  public:
-  typedef std::chrono::time_point<std::chrono::system_clock> sys_time_point;
+  SonarStatus(const ByteVector &buffer);
 
-  SonarStatus();
 
-  OculusStatusMsg operator()( void ) const;
+  const OculusStatusMsg *msg( void ) const {
+    return reinterpret_cast<const OculusStatusMsg *>(_buffer.data());
+  }
 
-  bool valid() const { return _valid; }
+  bool valid() const { return true; } //todo:  actually validate the packet
 
   // Print most recent OculusStatusMsg to LOG(DEBUG)
   void dump() const;
 
   boost::asio::ip::address ipAddr() const;
-  uint32_t status() const { return _osm.status; }
-
-  void update(const OculusStatusMsg &msg,
-              sys_time_point msgTime = std::chrono::system_clock::now());
-
- protected:
-  mutable std::mutex _statusMutex;
+  uint32_t status() const { 
+    return msg()->status;
+  }
 
  private:
-  bool                  _valid;
-  OculusStatusMsg       _osm;             // The more recent status message
-  sys_time_point        _msgTime;     // The time of the last message
+  const ByteVector &_buffer;
 };
 
-}
+}  // namespace liboculus

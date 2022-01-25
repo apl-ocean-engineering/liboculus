@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017-2020 Aaron Marburg <amarburg@uw.edu>
+ * Copyright (c) 2017-2022 University of Washington
+ * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,45 +33,75 @@
 
 #pragma once
 
-#include "DataTypes.h"
-#include "Oculus/Oculus.h"
-
 #include <iostream>
 
 #include <g3log/g3log.hpp>  // needed for CHECK macro
+
+#include "DataTypes.h"
+#include "Oculus/Oculus.h"
 
 namespace liboculus {
 
 class ImageData {
  public:
-  // \TODO get rid of this when the base constructor for SimplePingResult goes away
-  ImageData()
-      : _ptr(nullptr), _numRanges(0), _numBeams(0), _dataSz(0) {}
+  ImageData() 
+    : _data(nullptr),
+      _imageSize(0),
+      _numRanges(0),
+      _numBeams(0),
+      _dataSize(0),
+      _stride(0),
+      _offset(0) {}
 
-  ImageData( OculusSimplePingResult *ping )
-    : _ptr( &(reinterpret_cast<uint8_t *>(ping)[ping->imageOffset]) ),
-      _numRanges( ping->nRanges ),
-      _numBeams( ping->nBeams ),
-      _dataSz( SizeOfDataSize(ping->dataSize) ) {}
+  ImageData(const ImageData &other) = default;
 
-  // TODO.  Deal with non-8-bit data somehow
-  uint8_t at(unsigned int bearing, unsigned int range) const {
-    CHECK(_dataSz == 1) << "Sorry, can only handle 8-bit data right now";
-    if (_ptr == nullptr) {
-      return 0;
-    }
+  ImageData( const uint8_t *data,
+            uint32_t imageSize,
+            uint16_t nRanges,
+            uint16_t nBeams,
+            uint8_t dataSize,
+            uint16_t stride = 0,
+            uint16_t offset = 0 )
+    : _data(data), 
+      _imageSize( imageSize ),
+      _numRanges( nRanges ),
+      _numBeams( nBeams ),
+      _dataSize( dataSize ),
+      _stride( stride == 0 ? nBeams*dataSize : stride ),  // Stride is in _bytes_
+      _offset( offset ) {}
 
-    // TODO range check
-    const unsigned int index = range * _numBeams + bearing;
-    CHECK(index < (unsigned int)(_numRanges * _numBeams));
 
-    return ((uint8_t *)_ptr)[range * _numBeams + bearing];
+  uint8_t at_uint8(unsigned int beam, unsigned int rangeBin) const {
+    CHECK(_dataSize == 1) << "This function can only handle 8-bit data, use at_uint16()";
+    if ((_data == nullptr) || (beam >= _numBeams) || (rangeBin >= _numRanges)) return 0;
+
+    // Simplified calculation assumes 1-byte data
+    const size_t index = rangeBin * _stride + beam + _offset;
+    CHECK(index < _imageSize);
+    return ((uint8_t *)_data)[index];
   }
 
+    // This function works for either 1- or 2-byte sonar data
+    // For 1-byte, the 8-bit value is simply cast into the 16-bit return
+    uint16_t at_uint16(unsigned int beam, unsigned int rangeBin) const {
+    if ((_data == nullptr) || (beam >= _numBeams) || (rangeBin >= _numRanges)) return 0;
+
+    if(_dataSize == 1) {
+        return at_uint8(beam,rangeBin);
+    } else if (_dataSize == 2) {
+        const size_t offset = (rangeBin * _stride) + (beam * _dataSize) + _offset;
+        CHECK(offset < (_imageSize-1));
+        return (_data[offset] | _data[offset+1] << 8);
+    }
+
+    return 0;
+    }
+
  private:
-  uint8_t *_ptr;
-  uint16_t _numRanges, _numBeams;
-  uint8_t _dataSz;
+  const uint8_t *_data;
+  uint32_t _imageSize;
+  size_t _numRanges, _numBeams, _stride, _offset;
+  uint8_t _dataSize;
 };  // class ImageData
 
 }  // namespace liboculus
