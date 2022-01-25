@@ -40,7 +40,8 @@ namespace asio = boost::asio;
 DataRx::DataRx(const IoServiceThread::IoContextPtr &iosrv)
     : _socket(*iosrv),
       _buffer(std::make_shared<ByteVector>()),
-      _simplePingCallback([](const SimplePingResult &){}),
+      _simplePingCallback([](const SimplePingResult<PingV1> &){}),
+      _simplePing2Callback([](const SimplePingResult<PingV2> &){}),
       _onConnectCallback([](void){}) {
 }
 
@@ -81,10 +82,17 @@ void DataRx::sendSimpleFireMessage(const SonarConfiguration &msg) {
     return;
   }
 
-  std::vector<std::uint8_t> data = msg.serialize();
-  auto result = _socket.send(asio::buffer(data));
-  LOG(DEBUG) << "Sent " << result << " bytes to sonar";
-  haveWritten(data);
+  // According to Blueprint, send OculusSimpleFireMessage2
+  // for 32 bit data
+
+  //if (msg->32bitdata) {}
+
+  //} else {
+    std::vector<std::uint8_t> data = msg.serializeFireMsg();
+    auto result = _socket.send(asio::buffer(data));
+    LOG(DEBUG) << "Sent " << result << " bytes to sonar";
+    haveWritten(data);
+  //}
 }
 
 //=== Readers
@@ -212,29 +220,54 @@ if (bytes_transferred != (sizeof(OculusMessageHeader)-sizeof(uint16_t))) {
 
 void DataRx::rxSimplePingResult(const boost::system::error_code& ec,
                                   std::size_t bytes_transferred) {
+  MessageHeader hdr(_buffer);
+
   if (ec) {
     LOG(WARNING) << "Error on receive of simplePingResult: " << ec.message();
     goto exit;
   }
 
-  if (bytes_transferred <= (sizeof(SimplePingResult)-sizeof(OculusMessageHeader))) {
-    LOG(WARNING) << "Received short header of " << bytes_transferred;
-    goto exit;
-  }
+  // \todo Reduce DRY
+  if (hdr.msgVersion() == 1) {
 
-  {
-    SimplePingResult ping(_buffer);
+    if (bytes_transferred <= (sizeof(SimplePingResult<PingV1>)-sizeof(OculusMessageHeader))) {
+        LOG(WARNING) << "Received short header of " << bytes_transferred;
+        goto exit;
+    }
+
+    SimplePingResultV1 ping(_buffer);
 
     if (ping.valid()) {
-      if (bytes_transferred < ping.payloadSize()) {
-        LOG(WARNING) << "Did not read full data packet, resetting...";
-        goto exit;
-      }
+        if (bytes_transferred < ping.payloadSize()) {
+            LOG(WARNING) << "Did not read full data packet, resetting...";
+            goto exit;
+        }
 
-      _simplePingCallback(ping);
+        _simplePingCallback(ping);
+    } else {
+        LOG(WARNING) << "Incoming packet invalid";
+    }
+  } else if (hdr.msgVersion() == 2) {
+
+    if (bytes_transferred <= (sizeof(SimplePingResult<PingV2>)-sizeof(OculusMessageHeader))) {
+        LOG(WARNING) << "Received short header of " << bytes_transferred;
+        goto exit;
+    }
+
+    SimplePingResultV2 ping(_buffer);
+
+    if (ping.valid()) {
+        if (bytes_transferred < ping.payloadSize()) {
+            LOG(WARNING) << "Did not read full data packet, resetting...";
+            goto exit;
+        }
+
+      _simplePing2Callback(ping);
     } else {
       LOG(WARNING) << "Incoming packet invalid";
     }
+  } else {
+    LOG(WARNING) << "Unknown message version " << hdr.msgVersion() << " ignoring";
   }
 
 exit:

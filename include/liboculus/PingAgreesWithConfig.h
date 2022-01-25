@@ -36,6 +36,23 @@
 namespace liboculus {
 
 // \TODO develop better API for exposing results
-bool checkPingAgreesWithConfig( const SimplePingResult &ping, const SonarConfiguration &config );
+template<typename PingT>
+bool checkPingAgreesWithConfig( const SimplePingResult<PingT> &ping,
+                                const SonarConfiguration &config ) {
+    OculusSimpleFireFlags flags(ping.fireMsg()->flags);
+
+    const auto nBeams = ping.ping()->nBeams;
+    const auto nRanges = ping.ping()->nRanges;
+
+    if (config.flags().get512Beams() && (nBeams != 512)) {
+        LOG(WARNING) << "Config expects 512 beams, ping has " << nBeams;
+    } else if (nBeams != 256) {
+        LOG(WARNING) << "Config expects 256 beams, ping has " << nBeams;
+    }
+
+    /// etc
+
+    return true;
+}
 
 }  // namespace liboculus

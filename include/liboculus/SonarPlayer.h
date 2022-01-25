@@ -40,7 +40,7 @@ namespace liboculus {
 
 class SonarPlayerBase {
 public:
-  typedef tl::expected<SimplePingResult, bool> SonarPlayerResult_t;
+  typedef tl::expected<SimplePingResult<PingV1>, bool> SonarPlayerResult_t;
 
   SonarPlayerBase()           {;}
   virtual ~SonarPlayerBase()  {;}

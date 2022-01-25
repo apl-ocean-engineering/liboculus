@@ -113,7 +113,7 @@ SonarPlayerBase::SonarPlayerResult_t RawSonarPlayer::nextPing() {
   // Read the rest of the data
   buffer->resize(header.packetSize());
   _input.get(reinterpret_cast<char *>(buffer->data()[sizeof(MessageHeader)]),header.payloadSize());
-  return SimplePingResult(buffer);
+  return SimplePingResult<PingV1>(buffer);
 }
 
 

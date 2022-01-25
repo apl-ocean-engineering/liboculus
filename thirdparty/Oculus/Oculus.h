@@ -183,7 +183,7 @@ public:
     double frequency;				/* The acoustic frequency (Hz) */
     double temperature;				/* The external temperature (deg C) */
     double pressure;				/* The external pressure (bar) */
-    double speeedOfSoundUsed;		/* The actual used speed of sound (m/s). May be different to the speed of sound set in the fire message */
+    double speedOfSoundUsed;		/* The actual used speed of sound (m/s). May be different to the speed of sound set in the fire message */
     uint32_t pingStartTime;
     DataSizeType dataSize; 			/* The size of the individual data entries */
     double rangeResolution;			/* The range in metres corresponding to a single range line */
@@ -209,7 +209,7 @@ typedef struct {
   double heading;			/* The heading (degrees) */
   double pitch;			/* The pitch (degrees) */
   double roll;			/* The roll (degrees) */
-  double speeedOfSoundUsed;	/* The actual used speed of sound (m/s) */
+  double speedOfSoundUsed;	/* The actual used speed of sound (m/s) */
   double pingStartTime;		/* In seconds from sonar powerup (to microsecond resolution) */
   DataSizeType dataSize; 		/* The size of the individual data entries */
   double rangeResolution;		/* The range in metres corresponding to a single range line */
@@ -247,7 +247,7 @@ public:
   OculusDeviceType   deviceType;
   OculusPartNumberType partNumber;
   uint32_t   status;
-  OculusVersionInfo versinInfo;
+  OculusVersionInfo versionInfo;
   uint32_t   ipAddr;
   uint32_t   ipMask;
   uint32_t   connectedIpAddr;
@@ -506,7 +506,7 @@ typedef struct
 } OculusReturnFireMessage;
 
 
-#include <QString>
+//#include <QString>
 
 // Oculus configuration information
 struct OculusInfo {

@@ -57,9 +57,16 @@ class DataRx {
 
   bool isConnected() const { return _socket.is_open(); }
 
-  typedef std::function< void(const SimplePingResult &) > SimplePingCallback;
+  typedef std::function< void(const SimplePingResultV1 &) > SimplePingCallback;
   void setSimplePingCallback(SimplePingCallback callback) {
     _simplePingCallback = callback;
+  }
+
+  // Though the two SimplePingResults are very similar, but maintain
+  // separate callbacks
+  typedef std::function< void(const SimplePingResultV2 &) > SimplePing2Callback;
+  void setSimplePing2Callback(SimplePing2Callback callback) {
+    _simplePing2Callback = callback;
   }
 
   typedef std::function< void() > OnConnectCallback;
@@ -114,6 +121,8 @@ class DataRx {
   shared_ptr<ByteVector> _buffer;
 
   SimplePingCallback _simplePingCallback;
+  SimplePing2Callback _simplePing2Callback;
+  
   OnConnectCallback _onConnectCallback;
 
 };  // class DataRx

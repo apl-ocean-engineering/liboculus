@@ -103,7 +103,8 @@ class SonarConfiguration {
  public:
   SonarConfiguration();
 
-  std::vector<uint8_t> serialize() const;
+  std::vector<uint8_t> serializeFireMsg() const;
+  std::vector<uint8_t> serializeFireMsg2() const;
 
   // Setter functions
   void setGamma(int input);

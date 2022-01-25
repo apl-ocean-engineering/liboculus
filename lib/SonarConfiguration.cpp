@@ -46,7 +46,7 @@ SonarConfiguration::SonarConfiguration() {
   _sfm.head.srcDeviceId = 0;
   _sfm.head.dstDeviceId = 0;                // n.b. ignored by device
   _sfm.head.msgId       = messageSimpleFire;
-  _sfm.head.msgVersion  = 0;
+  _sfm.head.msgVersion  = 1;
   _sfm.head.payloadSize = sizeof(OculusSimpleFireMessage) - sizeof(OculusMessageHeader);
 
   _sfm.masterMode = OCULUS_HIGH_FREQ;
@@ -96,7 +96,7 @@ void SonarConfiguration::setFreqMode(OculusFreqMode input) {
   _sfm.masterMode = input;
 }
 
-std::vector<uint8_t> SonarConfiguration::serialize() const {
+std::vector<uint8_t> SonarConfiguration::serializeFireMsg() const {
   _sfm.flags = _flags();
 
   std::vector<uint8_t> v;
@@ -104,6 +104,29 @@ std::vector<uint8_t> SonarConfiguration::serialize() const {
   v.insert(v.end(), ptr, ptr + sizeof(OculusSimpleFireMessage));
   return v;
 }
+
+std::vector<uint8_t> SonarConfiguration::serializeFireMsg2() const {
+  _sfm.flags = _flags();
+
+  // As of right now, since OculusSimpleFireMessage and OculusSimpleFireMessage2
+  // have the same fields in the same order (but different length)
+  // Just memcpy and revise and necessary fields
+
+  OculusSimpleFireMessage2 sfm2;
+  memcpy(reinterpret_cast<void *>(&sfm2), 
+         reinterpret_cast<const void *>(&_sfm), 
+         sizeof(OculusSimpleFireMessage2));
+
+  // Rewrite any fields 
+  sfm2.head.msgVersion = 2;
+  sfm2.head.payloadSize = sizeof(OculusSimpleFireMessage2) - sizeof(OculusMessageHeader);
+
+  std::vector<uint8_t> v;
+  const auto ptr = reinterpret_cast<const char*>(&sfm2);
+  v.insert(v.end(), ptr, ptr + sizeof(OculusSimpleFireMessage2));
+  return v;
+}
+
 
 void SonarConfiguration::dump() const {
     LOG(INFO) << "Setting flags: 0x"
