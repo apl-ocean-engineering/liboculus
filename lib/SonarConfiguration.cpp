@@ -38,7 +38,13 @@
 
 namespace liboculus {
 
-SonarConfiguration::SonarConfiguration() {
+SonarConfiguration::SonarConfiguration()
+: _rangeAsMeters(true),
+  _sendGain(true),
+  _simpleReturn(true),
+  _gainAssistance(true),
+  _512beams(true),
+  _dataSize(OCULUS_8BIT) {
   memset(&_sfm, 0, sizeof(OculusSimpleFireMessage));
 
   // Fill in OculusMessageHeader _sfm.head
@@ -46,159 +52,151 @@ SonarConfiguration::SonarConfiguration() {
   _sfm.head.srcDeviceId = 0;
   _sfm.head.dstDeviceId = 0;                // n.b. ignored by device
   _sfm.head.msgId       = messageSimpleFire;
-  _sfm.head.msgVersion  = 1;
-  _sfm.head.payloadSize = sizeof(OculusSimpleFireMessage) - sizeof(OculusMessageHeader);
+  _sfm.head.msgVersion  = 2;
+  _sfm.head.payloadSize = sizeof(OculusSimpleFireMessage2) - sizeof(OculusMessageHeader);
 
   _sfm.masterMode = OCULUS_HIGH_FREQ;
   _sfm.pingRate = pingRateNormal;
   _sfm.networkSpeed = 0xff;  // uint8_t; can reduce network speed for bad links
   _sfm.gammaCorrection = 127;  // uint8_t; for 127, gamma = 0.5
 
-  _sfm.flags = _flags();   // Set to defaults
+  _sfm.flags = makeFlags();   // Set to defaults
 
-  _sfm.range = 2;  // 2 m; can be percent or meters, flag controlled
+  _sfm.rangePercent = 2;  // 2 m; can be percent or meters, flag controlled
   _sfm.gainPercent = 50;
   _sfm.speedOfSound = 0.0;  // m/s  0 to calculate SoS from salinity
   _sfm.salinity = 0.0;  // ppt; 0 for freshwater, 35 for seawater
 }
 
-void SonarConfiguration::setRange(double input) {
+SonarConfiguration &SonarConfiguration::setRange(double input) {
   // 40 meters is the max range for the 1200d model
   // may need to use a double instead of uint8_t (depends on flags)
   if (input <= 40 && input > 0) {
-    _sfm.range = input;
+    _sfm.rangePercent = input;
   } else {
     LOG(WARNING) << "Requested invalid range: " << input;
   }
+  return *this;
 }
 
-void SonarConfiguration::setGainPercent(double input) {
+SonarConfiguration &SonarConfiguration::setGainPercent(double input) {
   if (input <= 100 && input > 0) {
     _sfm.gainPercent = input;
   } else {
     LOG(WARNING) << "Requested invalid gain: " << input;
   }
+  return *this;
 }
 
-void SonarConfiguration::setGamma(int input) {
+SonarConfiguration &SonarConfiguration::setGamma(int input) {
   if (input <= 255 && input > 0) {
     _sfm.gammaCorrection = input;
   } else {
     LOG(WARNING) << "Requested invalid gamma: " << input;
   }
+  return *this;
 }
 
-void SonarConfiguration::setPingRate(PingRateType newRate) {
+SonarConfiguration &SonarConfiguration::setPingRate(PingRateType newRate) {
   _sfm.pingRate = newRate;
+  return *this;
 }
 
-void SonarConfiguration::setFreqMode(OculusFreqMode input) {
+SonarConfiguration &SonarConfiguration::setFreqMode(OculusFreqMode input) {
   _sfm.masterMode = input;
+  return *this;
 }
 
-std::vector<uint8_t> SonarConfiguration::serializeFireMsg() const {
-  _sfm.flags = _flags();
+SonarConfiguration &SonarConfiguration::setDataSize(OculusDataSize sz) {
+  _dataSize = sz;
+  return *this;
+}
+
+SonarConfiguration &SonarConfiguration::setRangeAsMeters(bool v) {
+  _rangeAsMeters = v;
+  return *this;
+}
+
+SonarConfiguration &SonarConfiguration::setSendGain(bool v) {
+  _sendGain = v;
+  return *this;
+}
+
+SonarConfiguration &SonarConfiguration::setSimpleReturn(bool v) {
+  _simpleReturn = v;
+  return *this;
+}
+
+SonarConfiguration &SonarConfiguration::setGainAssistance(bool v) {
+  _gainAssistance = v;
+  return *this;
+}
+
+SonarConfiguration &SonarConfiguration::set512Beams(bool v) {
+  _512beams = v;
+  return *this;
+}
+
+
+//== Serialization functions
+
+std::vector<uint8_t> SonarConfiguration::serializeFireMsg2() const {
+  _sfm.flags = makeFlags();
 
   std::vector<uint8_t> v;
   const auto ptr = reinterpret_cast<const char*>(&_sfm);
-  v.insert(v.end(), ptr, ptr + sizeof(OculusSimpleFireMessage));
+  v.insert(v.end(), ptr, ptr + sizeof(OculusSimpleFireMessage2));
   return v;
 }
 
-std::vector<uint8_t> SonarConfiguration::serializeFireMsg2() const {
-  _sfm.flags = _flags();
+std::vector<uint8_t> SonarConfiguration::serializeFireMsg() const {
+  _sfm.flags = makeFlags();
 
   // As of right now, since OculusSimpleFireMessage and OculusSimpleFireMessage2
   // have the same fields in the same order (but different length)
   // Just memcpy and revise and necessary fields
 
-  OculusSimpleFireMessage2 sfm2;
-  memcpy(reinterpret_cast<void *>(&sfm2), 
+  OculusSimpleFireMessage sfm;
+  memcpy(reinterpret_cast<void *>(&sfm), 
          reinterpret_cast<const void *>(&_sfm), 
-         sizeof(OculusSimpleFireMessage2));
+         sizeof(OculusSimpleFireMessage));
 
-  // Rewrite any fields 
-  sfm2.head.msgVersion = 2;
-  sfm2.head.payloadSize = sizeof(OculusSimpleFireMessage2) - sizeof(OculusMessageHeader);
+  // Rewrite any fields which are different between SimpleFireMessage and SimpleFireMessage2
+  sfm.head.msgVersion = 1;
+  sfm.head.payloadSize = sizeof(OculusSimpleFireMessage) - sizeof(OculusMessageHeader);
 
   std::vector<uint8_t> v;
-  const auto ptr = reinterpret_cast<const char*>(&sfm2);
-  v.insert(v.end(), ptr, ptr + sizeof(OculusSimpleFireMessage2));
+  const auto ptr = reinterpret_cast<const char*>(&sfm);
+  v.insert(v.end(), ptr, ptr + sizeof(OculusSimpleFireMessage));
   return v;
+}
+
+uint8_t SonarConfiguration::makeFlags() const {
+  return (_rangeAsMeters  ? FlagBits::RangeAsMeters : 0 ) |
+         ((_dataSize == OCULUS_16BIT) ? FlagBits::Data16Bits : 0) |
+         (_sendGain       ? FlagBits::DoSendGain : 0) |
+         (_simpleReturn   ? FlagBits::SimpleReturn : 0) |
+         (_gainAssistance ? FlagBits::GainAssistance : 0) |
+         (_512beams       ? FlagBits::Do512Beams : 0);
 }
 
 
 void SonarConfiguration::dump() const {
+    auto flags = makeFlags();
+
     LOG(INFO) << "Setting flags: 0x"
             << std::hex << std::setw(2) << std::setfill('0')
-            << static_cast<unsigned int>(flags()())
+            << static_cast<unsigned int>(flags)
             << std::dec << std::setw(0)
-            << "\n   range is meters " << flags().getRangeAsMeters()
-            << "\n   data is 16 bit  " << flags().getData16Bit()
-            << "\n   send gain       " << flags().getSendGain()
-            << "\n   simple return   " << flags().getSimpleReturn()
-            << "\n   gain assistance " << flags().getGainAssistance()
-            << "\n   use 512 beams   " << flags().get512Beams();
+            << "\n   range is meters " << getRangeAsMeters()
+            << "\n   data size       " << "(undefined)"
+            << "\n   send gain       " << getSendGain()
+            << "\n   simple return   " << getSimpleReturn()
+            << "\n   gain assistance " << getGainAssistance()
+            << "\n   use 512 beams   " << get512Beams();
 }
 
 
-// ====  ====
 
-OculusSimpleFireFlags::OculusSimpleFireFlags()
-  : _rangeAsMeters(true),
-    _16bitData(false),
-    _sendGain(true),
-    _simpleReturn(true),
-    _gainAssistance(true),
-    _512beams(true)
-{}
-
-OculusSimpleFireFlags::OculusSimpleFireFlags(uint8_t flags) {
-  setRangeAsMeters(flags & RangeAsMeters);
-  setData16Bit(flags & Data16Bits);
-  setSendGain(flags & DoSendGain);
-  setSimpleReturn(flags & SimpleReturn);
-  setGainAssistance(flags & GainAssistance);
-  set512Beams(flags & Do512Beams);
-}
-
-uint8_t OculusSimpleFireFlags::operator()() const {
-  return (_rangeAsMeters ? RangeAsMeters : 0 ) |
-         (_16bitData     ? Data16Bits : 0) |
-         (_sendGain      ? DoSendGain : 0) |
-         (_simpleReturn  ? SimpleReturn : 0) |
-         (_gainAssistance ? GainAssistance : 0) |
-         (_512beams      ? Do512Beams : 0);
-}
-
-  OculusSimpleFireFlags &OculusSimpleFireFlags::setRangeAsMeters(bool v) {
-    _rangeAsMeters = v;
-    return *this;
-  }
-
-  OculusSimpleFireFlags &OculusSimpleFireFlags::setData16Bit(bool v) {
-    _16bitData = v;
-    return *this;
-  }
-
-  OculusSimpleFireFlags &OculusSimpleFireFlags::setSendGain(bool v) {
-    _sendGain = v;
-    return *this;
-  }
-
-  OculusSimpleFireFlags &OculusSimpleFireFlags::setSimpleReturn(bool v) {
-    _simpleReturn = v;
-    return *this;
-  }
-
-  OculusSimpleFireFlags &OculusSimpleFireFlags::setGainAssistance(bool v) {
-    _gainAssistance = v;
-    return *this;
-  }
-
-  OculusSimpleFireFlags &OculusSimpleFireFlags::set512Beams(bool v) {
-    _512beams = v;
-    return *this;
-  }
 
 }  // namespace liboculus

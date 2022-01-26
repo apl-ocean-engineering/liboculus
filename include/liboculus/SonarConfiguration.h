@@ -37,99 +37,117 @@
 
 namespace liboculus {
 
-
-class OculusSimpleFireFlags {
+struct FlagBits {
   // bit 0: 0 = interpret range as percent, 1 = interpret range as meters
   // bit 1: 0 = 8 bit data, 1 = 16 bit data
   // bit 2: 0 = wont send gain, 1 = send gain
   // bit 3: 0 = send full return message, 1 = send simple return message
   // bit 4: "gain assistance"?
   // bit 6: use 512 beams (vs 256): email from Blueprint said to set flags |= 0x40
-static const uint8_t RangeAsMeters = (0x01) << 0;
-static const uint8_t Data16Bits    = (0x01) << 1;
-static const uint8_t DoSendGain    = (0x01) << 2;
-static const uint8_t SimpleReturn  = (0x01) << 3;
-static const uint8_t GainAssistance = (0x01) << 4;
-static const uint8_t Do512Beams    = (0x01) << 6;
 
- public:
-  OculusSimpleFireFlags();
-  OculusSimpleFireFlags(uint8_t flags);
-
-  // Serialize values
-  uint8_t operator()() const;
-
-  OculusSimpleFireFlags &setRangeAsMeters(bool v);
-  OculusSimpleFireFlags &setData16Bit(bool v);
-  OculusSimpleFireFlags &setSendGain(bool v);
-  OculusSimpleFireFlags &setSimpleReturn(bool v);
-  OculusSimpleFireFlags &setGainAssistance(bool v);
-  OculusSimpleFireFlags &set512Beams(bool v);
-
-  bool getRangeAsMeters() const           { return _rangeAsMeters; }
-  bool getSendGain() const                { return _sendGain; }
-  bool getData16Bit() const               { return _16bitData; }
-  bool getSimpleReturn() const            { return _simpleReturn; }
-  bool getGainAssistance() const          { return _gainAssistance; }
-  bool get512Beams() const                { return _512beams;}
-
-  // Convenient setters
-  OculusSimpleFireFlags &rangeAsMeters()  { return setRangeAsMeters(true); }
-  OculusSimpleFireFlags &rangeAsPercent() { return setRangeAsMeters(false); }
-  OculusSimpleFireFlags &data8Bit()       { return setData16Bit(false); }
-  OculusSimpleFireFlags &data16Bit()      { return setData16Bit(true); }
-  OculusSimpleFireFlags &sendGain()       { return setSendGain(true); }
-  OculusSimpleFireFlags &dontSendGain()   { return setSendGain(false); }
-  OculusSimpleFireFlags &use256Beams()    { return set512Beams(false); }
-  OculusSimpleFireFlags &use512Beams()    { return set512Beams(true); }
-  OculusSimpleFireFlags &gainAssistance() { return setGainAssistance(true); }
-  OculusSimpleFireFlags &noGainAssistance() { return setGainAssistance(false); }
-
- protected:
-
-  OculusSimpleFireFlags &setBit(uint8_t bit, bool v);
-
-  bool _rangeAsMeters;
-  bool _16bitData;
-  bool _sendGain;
-  bool _simpleReturn;
-  bool _gainAssistance;
-  bool _512beams;
+  static const uint8_t RangeAsMeters = (0x01) << 0;
+  static const uint8_t Data16Bits    = (0x01) << 1;
+  static const uint8_t DoSendGain    = (0x01) << 2;
+  static const uint8_t SimpleReturn  = (0x01) << 3;
+  static const uint8_t GainAssistance = (0x01) << 4;
+  static const uint8_t Do512Beams    = (0x01) << 6;
 };
 
+// This class used to be both a way to store state and
+// deserializer.  But it got awkward, so now it's 
+// *only* a parser of flag bytes (does no allow setting)
+// configuration is stored outside of the bitfield in
+// SonarConfiguration, and the flag byte is made just-in-time
+class OculusSimpleFireFlags {
+ public:
+    OculusSimpleFireFlags() = delete;
+    OculusSimpleFireFlags( const uint8_t flags )
+    : _data(flags) {;}
+
+    bool getRangeAsMeters() const           { return _data & FlagBits::RangeAsMeters; }
+    bool getSendGain() const                { return _data & FlagBits::DoSendGain; }
+    bool getData16Bit() const               { return _data & FlagBits::Data16Bits; }
+    bool getSimpleReturn() const            { return _data & FlagBits::SimpleReturn; }
+    bool getGainAssistance() const          { return _data & FlagBits::GainAssistance; }
+    bool get512Beams() const                { return _data & FlagBits::Do512Beams;}
+
+ private:
+    uint8_t _data;
+};
 
 // Thin OO wrapper around the OculusSimpleFireMessage.
 class SonarConfiguration {
  public:
+
   SonarConfiguration();
 
   std::vector<uint8_t> serializeFireMsg() const;
   std::vector<uint8_t> serializeFireMsg2() const;
 
   // Setter functions
-  void setGamma(int input);
-  void setPingRate(PingRateType newRate);
-  void setGainPercent(double input);
-  void setRange(double input);
-  void setFlags(uint8_t flags);
-  void setWaterTemperature(double degC);
+  SonarConfiguration &setGamma(int input);
+  SonarConfiguration &setPingRate(PingRateType newRate);
+  SonarConfiguration &setGainPercent(double input);
+  SonarConfiguration &setRange(double input);
+  SonarConfiguration &setFlags(uint8_t flags);
+  SonarConfiguration &setWaterTemperature(double degC);
 
   typedef enum {
     OCULUS_LOW_FREQ = 1,
     OCULUS_HIGH_FREQ = 2
   } OculusFreqMode;
 
-  void setFreqMode(OculusFreqMode input);
+  SonarConfiguration &setFreqMode(OculusFreqMode input);
 
-  OculusSimpleFireFlags &flags() { return _flags; }
-  const OculusSimpleFireFlags &flags() const { return _flags; }
+  typedef enum {
+    OCULUS_8BIT = 0,
+    OCULUS_16BIT = 1,
+    OCULUS_32BIT = 2
+  } OculusDataSize;
 
+  SonarConfiguration &setDataSize(OculusDataSize sz);
+
+  SonarConfiguration &setRangeAsMeters(bool v);
+  SonarConfiguration &rangeAsMeters()  { return setRangeAsMeters(true); }
+  SonarConfiguration &rangeAsPercent() { return setRangeAsMeters(false); }
+
+  SonarConfiguration &setSendGain(bool v);
+  SonarConfiguration &sendGain()       { return setSendGain(true); }
+  SonarConfiguration &dontSendGain()   { return setSendGain(false); }
+
+  SonarConfiguration &setSimpleReturn(bool v);
+
+  SonarConfiguration &setGainAssistance(bool v);
+  SonarConfiguration &gainAssistance() { return setGainAssistance(true); }
+  SonarConfiguration &noGainAssistance() { return setGainAssistance(false); }
+
+  SonarConfiguration &set512Beams(bool v);
+  SonarConfiguration &use256Beams()    { return set512Beams(false); }
+  SonarConfiguration &use512Beams()    { return set512Beams(true); }
+
+  bool getRangeAsMeters() const           { return _rangeAsMeters; }
+  bool getSendGain() const                { return _sendGain; }
+  //bool getData16Bit() const               { return _16bitData; }
+  bool getSimpleReturn() const            { return _simpleReturn; }
+  bool getGainAssistance() const          { return _gainAssistance; }
+  bool get512Beams() const                { return _512beams;}
 
   void dump() const;
 
  private:
-  OculusSimpleFireFlags _flags;
-  mutable OculusSimpleFireMessage _sfm;
+
+  uint8_t makeFlags() const;
+
+  mutable OculusSimpleFireMessage2 _sfm;
+
+  bool _rangeAsMeters;
+  bool _sendGain;
+  bool _simpleReturn;
+  bool _gainAssistance;
+  bool _512beams;
+
+  OculusDataSize _dataSize;
+
 };  // class SonarConfiguration
 
 }  // namespace liboculus
