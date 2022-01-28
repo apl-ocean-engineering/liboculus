@@ -93,7 +93,7 @@ bool RawSonarPlayer::nextPing() {
     skipped_bytes++;
     if (_input.eof()) {
       LOG(DEBUG) << "No packets before the end of the file";
-      return false; //tl::make_unexpected(false);
+      return false;
     }
   }
 
@@ -103,18 +103,22 @@ bool RawSonarPlayer::nextPing() {
   _input.get(reinterpret_cast<char *>(buffer->data()), sizeof(MessageHeader));
 
   MessageHeader header(buffer);
-  if (!header.valid()) return false; //tl::make_unexpected(false);
-
-  if (header.msgId() != messageSimplePingResult) {
-    LOG(DEBUG) << "Skipping message of type " << MessageTypeToString(header.msgId());
-    tl::make_unexpected(true);
-  }
+  if (!header.valid()) return false;
 
   // Read the rest of the data
   buffer->resize(header.packetSize());
   _input.get(reinterpret_cast<char *>(buffer->data()[sizeof(MessageHeader)]),header.payloadSize());
-  return true; //SimplePingResult<PingV1>(buffer);
+
+  if (header.msgId() == messageSimplePingResult) {
+    if (header.msgVersion() == 2) {
+      callback(SimplePingResultV2(buffer));
+    } else {
+      callback(SimplePingResultV1(buffer));
+    }    
+  }
+
+  return true; 
 }
 
 
-} // namespace liboculus
+}  // namespace liboculus
