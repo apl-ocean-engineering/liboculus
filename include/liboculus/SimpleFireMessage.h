@@ -81,7 +81,6 @@ SimpleFireMessage<FireMsgT>::SimpleFireMessage(const std::shared_ptr<ByteVector>
 
 template<typename FireMsgT>
 void SimpleFireMessage<FireMsgT>::dump() const {
-  LOG(DEBUG) << "--------------";
   MessageHeader::dump();
 
   LOG(DEBUG) << "        Mode: " << FreqModeToString(this->fireMsg()->masterMode);
@@ -94,7 +93,6 @@ void SimpleFireMessage<FireMsgT>::dump() const {
   }
 
   LOG(DEBUG) << "   Send gain: " << (this->flags().getSendGain() ? "Yes" : "No");
-  LOG(DEBUG) << "--------------";
 }
 
 }  // namespace liboculus

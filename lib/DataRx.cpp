@@ -203,111 +203,70 @@ if (bytes_transferred != (sizeof(OculusMessageHeader)-sizeof(uint16_t))) {
 
   LOG(DEBUG) << "Got message ID " <<  static_cast<int>(hdr.msgId()) << " (" << MessageTypeToString(hdr.msgId()) << ")";
 
-  hdr.dump();
+  //hdr.dump();
 
   const auto packetSize = hdr.packetSize();
-  const auto id = hdr.msgId();
-  if ((id == messageSimpleFire) ||
-      (id == messagePingResult) ||
-      (id == messageUserConfig) ||
-      (id == messageDummy)) {
-    // I think these messages are exclusively user -> sonar
-    // so we should never receive them from the sonar
-    readUpTo(packetSize,
-              boost::bind(&DataRx::rxIgnoredData, this, _1, _2));
-  } else if (id == messageSimplePingResult) {
-    readUpTo(packetSize,
-              boost::bind(&DataRx::rxSimplePingResult, this, _1, _2));
-  } else if (id == messageLogs) {
-    readUpTo(packetSize,
-              boost::bind(&DataRx::rxMessageLogs, this, _1, _2));
-  } else {
-    LOG(WARNING) << "Not sure how to handle message ID " << static_cast<int>(hdr.msgId());
-    restartReceiveCycle();
-  }
+  readUpTo(packetSize, boost::bind(&DataRx::rxPacket, this, _1, _2));
 
 }
 
-void DataRx::rxSimplePingResult(const boost::system::error_code& ec,
+void DataRx::rxPacket(const boost::system::error_code& ec,
                                   std::size_t bytes_transferred) {
   MessageHeader hdr(_buffer);
 
   if (ec) {
-    LOG(WARNING) << "Error on receive of simplePingResult: " << ec.message();
+    LOG(WARNING) << "Error on receive of packet data: " << ec.message();
     goto exit;
   }
 
-  // \todo Reduce DRY
-  if ((hdr.msgVersion() == 1) || (hdr.msgVersion() == 0)) {
-    if (bytes_transferred <= (sizeof(SimplePingResultV1)-sizeof(OculusMessageHeader))) {
-        LOG(WARNING) << "Received short header of " << bytes_transferred;
-        goto exit;
-    }
+  if (bytes_transferred < hdr.payloadSize()) {
+    LOG(WARNING) << "Received short header of " << bytes_transferred << ", expected " << hdr.payloadSize();
+    goto exit;
+  }
 
-    SimplePingResultV1 ping(_buffer);
+  if (hdr.msgId() == messageSimplePingResult) {
 
-    if (ping.valid()) {
-        if (bytes_transferred < ping.payloadSize()) {
-            LOG(WARNING) << "Did not read full data packet, resetting...";
-            goto exit;
-        }
+    if ((hdr.msgVersion() == 1) || (hdr.msgVersion() == 0)) {
+      SimplePingResultV1 ping(_buffer);
+
+      if (ping.valid()) {
+          if (bytes_transferred < ping.payloadSize()) {
+              LOG(WARNING) << "Did not read full data packet, resetting...";
+              goto exit;
+          }
+
+          callback(ping);
+      } else {
+          LOG(WARNING) << "Incoming packet invalid";
+      }
+    } else if (hdr.msgVersion() == 2) {
+      SimplePingResultV2 ping(_buffer);
+
+      if (ping.valid()) {
+          if (bytes_transferred < ping.payloadSize()) {
+              LOG(WARNING) << "Did not read full data packet, resetting...";
+              goto exit;
+          }
 
         callback(ping);
-    } else {
+      } else {
         LOG(WARNING) << "Incoming packet invalid";
-    }
-  } else if (hdr.msgVersion() == 2) {
-    if (bytes_transferred <= (sizeof(SimplePingResultV2)-sizeof(OculusMessageHeader))) {
-        LOG(WARNING) << "Received short header of " << bytes_transferred;
-        goto exit;
-    }
-
-    SimplePingResultV2 ping(_buffer);
-
-    if (ping.valid()) {
-        if (bytes_transferred < ping.payloadSize()) {
-            LOG(WARNING) << "Did not read full data packet, resetting...";
-            goto exit;
-        }
-
-      callback(ping);
+      }
     } else {
-      LOG(WARNING) << "Incoming packet invalid";
+      LOG(WARNING) << "Unknown message version " << hdr.msgVersion() << " ignoring";
     }
+
+
+  } else if (hdr.msgId() == messageLogs) {
+    LOG(DEBUG) << "Received " << bytes_transferred << " of LogMessage data";
+    LOG(INFO) << std::string(_buffer->begin()+sizeof(OculusMessageHeader), _buffer->end());
   } else {
-    LOG(WARNING) << "Unknown message version " << hdr.msgVersion() << " ignoring";
+    LOG(WARNING) << "Ignoring message id " << static_cast<int>(hdr.msgId());
   }
 
 exit:
   restartReceiveCycle();
 }
 
-void DataRx::rxMessageLogs(const boost::system::error_code& ec,
-                                  std::size_t bytes_transferred) {
-  if (ec) {
-    LOG(WARNING) << "Error on receive of rxMessageLogs: " << ec.message();
-    goto exit;
-  }
-
-  LOG(DEBUG) << "Received " << bytes_transferred << " of LogMessage data";
-  LOG(INFO) << std::string(_buffer->begin()+sizeof(OculusMessageHeader), _buffer->end());
-
-exit:
-  restartReceiveCycle();
-
-}
-
-void DataRx::rxIgnoredData(const boost::system::error_code& ec,
-                                  std::size_t bytes_transferred) {
-  if (ec) {
-    LOG(WARNING) << "Error on receive of rxIgnoredData: " << ec.message();
-    goto exit;
-  }
-
-  LOG(DEBUG) << "Ignoring " << bytes_transferred << " of data";
-
-exit:
-  restartReceiveCycle();
-}
 
 }  // namespace liboculus

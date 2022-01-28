@@ -75,7 +75,7 @@ class DataRx : public OculusMessageHandler {
  private:
   void onConnect(const boost::system::error_code& error);
 
-  // Initiates another network read.
+  // Initiates a network read.
   // Note this function reads until the **total number of bytes
   // in _buffer == bytes**   The actual number of bytes requested
   // from the network depends on the size of _buffer at the start
@@ -97,14 +97,10 @@ class DataRx : public OculusMessageHandler {
   void rxHeader(const boost::system::error_code& ec,
                   std::size_t bytes_transferred);
 
-  void rxSimplePingResult(const boost::system::error_code& ec,
-                            std::size_t bytes_transferred);
+  void rxPacket(const boost::system::error_code& ec,
+                  std::size_t bytes_transferred);
 
-  void rxIgnoredData(const boost::system::error_code& ec,
-                            std::size_t bytes_transferred);
 
-  void rxMessageLogs(const boost::system::error_code& ec,
-                            std::size_t bytes_transferred);
 
   boost::asio::ip::tcp::socket _socket;
 

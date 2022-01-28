@@ -173,6 +173,7 @@ bool SimplePingResult<Ping_t>::valid() const {
 
 template<typename Ping_t>
 void SimplePingResult<Ping_t>::dump() const {
+  LOG(DEBUG) << "--------------";
   SimpleFireMsg_t::dump();
 
   LOG(DEBUG) << "     Ping ID: " << this->ping()->pingId;
