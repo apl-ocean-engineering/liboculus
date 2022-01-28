@@ -75,8 +75,8 @@ class SimplePingResult : public SimpleFireMessage<typename Ping_t::FireMsg_t> {
   const Ping_t *ping() const;
 
   const BearingData &bearings() const { return _bearings; }
-  const GainData_t &gains() const     { return _gains; }
-  const ImageData &image() const      { return _image; }
+  const GainData_t  &gains() const     { return _gains; }
+  const ImageData   &image() const      { return _image; }
 
   uint8_t dataSize() const { return SizeOfDataSize(ping()->dataSize); }
 
@@ -106,7 +106,7 @@ SimplePingResult<Ping_t>::SimplePingResult(const std::shared_ptr<ByteVector> &bu
 
   // Bearing data is packed into an array of shorts at the end of the
   // OculusSimpleFireMessage
-  const int16_t *bearingData = reinterpret_cast<const short*>(buffer->data() + sizeof(OculusSimplePingResult));
+  const int16_t *bearingData = reinterpret_cast<const short*>(buffer->data() + sizeof(Ping_t));
   _bearings = BearingData(bearingData, this->ping()->nBeams);
 
   const uint8_t *imageData = reinterpret_cast<const uint8_t*>(buffer->data() + ping()->imageOffset);

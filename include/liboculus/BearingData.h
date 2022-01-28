@@ -65,6 +65,14 @@ class BearingData {
     return deg2rad(at(i));
   }
 
+  float front() const {
+    return _data[0];
+  }
+
+  float back() const {
+    return _data[_numBeams-1];
+  }
+
  private:
   const int16_t *_data;
   uint16_t _numBeams;

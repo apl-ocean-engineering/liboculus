@@ -70,6 +70,8 @@ class GainData {
     return _data[index];
   }
 
+  T operator[](unsigned int i) const { return at(i); }
+
  private:
   const T *_data;
   size_t _stride, _numRanges;
