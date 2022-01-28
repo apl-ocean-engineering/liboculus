@@ -28,39 +28,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "liboculus/OculusMessageHandler.h"
 
-#include "liboculus/SimplePingResult.h"
-#include "liboculus/SonarConfiguration.h"
 
 namespace liboculus {
 
-// \TODO develop better API for exposing results
-template<typename PingT>
-bool checkPingAgreesWithConfig( const SimplePingResult<PingT> &ping,
-                                const SonarConfiguration &config ) {
-    OculusSimpleFireFlags flags(ping.fireMsg()->flags);
-
-    const auto nBeams = ping.ping()->nBeams;
-    const auto nRanges = ping.ping()->nRanges;
-    const auto dataSize = ping.ping()->dataSize;
-
-    if (config.get512Beams()) {
-        if (nBeams != 512) {
-            LOG(WARNING) << "Config expects 512 beams, ping has " << nBeams;
-        }
-    } else {
-        if (nBeams != 256) {
-            LOG(WARNING) << "Config expects 256 beams, ping has " << nBeams;
-        }
-    }
-
-    // Check data size
-    if (config.getDataSize() != dataSize) {
-        LOG(WARNING) << "Config expected " << 8*SizeOfDataSize(config.getDataSize()) << " bit data, data is " << 8*SizeOfDataSize(dataSize) << " bit";
-    }
-
-    return true;
+template <>
+void OculusMessageHandler::setCallback<SimplePingResultV1>(SimplePingCallback callback) {
+  _simplePingCallback = callback;
 }
 
-}  // namespace liboculus
+template <>
+void OculusMessageHandler::setCallback<SimplePingResultV2>(SimplePing2Callback callback) {
+  _simplePing2Callback = callback;
+}
+
+template<>
+void OculusMessageHandler::callback<SimplePingResultV1>(const SimplePingResultV1 &data) {
+    if (_simplePingCallback) _simplePingCallback(data);
+}
+
+template<>
+void OculusMessageHandler::callback<SimplePingResultV2>(const SimplePingResultV2 &data) {
+    if (_simplePing2Callback) _simplePing2Callback(data);
+}
+
+
+};   // namespace liboculus

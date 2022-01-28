@@ -46,10 +46,10 @@ class ImageData {
  public:
   ImageData() 
     : _data(nullptr),
+      _dataSize(0),
       _imageSize(0),
       _numRanges(0),
       _numBeams(0),
-      _dataSize(0),
       _stride(0),
       _offset(0) {}
 
@@ -62,13 +62,13 @@ class ImageData {
             uint8_t dataSize,
             uint16_t stride = 0,
             uint16_t offset = 0 )
-    : _data(data), 
-      _imageSize( imageSize ),
-      _numRanges( nRanges ),
-      _numBeams( nBeams ),
-      _dataSize( dataSize ),
-      _stride( stride == 0 ? nBeams*dataSize : stride ),  // Stride is in _bytes_
-      _offset( offset ) {}
+    : _data(data),
+      _dataSize(dataSize),
+      _imageSize(imageSize),
+      _numRanges(nRanges),
+      _numBeams(nBeams),
+      _stride(stride == 0 ? nBeams*dataSize : stride),  // Stride is in _bytes_
+      _offset(offset) {}
 
 
   uint8_t at_uint8(unsigned int beam, unsigned int rangeBin) const {
@@ -99,9 +99,9 @@ class ImageData {
 
  private:
   const uint8_t *_data;
+  uint8_t _dataSize;
   uint32_t _imageSize;
   size_t _numRanges, _numBeams, _stride, _offset;
-  uint8_t _dataSize;
 };  // class ImageData
 
 }  // namespace liboculus

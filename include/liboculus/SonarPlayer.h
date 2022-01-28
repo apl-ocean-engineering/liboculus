@@ -35,12 +35,13 @@
 
 #include "liboculus/SimplePingResult.h"
 #include "liboculus/expected.hpp"
+#include "liboculus/OculusMessageHandler.h"
 
 namespace liboculus {
 
-class SonarPlayerBase {
+class SonarPlayerBase : public OculusMessageHandler {
 public:
-  typedef tl::expected<SimplePingResult<PingV1>, bool> SonarPlayerResult_t;
+  //typedef tl::expected<SimplePingResult<PingV1>, bool> SonarPlayerResult_t;
 
   SonarPlayerBase()           {;}
   virtual ~SonarPlayerBase()  {;}
@@ -55,7 +56,7 @@ public:
   virtual void rewind()
     { _input.seekg(0); }
 
-  virtual SonarPlayerResult_t nextPing() = 0;
+  virtual bool nextPing() = 0;
 
   static std::shared_ptr<SonarPlayerBase> OpenFile(const std::string &filename);
 
@@ -80,7 +81,7 @@ class RawSonarPlayer : public SonarPlayerBase {
   virtual ~RawSonarPlayer()
     {;}
 
-  SonarPlayerBase::SonarPlayerResult_t nextPing() override;
+  bool nextPing() override;
 
  private:
 };

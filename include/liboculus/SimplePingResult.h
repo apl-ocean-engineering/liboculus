@@ -43,7 +43,7 @@
 #include "liboculus/ImageData.h"
 
 #include "Oculus/Oculus.h"
-#include "liboculus/MessageHeader.h"
+#include "liboculus/SimpleFireMessage.h"
 #include "liboculus/SonarConfiguration.h"
 
 namespace liboculus {
@@ -59,21 +59,11 @@ using std::vector;
 // Conveniently the OculusSimplePingResult and OculusSimplePingResult2
 // structs have the same fields, but a different structure
 
-struct PingV1 {
-  typedef OculusSimplePingResult  Ping_t;
-  typedef OculusSimpleFireMessage FireMsg_t;
-};
-
-struct PingV2 {
-  typedef OculusSimplePingResult2  Ping_t;
-  typedef OculusSimpleFireMessage2 FireMsg_t;
-};
-
-
-template <typename PingT = PingV1>
-class SimplePingResult : public MessageHeader {
+template <typename Ping_t>
+class SimplePingResult : public SimpleFireMessage<typename Ping_t::FireMsg_t> {
  public:
-  typedef GainData<int32_t> GainData_t;
+  typedef SimpleFireMessage<typename Ping_t::FireMsg_t> SimpleFireMsg_t;
+  typedef GainData<float> GainData_t;
 
   SimplePingResult() = default;
   SimplePingResult(const SimplePingResult &other) = default;
@@ -82,17 +72,7 @@ class SimplePingResult : public MessageHeader {
 
   ~SimplePingResult() {}
 
-  const typename PingT::FireMsg_t *fireMsg() const {
-      return reinterpret_cast<const typename PingT::FireMsg_t *>(_buffer->data());
-  }
-
-  const typename PingT::Ping_t *ping() const  {
-    return reinterpret_cast<const typename PingT::Ping_t *>(_buffer->data());
-  }
-
-  const OculusSimpleFireFlags &flags() const {
-    return _flags;
-  }
+  const Ping_t *ping() const;
 
   const BearingData &bearings() const { return _bearings; }
   const GainData_t &gains() const     { return _gains; }
@@ -104,29 +84,25 @@ class SimplePingResult : public MessageHeader {
   void dump() const override;
 
  private:
-  OculusSimpleFireFlags _flags;
-
   // Objects which create OOI overlays the _buffer for  easier interpretation
   BearingData _bearings;
 
   GainData_t _gains;
   ImageData _image;
-
 };  // class SimplePingResult
 
 
-typedef SimplePingResult<PingV1> SimplePingResultV1;
-typedef SimplePingResult<PingV2> SimplePingResultV2;
+typedef SimplePingResult<OculusSimplePingResult> SimplePingResultV1;
+typedef SimplePingResult<OculusSimplePingResult2> SimplePingResultV2;
 
 
-template<typename PingT>
-SimplePingResult<PingT>::SimplePingResult(const std::shared_ptr<ByteVector> &buffer)
-  : MessageHeader(buffer),
-  _flags(this->fireMsg()->flags),
-  _bearings(),
-  _gains(),
-  _image() {
-  assert(buffer->size() >= sizeof(OculusSimplePingResult));
+template<typename Ping_t>
+SimplePingResult<Ping_t>::SimplePingResult(const std::shared_ptr<ByteVector> &buffer)
+  : SimpleFireMsg_t(buffer),
+    _bearings(),
+    _gains(),
+    _image() {
+    assert(buffer->size() >= sizeof(Ping_t));
 
   // Bearing data is packed into an array of shorts at the end of the
   // OculusSimpleFireMessage
@@ -135,7 +111,7 @@ SimplePingResult<PingT>::SimplePingResult(const std::shared_ptr<ByteVector> &buf
 
   const uint8_t *imageData = reinterpret_cast<const uint8_t*>(buffer->data() + ping()->imageOffset);
 
-  if (_flags.getSendGain()) { 
+  if (this->flags().getSendGain()) { 
     // If sent, the gain is included as the first 4 bytes in each "row" of data 
     const uint16_t offsetBytes = 4;
 
@@ -151,7 +127,7 @@ SimplePingResult<PingT>::SimplePingResult(const std::shared_ptr<ByteVector> &buf
 
     _gains = GainData_t(reinterpret_cast<const GainData_t::DataType *>(imageData),
                           this->ping()->imageSize,
-                          strideBytes, 
+                          strideBytes,
                           this->ping()->nRanges);
   } else {
     _image = ImageData(imageData,
@@ -162,13 +138,17 @@ SimplePingResult<PingT>::SimplePingResult(const std::shared_ptr<ByteVector> &buf
   }
 }
 
-template<typename PingT>
-bool SimplePingResult<PingT>::valid() const {
-  if (_buffer->size() < sizeof(OculusMessageHeader)) return false;
-  if (_buffer->size() < packetSize()) return false;
+template<typename Ping_t>
+const Ping_t *SimplePingResult<Ping_t>::ping() const {
+  return reinterpret_cast<const Ping_t *>(this->buffer()->data());
+}
 
-  MessageHeader hdr(_buffer);
-  if (!hdr.valid()) {
+template<typename Ping_t>
+bool SimplePingResult<Ping_t>::valid() const {
+  if (this->buffer()->size() < sizeof(OculusMessageHeader)) return false;
+  if (this->buffer()->size() < this->packetSize()) return false;
+
+  if (!MessageHeader::valid()) {
     LOG(WARNING) << "Header not valid";
     return false;
   }
@@ -176,7 +156,7 @@ bool SimplePingResult<PingT>::valid() const {
   int num_pixels = ping()->nRanges * ping()->nBeams;
   size_t expected_size = SizeOfDataSize(ping()->dataSize) * num_pixels;
 
-  if (flags().getSendGain()) {
+  if (this->flags().getSendGain()) {
     expected_size += sizeof(uint32_t) * ping()->nRanges;
   }
 
@@ -191,18 +171,9 @@ bool SimplePingResult<PingT>::valid() const {
   return true;
 }
 
-template<typename PingT>
-void SimplePingResult<PingT>::dump() const {
-  LOG(DEBUG) << "--------------";
-  MessageHeader::dump();
-  LOG(DEBUG) << "        Mode: " << FreqModeToString(this->fireMsg()->masterMode);
-
-  const int pingRate = PingRateToHz(this->fireMsg()->pingRate);
-  if (pingRate >= 0 ) {
-    LOG(DEBUG) << "   Ping rate: " << pingRate;
-  } else {
-    LOG(DEBUG) << "   Ping rate: (unknown) " << static_cast<int>(this->fireMsg()->pingRate);
-  }
+template<typename Ping_t>
+void SimplePingResult<Ping_t>::dump() const {
+  SimpleFireMsg_t::dump();
 
   LOG(DEBUG) << "     Ping ID: " << this->ping()->pingId;
   LOG(DEBUG) << "      Status: " << this->ping()->status;
@@ -220,7 +191,6 @@ void SimplePingResult<PingT>::dump() const {
   LOG(DEBUG) << "  Image size: " << this->ping()->imageSize;
   LOG(DEBUG) << "Image offset: " << this->ping()->imageOffset;
   LOG(DEBUG) << "   Data size: " << DataSizeToString(this->ping()->dataSize);
-  LOG(DEBUG) << "   Send gain: " << (this->flags().getSendGain() ? "Yes" : "No");
   LOG(DEBUG) << "Message size: " << this->ping()->messageSize;
   LOG(DEBUG) << "--------------";
 }

@@ -32,6 +32,7 @@
 #include <iomanip>
 
 #include "liboculus/SonarConfiguration.h"
+#include "liboculus/DataTypes.h"
 
 #include <boost/asio.hpp>
 #include <g3log/g3log.hpp>
@@ -44,7 +45,7 @@ SonarConfiguration::SonarConfiguration()
   _simpleReturn(true),
   _gainAssistance(true),
   _512beams(true),
-  _dataSize(OCULUS_8BIT) {
+  _dataSize(dataSize8Bit) {
   memset(&_sfm, 0, sizeof(OculusSimpleFireMessage));
 
   // Fill in OculusMessageHeader _sfm.head
@@ -60,7 +61,7 @@ SonarConfiguration::SonarConfiguration()
   _sfm.networkSpeed = 0xff;  // uint8_t; can reduce network speed for bad links
   _sfm.gammaCorrection = 127;  // uint8_t; for 127, gamma = 0.5
 
-  _sfm.flags = makeFlags();   // Set to defaults
+  updateFlags();   // Set to defaults
 
   _sfm.rangePercent = 2;  // 2 m; can be percent or meters, flag controlled
   _sfm.gainPercent = 50;
@@ -107,7 +108,7 @@ SonarConfiguration &SonarConfiguration::setFreqMode(OculusFreqMode input) {
   return *this;
 }
 
-SonarConfiguration &SonarConfiguration::setDataSize(OculusDataSize sz) {
+SonarConfiguration &SonarConfiguration::setDataSize(DataSizeType sz) {
   _dataSize = sz;
   return *this;
 }
@@ -140,8 +141,9 @@ SonarConfiguration &SonarConfiguration::set512Beams(bool v) {
 
 //== Serialization functions
 
-std::vector<uint8_t> SonarConfiguration::serializeFireMsg2() const {
-  _sfm.flags = makeFlags();
+template <>
+std::vector<uint8_t> SonarConfiguration::serialize<OculusSimpleFireMessage2>() const {
+  updateFlags();
 
   std::vector<uint8_t> v;
   const auto ptr = reinterpret_cast<const char*>(&_sfm);
@@ -149,8 +151,9 @@ std::vector<uint8_t> SonarConfiguration::serializeFireMsg2() const {
   return v;
 }
 
-std::vector<uint8_t> SonarConfiguration::serializeFireMsg() const {
-  _sfm.flags = makeFlags();
+template <>
+std::vector<uint8_t> SonarConfiguration::serialize<OculusSimpleFireMessage>() const {
+  updateFlags();
 
   // As of right now, since OculusSimpleFireMessage and OculusSimpleFireMessage2
   // have the same fields in the same order (but different length)
@@ -171,9 +174,13 @@ std::vector<uint8_t> SonarConfiguration::serializeFireMsg() const {
   return v;
 }
 
-uint8_t SonarConfiguration::makeFlags() const {
-  return (_rangeAsMeters  ? FlagBits::RangeAsMeters : 0 ) |
-         ((_dataSize == OCULUS_16BIT) ? FlagBits::Data16Bits : 0) |
+void SonarConfiguration::updateFlags() const {
+  _sfm.extFlags = 0;
+  if (_dataSize == dataSize32Bit) 
+    _sfm.extFlags |= 0x00000200;
+
+  _sfm.flags = (_rangeAsMeters  ? FlagBits::RangeAsMeters : 0 ) |
+         (((_dataSize == dataSize16Bit) || (_dataSize == dataSize32Bit)) ? FlagBits::Data16Bits : 0) |
          (_sendGain       ? FlagBits::DoSendGain : 0) |
          (_simpleReturn   ? FlagBits::SimpleReturn : 0) |
          (_gainAssistance ? FlagBits::GainAssistance : 0) |
@@ -182,14 +189,17 @@ uint8_t SonarConfiguration::makeFlags() const {
 
 
 void SonarConfiguration::dump() const {
-    auto flags = makeFlags();
+    updateFlags();
 
-    LOG(INFO) << "Setting flags: 0x"
+    LOG(INFO) << "\n             Flags 0x"
             << std::hex << std::setw(2) << std::setfill('0')
-            << static_cast<unsigned int>(flags)
+            << static_cast<unsigned int>(_sfm.flags)
+            << std::setw(8)
+            << "\n         Ext flags 0x"
+            << std::setw(8) << static_cast<uint32_t>(_sfm.extFlags)
             << std::dec << std::setw(0)
             << "\n   range is meters " << getRangeAsMeters()
-            << "\n   data size       " << "(undefined)"
+            << "\n   data size       " << DataSizeToString(getDataSize())
             << "\n   send gain       " << getSendGain()
             << "\n   simple return   " << getSimpleReturn()
             << "\n   gain assistance " << getGainAssistance()

@@ -48,9 +48,12 @@ namespace liboculus {
 using std::shared_ptr;
 using std::vector;
 
+/// This class serves two purposes.  It is both a "holder of a byte buffer"
+//  as well as an overlay for accessing the MessageHeader struct represented
+//  by the buffer.    Other packet types can inherit from this class
+//  to represent large structs which start with a MessageHeader
 class MessageHeader {
  public:
-
   MessageHeader() = default;
   MessageHeader( const MessageHeader & ) = default;
 
@@ -79,6 +82,7 @@ class MessageHeader {
   virtual void dump() const {
     LOG(DEBUG) << "   Oculus Id: 0x" << std::hex << oculusId();
     LOG(DEBUG) << "      Msg id: 0x" << std::hex << static_cast<uint16_t>(msgId());
+    LOG(DEBUG) << " Msg Version: " << msgVersion();
     LOG(DEBUG) << "      Dst ID: " << std::hex << dstDeviceId();
     LOG(DEBUG) << "      Src ID: " << std::hex << srcDeviceId();
     LOG(DEBUG) << "Payload size: " << payloadSize() << " bytes";

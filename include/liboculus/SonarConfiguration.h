@@ -81,8 +81,8 @@ class SonarConfiguration {
 
   SonarConfiguration();
 
-  std::vector<uint8_t> serializeFireMsg() const;
-  std::vector<uint8_t> serializeFireMsg2() const;
+  template <typename FireMsg_t>
+  std::vector<uint8_t> serialize() const;
 
   // Setter functions
   SonarConfiguration &setGamma(int input);
@@ -99,13 +99,8 @@ class SonarConfiguration {
 
   SonarConfiguration &setFreqMode(OculusFreqMode input);
 
-  typedef enum {
-    OCULUS_8BIT = 0,
-    OCULUS_16BIT = 1,
-    OCULUS_32BIT = 2
-  } OculusDataSize;
-
-  SonarConfiguration &setDataSize(OculusDataSize sz);
+  SonarConfiguration &setDataSize(DataSizeType sz);
+  DataSizeType getDataSize() const { return _dataSize; }
 
   SonarConfiguration &setRangeAsMeters(bool v);
   SonarConfiguration &rangeAsMeters()  { return setRangeAsMeters(true); }
@@ -124,19 +119,20 @@ class SonarConfiguration {
   SonarConfiguration &set512Beams(bool v);
   SonarConfiguration &use256Beams()    { return set512Beams(false); }
   SonarConfiguration &use512Beams()    { return set512Beams(true); }
+  bool get512Beams() const                { return _512beams;}
+
 
   bool getRangeAsMeters() const           { return _rangeAsMeters; }
   bool getSendGain() const                { return _sendGain; }
   //bool getData16Bit() const               { return _16bitData; }
   bool getSimpleReturn() const            { return _simpleReturn; }
   bool getGainAssistance() const          { return _gainAssistance; }
-  bool get512Beams() const                { return _512beams;}
 
   void dump() const;
 
  private:
 
-  uint8_t makeFlags() const;
+  void updateFlags() const;
 
   mutable OculusSimpleFireMessage2 _sfm;
 
@@ -146,7 +142,7 @@ class SonarConfiguration {
   bool _gainAssistance;
   bool _512beams;
 
-  OculusDataSize _dataSize;
+  DataSizeType _dataSize;
 
 };  // class SonarConfiguration
 

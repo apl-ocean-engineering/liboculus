@@ -62,6 +62,10 @@ int main(int argc, char **argv) {
   app.add_option("-i,--input", inputFilename, 
                   "Reads raw sonar data from specified file.   Plays file contents rather than contacting \"real\" sonar on network.");
 
+  int bitDepth(8);
+  app.add_option("-b,--bits", bitDepth, 
+                  "Bit depth oof data (8,16,32)");
+
   int stopAfter = -1;
   app.add_option("-n,--frames", stopAfter, "Stop after (n) frames.");
 
@@ -72,6 +76,11 @@ int main(int argc, char **argv) {
     logger.setLevel(INFO);
   } else if (verbosity > 1) {
     logger.setLevel(DEBUG);
+  }
+
+  if ((bitDepth != 8) && (bitDepth != 16) && (bitDepth != 32)) {
+    LOG(FATAL) << "Invalid bit depth " << bitDepth;
+    exit(-1);
   }
 
   ofstream output;
@@ -100,13 +109,23 @@ int main(int argc, char **argv) {
 
   SonarConfiguration config;
   config.setPingRate(pingRateNormal);
-  config.flags().use256Beams();
+  if (bitDepth == 8)
+    config.setDataSize(dataSize8Bit);
+  else if (bitDepth == 16)
+    config.setDataSize(dataSize16Bit);
+  else if (bitDepth == 32) {
+    config.dontSendGain()
+          .noGainAssistance()
+          .rangeAsPercent()
+          // .use256Beams()
+          .setDataSize(dataSize32Bit);
+  }
 
   _io_thread.reset(new IoServiceThread);
   DataRx _data_rx(_io_thread->context());
   StatusRx _status_rx(_io_thread->context());
 
-  _data_rx.setSimplePingCallback([&](const SimplePingResult &ping) {
+  _data_rx.setCallback<liboculus::SimplePingResultV1>([&](const liboculus::SimplePingResultV1 &ping) {
     // Pings send to the callback are always valid
 
     {
@@ -115,6 +134,27 @@ int main(int argc, char **argv) {
         LOG(WARNING) << "Mismatch between requested config and ping";
       }
     }
+
+    ping.dump();
+
+    if (output.is_open()) {
+      const char *cdata = reinterpret_cast<const char *>(ping.buffer()->data());
+      output.write(cdata, ping.buffer()->size());
+    }
+
+    count++;
+    if ((stopAfter > 0) && (count >= stopAfter)) _io_thread->stop();
+  });
+
+  _data_rx.setCallback<liboculus::SimplePingResultV2>([&](const liboculus::SimplePingResultV2 &ping) {
+    // Pings send to the callback are always valid
+
+    // {
+    //   const auto valid = checkPingAgreesWithConfig(ping, config);
+    //   if (!valid) {
+    //     LOG(WARNING) << "Mismatch between requested config and ping";
+    //   }
+    // }
 
     ping.dump();
 

@@ -85,7 +85,7 @@ bool SonarPlayerBase::open(const std::string &filename) {
 
 //--- RawSonarPlayer --
 
-SonarPlayerBase::SonarPlayerResult_t RawSonarPlayer::nextPing() {
+bool RawSonarPlayer::nextPing() {
   unsigned int skipped_bytes = 0;
   while (_input.peek() != PacketHeaderLSB) {
     char c;
@@ -93,7 +93,7 @@ SonarPlayerBase::SonarPlayerResult_t RawSonarPlayer::nextPing() {
     skipped_bytes++;
     if (_input.eof()) {
       LOG(DEBUG) << "No packets before the end of the file";
-      return tl::make_unexpected(false);
+      return false; //tl::make_unexpected(false);
     }
   }
 
@@ -103,7 +103,7 @@ SonarPlayerBase::SonarPlayerResult_t RawSonarPlayer::nextPing() {
   _input.get(reinterpret_cast<char *>(buffer->data()), sizeof(MessageHeader));
 
   MessageHeader header(buffer);
-  if (!header.valid()) return tl::make_unexpected(false);
+  if (!header.valid()) return false; //tl::make_unexpected(false);
 
   if (header.msgId() != messageSimplePingResult) {
     LOG(DEBUG) << "Skipping message of type " << MessageTypeToString(header.msgId());
@@ -113,7 +113,7 @@ SonarPlayerBase::SonarPlayerResult_t RawSonarPlayer::nextPing() {
   // Read the rest of the data
   buffer->resize(header.packetSize());
   _input.get(reinterpret_cast<char *>(buffer->data()[sizeof(MessageHeader)]),header.payloadSize());
-  return SimplePingResult<PingV1>(buffer);
+  return true; //SimplePingResult<PingV1>(buffer);
 }
 
 

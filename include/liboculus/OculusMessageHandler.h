@@ -30,37 +30,38 @@
 
 #pragma once
 
+#include <string>
+#include <thread>
+#include <vector>
+#include <memory>
+
+#include "liboculus/IoServiceThread.h"
 #include "liboculus/SimplePingResult.h"
 #include "liboculus/SonarConfiguration.h"
 
 namespace liboculus {
 
-// \TODO develop better API for exposing results
-template<typename PingT>
-bool checkPingAgreesWithConfig( const SimplePingResult<PingT> &ping,
-                                const SonarConfiguration &config ) {
-    OculusSimpleFireFlags flags(ping.fireMsg()->flags);
+using std::shared_ptr;
 
-    const auto nBeams = ping.ping()->nBeams;
-    const auto nRanges = ping.ping()->nRanges;
-    const auto dataSize = ping.ping()->dataSize;
+class OculusMessageHandler {
+ public:
+  template <typename T>
+  using Callback = std::function< void(const T &) >;
 
-    if (config.get512Beams()) {
-        if (nBeams != 512) {
-            LOG(WARNING) << "Config expects 512 beams, ping has " << nBeams;
-        }
-    } else {
-        if (nBeams != 256) {
-            LOG(WARNING) << "Config expects 256 beams, ping has " << nBeams;
-        }
-    }
+  template <typename T>
+  void setCallback(Callback<T> callback);
 
-    // Check data size
-    if (config.getDataSize() != dataSize) {
-        LOG(WARNING) << "Config expected " << 8*SizeOfDataSize(config.getDataSize()) << " bit data, data is " << 8*SizeOfDataSize(dataSize) << " bit";
-    }
+  template <typename T>
+  void callback(const T &);
 
-    return true;
-}
+  typedef Callback<SimplePingResultV1>  SimplePingCallback;
+  typedef Callback<SimplePingResultV2>  SimplePing2Callback;
 
-}  // namespace liboculus
+// protected:
+
+  SimplePingCallback  _simplePingCallback;
+  SimplePing2Callback _simplePing2Callback;
+
+};
+
+};

@@ -15,9 +15,9 @@ void validateOculusHeader( const OculusMessageHeader &head )
 TEST(SonarConfiguration, serialize) {
   SonarConfiguration msg;
 
-  auto b = msg.serialize();
+  // auto b = msg.serialize();
 
-  ASSERT_EQ(b.size(), sizeof(OculusSimpleFireMessage));
+  // ASSERT_EQ(b.size(), sizeof(OculusSimpleFireMessage));
 
   // De-serialize and validate the message
   // {

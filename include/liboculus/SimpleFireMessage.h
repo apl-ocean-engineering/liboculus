@@ -30,37 +30,71 @@
 
 #pragma once
 
-#include "liboculus/SimplePingResult.h"
+#include <memory>
+#include <string>
+#include <vector>
+#include <cassert>
+
+#include <g3log/g3log.hpp>
+
+#include "Oculus/Oculus.h"
+#include "liboculus/MessageHeader.h"
 #include "liboculus/SonarConfiguration.h"
 
 namespace liboculus {
 
-// \TODO develop better API for exposing results
-template<typename PingT>
-bool checkPingAgreesWithConfig( const SimplePingResult<PingT> &ping,
-                                const SonarConfiguration &config ) {
-    OculusSimpleFireFlags flags(ping.fireMsg()->flags);
+using std::shared_ptr;
+using std::vector;
 
-    const auto nBeams = ping.ping()->nBeams;
-    const auto nRanges = ping.ping()->nRanges;
-    const auto dataSize = ping.ping()->dataSize;
 
-    if (config.get512Beams()) {
-        if (nBeams != 512) {
-            LOG(WARNING) << "Config expects 512 beams, ping has " << nBeams;
-        }
-    } else {
-        if (nBeams != 256) {
-            LOG(WARNING) << "Config expects 256 beams, ping has " << nBeams;
-        }
-    }
+template <typename FireMsgT>
+class SimpleFireMessage : public MessageHeader {
+ public:
+  SimpleFireMessage() = default;
+  SimpleFireMessage(const SimpleFireMessage &other) = default;
 
-    // Check data size
-    if (config.getDataSize() != dataSize) {
-        LOG(WARNING) << "Config expected " << 8*SizeOfDataSize(config.getDataSize()) << " bit data, data is " << 8*SizeOfDataSize(dataSize) << " bit";
-    }
+  explicit SimpleFireMessage(const std::shared_ptr<ByteVector> &buffer);
 
-    return true;
+  ~SimpleFireMessage() {}
+
+  const FireMsgT *fireMsg() const {
+      return reinterpret_cast<const FireMsgT *>(_buffer->data());
+  }
+
+  const OculusSimpleFireFlags &flags() const {
+    return _flags;
+  }
+
+  void dump() const override;
+
+ protected:
+  OculusSimpleFireFlags _flags;
+};  // class SimpleFireMessage
+
+
+template<typename FireMsgT>
+SimpleFireMessage<FireMsgT>::SimpleFireMessage(const std::shared_ptr<ByteVector> &buffer)
+  : MessageHeader(buffer),
+  _flags(this->fireMsg()->flags) {
+  assert(buffer->size() >= sizeof(FireMsgT));
+}
+
+template<typename FireMsgT>
+void SimpleFireMessage<FireMsgT>::dump() const {
+  LOG(DEBUG) << "--------------";
+  MessageHeader::dump();
+
+  LOG(DEBUG) << "        Mode: " << FreqModeToString(this->fireMsg()->masterMode);
+
+  const int pingRate = PingRateToHz(this->fireMsg()->pingRate);
+  if (pingRate >= 0 ) {
+    LOG(DEBUG) << "   Ping rate: " << pingRate;
+  } else {
+    LOG(DEBUG) << "   Ping rate: (unknown) " << static_cast<int>(this->fireMsg()->pingRate);
+  }
+
+  LOG(DEBUG) << "   Send gain: " << (this->flags().getSendGain() ? "Yes" : "No");
+  LOG(DEBUG) << "--------------";
 }
 
 }  // namespace liboculus

@@ -178,6 +178,8 @@ typedef struct {
 typedef struct 
 {
 public:
+  typedef OculusSimpleFireMessage FireMsg_t;
+
     OculusSimpleFireMessage fireMessage;
     uint32_t pingId; 			/* An incrementing number */
     uint32_t status;
@@ -201,6 +203,9 @@ public:
 } OculusSimplePingResult;
 
 typedef struct {
+ public:
+  typedef OculusSimpleFireMessage2 FireMsg_t;
+
   OculusSimpleFireMessage2 fireMessage;
   uint32_t pingId; 		/* An incrementing number */
   uint32_t status;

@@ -38,42 +38,33 @@
 #include "liboculus/IoServiceThread.h"
 #include "liboculus/SimplePingResult.h"
 #include "liboculus/SonarConfiguration.h"
+#include "liboculus/OculusMessageHandler.h"
 
 namespace liboculus {
 
 using std::shared_ptr;
 
-class DataRx {
+class DataRx : public OculusMessageHandler {
  public:
   explicit DataRx(const IoServiceThread::IoContextPtr &iosrv);
   ~DataRx();
 
-  void connect(const boost::asio::ip::address &addr);
-  void connect(const std::string &strAddr) {
-       auto addr(boost::asio::ip::address_v4::from_string(strAddr));
-       //LOG_IF(FATAL,addr.is_unspecified()) << "Couldn't parse IP address" << ipAddr;  
-       connect(addr);
-  }
-
   bool isConnected() const { return _socket.is_open(); }
 
-  typedef std::function< void(const SimplePingResultV1 &) > SimplePingCallback;
-  void setSimplePingCallback(SimplePingCallback callback) {
-    _simplePingCallback = callback;
-  }
-
-  // Though the two SimplePingResults are very similar, but maintain
-  // separate callbacks
-  typedef std::function< void(const SimplePingResultV2 &) > SimplePing2Callback;
-  void setSimplePing2Callback(SimplePing2Callback callback) {
-    _simplePing2Callback = callback;
-  }
+  void connect(const boost::asio::ip::address &addr);
+  void connect(const std::string &strAddr);
 
   typedef std::function< void() > OnConnectCallback;
   void setOnConnectCallback(OnConnectCallback callback) {
     _onConnectCallback = callback;
   }
 
+  // By default, this function sends the config to the sonar
+  // as an OculusSimpleFireMessage2.
+  //
+  // To send an OculusSimpleFireMessage (version 1), specify
+  // it as the template argument in the function call.
+  template <typename FireMsg_t = OculusSimpleFireMessage2>
   void sendSimpleFireMessage(const SonarConfiguration &config);
 
   // Implement data read / data written hooks as virtual functions rather
@@ -83,7 +74,7 @@ class DataRx {
 
  private:
   void onConnect(const boost::system::error_code& error);
- 
+
   // Initiates another network read.
   // Note this function reads until the **total number of bytes
   // in _buffer == bytes**   The actual number of bytes requested
@@ -117,13 +108,31 @@ class DataRx {
 
   boost::asio::ip::tcp::socket _socket;
 
-  //
   shared_ptr<ByteVector> _buffer;
 
-  SimplePingCallback _simplePingCallback;
-  SimplePing2Callback _simplePing2Callback;
-  
   OnConnectCallback _onConnectCallback;
 
 };  // class DataRx
+
+
+template <typename FireMsg_t = OculusSimpleFireMessage2>
+void DataRx::sendSimpleFireMessage(const SonarConfiguration &config) {
+  if (!isConnected()) {
+    LOG(WARNING) << "Can't send to sonar, not connected";
+    return;
+  }
+
+  // According to Blueprint, send OculusSimpleFireMessage2
+  // for 32 bit data
+
+  std::vector<std::uint8_t> data;
+  data = config.serialize<FireMsg_t>();
+
+  if (data.size() > 0) {
+    auto result = _socket.send(boost::asio::buffer(data));
+    LOG(DEBUG) << "Sent " << result << " bytes to sonar";
+    haveWritten(data);
+  }
+}
+
 }  // namespace liboculus

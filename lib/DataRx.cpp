@@ -40,8 +40,8 @@ namespace asio = boost::asio;
 DataRx::DataRx(const IoServiceThread::IoContextPtr &iosrv)
     : _socket(*iosrv),
       _buffer(std::make_shared<ByteVector>()),
-      _simplePingCallback([](const SimplePingResult<PingV1> &){}),
-      _simplePing2Callback([](const SimplePingResult<PingV2> &){}),
+      // _simplePingCallback([](const SimplePingResult<PingV1> &){}),
+      // _simplePing2Callback([](const SimplePingResult<PingV2> &){}),
       _onConnectCallback([](void){}) {
 }
 
@@ -60,6 +60,12 @@ void DataRx::connect(const asio::ip::address &addr) {
                         boost::bind(&DataRx::onConnect, this, _1));
 }
 
+void DataRx::connect(const std::string &strAddr) {
+      auto addr(boost::asio::ip::address_v4::from_string(strAddr));
+      //LOG_IF(FATAL,addr.is_unspecified()) << "Couldn't parse IP address" << ipAddr;  
+      connect(addr);
+}
+
 
 void DataRx::onConnect(const boost::system::error_code& ec) {
   if (ec) {
@@ -76,24 +82,28 @@ void DataRx::onConnect(const boost::system::error_code& ec) {
 
 //== Data writers
 
-void DataRx::sendSimpleFireMessage(const SonarConfiguration &msg) {
-  if (!isConnected()) {
-    LOG(WARNING) << "Can't send to sonar, not connected";
-    return;
-  }
+// void DataRx::sendSimpleFireMessage(const SonarConfiguration &msg) {
+//   if (!isConnected()) {
+//     LOG(WARNING) << "Can't send to sonar, not connected";
+//     return;
+//   }
 
-  // According to Blueprint, send OculusSimpleFireMessage2
-  // for 32 bit data
+//   // According to Blueprint, send OculusSimpleFireMessage2
+//   // for 32 bit data
 
-  //if (msg->32bitdata) {}
+//   std::vector<std::uint8_t> data;
+//   //if (msg.getDataSize() == dataSize32Bit) {
+//     data = msg.serializeFireMsg2();
+//   //} else {
+//   //  data = msg.serializeFireMsg();
+//   //}
 
-  //} else {
-    std::vector<std::uint8_t> data = msg.serializeFireMsg();
-    auto result = _socket.send(asio::buffer(data));
-    LOG(DEBUG) << "Sent " << result << " bytes to sonar";
-    haveWritten(data);
-  //}
-}
+//   if (data.size() > 0) {
+//     auto result = _socket.send(asio::buffer(data));
+//     LOG(DEBUG) << "Sent " << result << " bytes to sonar";
+//     haveWritten(data);
+//   }
+// }
 
 //=== Readers
 void DataRx::readUpTo(size_t bytes,
@@ -228,9 +238,8 @@ void DataRx::rxSimplePingResult(const boost::system::error_code& ec,
   }
 
   // \todo Reduce DRY
-  if (hdr.msgVersion() == 1) {
-
-    if (bytes_transferred <= (sizeof(SimplePingResult<PingV1>)-sizeof(OculusMessageHeader))) {
+  if ((hdr.msgVersion() == 1) || (hdr.msgVersion() == 0)) {
+    if (bytes_transferred <= (sizeof(SimplePingResultV1)-sizeof(OculusMessageHeader))) {
         LOG(WARNING) << "Received short header of " << bytes_transferred;
         goto exit;
     }
@@ -243,13 +252,12 @@ void DataRx::rxSimplePingResult(const boost::system::error_code& ec,
             goto exit;
         }
 
-        _simplePingCallback(ping);
+        callback(ping);
     } else {
         LOG(WARNING) << "Incoming packet invalid";
     }
   } else if (hdr.msgVersion() == 2) {
-
-    if (bytes_transferred <= (sizeof(SimplePingResult<PingV2>)-sizeof(OculusMessageHeader))) {
+    if (bytes_transferred <= (sizeof(SimplePingResultV2)-sizeof(OculusMessageHeader))) {
         LOG(WARNING) << "Received short header of " << bytes_transferred;
         goto exit;
     }
@@ -262,7 +270,7 @@ void DataRx::rxSimplePingResult(const boost::system::error_code& ec,
             goto exit;
         }
 
-      _simplePing2Callback(ping);
+      callback(ping);
     } else {
       LOG(WARNING) << "Incoming packet invalid";
     }
