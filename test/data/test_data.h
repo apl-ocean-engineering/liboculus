@@ -17,8 +17,8 @@
   #error "TEST_DATA_PATH must be defined for unit test data to be found"
 #endif
 
-#define ONE_RAW_PING    (TEST_DATA_PATH"/one_ping.raw")
-#define THREE_RAW_PINGS (TEST_DATA_PATH"/three_ping.raw")
+#define ONE_RAW_PING    (TEST_DATA_PATH"/one_ping_8bit.raw")
+#define THREE_RAW_PINGS (TEST_DATA_PATH"/three_pings_8bit.raw")
 
 namespace Oculus_TestData {
 
