@@ -169,6 +169,7 @@ typedef struct {
 	double gainPercent; /* The percentage gain */
 	double speedOfSound; /* The speed of sound - set to zero to use internal calculations */
 	double salinity; /* THe salinity to be used with internal speed of sound calculations (ppt) */
+  // "To enable the 32-bit mode, you can OR-in 0x00000200 into the `extFlags` field.""
 	uint32_t extFlags;
 	uint32_t reserved[8];
 } OculusSimpleFireMessage2;
