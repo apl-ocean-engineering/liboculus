@@ -69,6 +69,8 @@ int main(int argc, char **argv) {
   int stopAfter = -1;
   app.add_option("-n,--frames", stopAfter, "Stop after (n) frames.");
 
+  float range = 4;
+  app.add_option("-r,--range", range, "Range in meters");
 
   CLI11_PARSE(app, argc, argv);
 
@@ -109,15 +111,14 @@ int main(int argc, char **argv) {
 
   SonarConfiguration config;
   config.setPingRate(pingRateNormal);
-  if (bitDepth == 8)
+  config.setRange(range);
+  if (bitDepth == 8) {
     config.setDataSize(dataSize8Bit);
-  else if (bitDepth == 16)
+  } else if (bitDepth == 16) {
     config.setDataSize(dataSize16Bit);
-  else if (bitDepth == 32) {
+  } else if (bitDepth == 32) {
     config.dontSendGain()
           .noGainAssistance()
-          .rangeAsPercent()
-          // .use256Beams()
           .setDataSize(dataSize32Bit);
   }
 
@@ -164,7 +165,7 @@ int main(int argc, char **argv) {
     }
 
     count++;
-    if ((stopAfter > 0) && (count >= stopAfter)) _io_thread->stop();
+    if ((stopAfter > 0) && (count >= stopAfter)) doStop=true;
   });
 
   _data_rx.setOnConnectCallback([&]() {

@@ -72,6 +72,7 @@ else()
               lib/StatusRx.cpp
               lib/SonarPlayer.cpp
               lib/OculusMessageHandler.cpp
+              lib/SimpleFireMessage.cpp
               lib/IoServiceThread.cpp )
 
 

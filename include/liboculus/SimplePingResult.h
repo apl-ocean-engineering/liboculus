@@ -186,6 +186,12 @@ void SimplePingResult<Ping_t>::dump() const {
   LOG(DEBUG) << "Spd of Sound: " << this->ping()->speedOfSoundUsed;
   LOG(DEBUG) << "   Range res: " << this->ping()->rangeResolution << " m";
 
+  if (this->flags().getRangeAsMeters()) {
+    LOG(DEBUG) << "  Calc range: " << this->ping()->rangeResolution*this->ping()->nRanges << " m";
+  } else {
+    LOG(DEBUG) << "   Pct range: " << this->ping()->rangeResolution*this->ping()->nRanges;
+  }
+
   LOG(DEBUG) << "   Num range: " << this->ping()->nRanges;
   LOG(DEBUG) << "   Num beams: " << this->ping()->nBeams;
 

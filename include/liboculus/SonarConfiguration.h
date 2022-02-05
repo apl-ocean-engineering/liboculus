@@ -76,6 +76,10 @@ class OculusSimpleFireFlags {
 };
 
 // Thin OO wrapper around the OculusSimpleFireMessage.
+//
+// \todo This API is a little messy right now.  Probably *shouldn't* keep
+// the shadow copy of the SimpleFireMessage{2}, instead
+// just make it at time of serialization.
 class SonarConfiguration {
  public:
 
@@ -88,7 +92,6 @@ class SonarConfiguration {
   SonarConfiguration &setGamma(int input);
   SonarConfiguration &setPingRate(PingRateType newRate);
   SonarConfiguration &setGainPercent(double input);
-  SonarConfiguration &setRange(double input);
   SonarConfiguration &setFlags(uint8_t flags);
   SonarConfiguration &setWaterTemperature(double degC);
 
@@ -98,13 +101,23 @@ class SonarConfiguration {
   } OculusFreqMode;
 
   SonarConfiguration &setFreqMode(OculusFreqMode input);
+  OculusFreqMode getFreqMode() const {
+    if (_sfm.masterMode == 1)
+      return OCULUS_LOW_FREQ;
+    else if (_sfm.masterMode == 2)
+      return OCULUS_HIGH_FREQ;
+  }
 
   SonarConfiguration &setDataSize(DataSizeType sz);
-  DataSizeType getDataSize() const { return _dataSize; }
+  DataSizeType getDataSize() const         { return _dataSize; }
 
-  SonarConfiguration &setRangeAsMeters(bool v);
-  SonarConfiguration &rangeAsMeters()  { return setRangeAsMeters(true); }
-  SonarConfiguration &rangeAsPercent() { return setRangeAsMeters(false); }
+  SonarConfiguration &setRange(double input);
+
+  SonarConfiguration &sendRangeAsMeters(bool v);
+  SonarConfiguration &sendRangeAsMeters()  { return sendRangeAsMeters(true); }
+  SonarConfiguration &sendRangeAsPercent() { return sendRangeAsMeters(false); }
+  bool getSendRangeAsMeters() const        { return _sendRangeAsMeters; }
+
 
   SonarConfiguration &setSendGain(bool v);
   SonarConfiguration &sendGain()       { return setSendGain(true); }
@@ -122,7 +135,6 @@ class SonarConfiguration {
   bool get512Beams() const                { return _512beams;}
 
 
-  bool getRangeAsMeters() const           { return _rangeAsMeters; }
   bool getSendGain() const                { return _sendGain; }
   //bool getData16Bit() const               { return _16bitData; }
   bool getSimpleReturn() const            { return _simpleReturn; }
@@ -136,7 +148,9 @@ class SonarConfiguration {
 
   mutable OculusSimpleFireMessage2 _sfm;
 
-  bool _rangeAsMeters;
+  bool _sendRangeAsMeters;
+  float _rangeInMeters;
+
   bool _sendGain;
   bool _simpleReturn;
   bool _gainAssistance;

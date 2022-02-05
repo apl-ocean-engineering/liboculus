@@ -67,6 +67,8 @@ class SimpleFireMessage : public MessageHeader {
 
   void dump() const override;
 
+  float range() const;
+
  protected:
   OculusSimpleFireFlags _flags;
 };  // class SimpleFireMessage
@@ -92,7 +94,10 @@ void SimpleFireMessage<FireMsgT>::dump() const {
     LOG(DEBUG) << "   Ping rate: (unknown) " << static_cast<int>(this->fireMsg()->pingRate);
   }
 
-  LOG(DEBUG) << "   Send gain: " << (this->flags().getSendGain() ? "Yes" : "No");
+  LOG(DEBUG) << "Flags: Send gain: " << (this->flags().getSendGain() ? "Yes" : "No");
+  LOG(DEBUG) << "Flags:  Range is: " << (this->flags().getRangeAsMeters() ? "Meters" : "Percent");
+  LOG(DEBUG) << "       Range: " << range();
+  LOG(DEBUG) << "Speed of sound: " << this->fireMsg()->speedOfSound;
 }
 
 }  // namespace liboculus

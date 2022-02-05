@@ -28,43 +28,25 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Utility conversions for data types defined in Oculus.h
 
-#pragma once
+#include <iomanip>
 
-#include <cstddef>  // for size_t
-#include <string>
-#include <vector>
-#include <cmath>
-
-#include "Oculus/Oculus.h"
+#include "liboculus/SimpleFireMessage.h"
 
 namespace liboculus {
-    const uint16_t StatusBroadcastPort = 52102;
-    const uint16_t DataPort = 52100;
 
-    const uint8_t PacketHeaderLSB = (OCULUS_CHECK_ID & 0x00FF);
-    const uint8_t PacketHeaderMSB = (OCULUS_CHECK_ID & 0xFF00) >> 8;
+// Specializations for the cases where the behavior actually varies between
+// the two SimpleFireMessage types
 
-    namespace Oculus_1200MHz {
-        const float ElevationBeamwidthDeg = 20.0;
-        const float ElevationBeamwidthRad = 20.0*M_PI/180.0;
+template<>
+float SimpleFireMessage<OculusSimpleFireMessage>::range() const {
+  return fireMsg()->range;
+}
 
-        const float AzimuthBeamwidthDeg = 0.6;
-        const float AzimuthBeamwidthRad = 0.6*M_PI/180.0;
+template<>
+ float SimpleFireMessage<OculusSimpleFireMessage2>::range() const {
+  return fireMsg()->rangePercent;
+}
 
-        const float MaxRange = 40;
-    };
 
-    namespace Oculus_2100MHz {
-         const float ElevationBeamwidthDeg = 12.0;
-         const float ElevationBeamwidthRad = 12.0*M_PI/180.0;
-
-         const float AzimuthBeamwidthDeg = 0.4;
-         const float AzimuthBeamwidthRad = 0.4*M_PI/180.0;
-
-         // \todo These shouldn't be fixed, should read from Oculus.h
-         const float MaxRange = 10;  // meters
-    };
-
-}  // namespace liboculus
+}

@@ -33,6 +33,7 @@
 
 #include "liboculus/SonarConfiguration.h"
 #include "liboculus/DataTypes.h"
+#include "liboculus/Constants.h"
 
 #include <boost/asio.hpp>
 #include <g3log/g3log.hpp>
@@ -40,7 +41,8 @@
 namespace liboculus {
 
 SonarConfiguration::SonarConfiguration()
-: _rangeAsMeters(true),
+: _sendRangeAsMeters(true),
+  _rangeInMeters(5),
   _sendGain(true),
   _simpleReturn(true),
   _gainAssistance(true),
@@ -73,7 +75,7 @@ SonarConfiguration &SonarConfiguration::setRange(double input) {
   // 40 meters is the max range for the 1200d model
   // may need to use a double instead of uint8_t (depends on flags)
   if (input <= 40 && input > 0) {
-    _sfm.rangePercent = input;
+    _rangeInMeters = input;
   } else {
     LOG(WARNING) << "Requested invalid range: " << input;
   }
@@ -113,8 +115,8 @@ SonarConfiguration &SonarConfiguration::setDataSize(DataSizeType sz) {
   return *this;
 }
 
-SonarConfiguration &SonarConfiguration::setRangeAsMeters(bool v) {
-  _rangeAsMeters = v;
+SonarConfiguration &SonarConfiguration::sendRangeAsMeters(bool v) {
+  _sendRangeAsMeters = v;
   return *this;
 }
 
@@ -145,9 +147,22 @@ template <>
 std::vector<uint8_t> SonarConfiguration::serialize<OculusSimpleFireMessage2>() const {
   updateFlags();
 
+  // Corner case.  If in 32bit mode, range is always a percentage of max range
+  // if ((_dataSize == dataSize32Bit) || (!_sendRangeAsMeters)) {
+  //   const float maxRange = ((getFreqMode()==OCULUS_LOW_FREQ) ? Oculus_1200MHz::MaxRange : Oculus_2100MHz::MaxRange);
+
+  //   _sfm.rangePercent = std::min(_rangeInMeters/maxRange * 100.0,100.0);
+
+
+  //   LOG(INFO) << "In 32bit mode, setting range to " << _rangeInMeters << " which is " << _sfm.rangePercent << " percent";
+  // } else {
+    _sfm.rangePercent = _rangeInMeters;
+  //}
+
   std::vector<uint8_t> v;
   const auto ptr = reinterpret_cast<const char*>(&_sfm);
   v.insert(v.end(), ptr, ptr + sizeof(OculusSimpleFireMessage2));
+
   return v;
 }
 
@@ -179,7 +194,7 @@ void SonarConfiguration::updateFlags() const {
   if (_dataSize == dataSize32Bit) 
     _sfm.extFlags |= 0x00000200;
 
-  _sfm.flags = (_rangeAsMeters  ? FlagBits::RangeAsMeters : 0 ) |
+  _sfm.flags = (_rangeInMeters  ? FlagBits::RangeAsMeters : 0 ) |
          (((_dataSize == dataSize16Bit) || (_dataSize == dataSize32Bit)) ? FlagBits::Data16Bits : 0) |
          (_sendGain       ? FlagBits::DoSendGain : 0) |
          (_simpleReturn   ? FlagBits::SimpleReturn : 0) |
@@ -195,15 +210,15 @@ void SonarConfiguration::dump() const {
             << std::hex << std::setw(2) << std::setfill('0')
             << static_cast<unsigned int>(_sfm.flags)
             << std::setw(8)
-            << "\n         Ext flags 0x"
+            << "\n            Ext flags 0x"
             << std::setw(8) << static_cast<uint32_t>(_sfm.extFlags)
             << std::dec << std::setw(0)
-            << "\n   range is meters " << getRangeAsMeters()
-            << "\n   data size       " << DataSizeToString(getDataSize())
-            << "\n   send gain       " << getSendGain()
-            << "\n   simple return   " << getSimpleReturn()
-            << "\n   gain assistance " << getGainAssistance()
-            << "\n   use 512 beams   " << get512Beams();
+            << "\n  send range is meters " << getSendRangeAsMeters()
+            << "\n       data size       " << DataSizeToString(getDataSize())
+            << "\n       send gain       " << getSendGain()
+            << "\n       simple return   " << getSimpleReturn()
+            << "\n       gain assistance " << getGainAssistance()
+            << "\n       use 512 beams   " << get512Beams();
 }
 
 
