@@ -60,7 +60,7 @@ SonarConfiguration::SonarConfiguration()
 
   _sfm.masterMode = OCULUS_HIGH_FREQ;
   _sfm.pingRate = pingRateNormal;
-  _sfm.networkSpeed = 0xff;  // uint8_t; can reduce network speed for bad links
+  _sfm.networkSpeed = 0xff;    // uint8_t; can reduce network speed for bad links
   _sfm.gammaCorrection = 127;  // uint8_t; for 127, gamma = 0.5
 
   updateFlags();   // Set to defaults
