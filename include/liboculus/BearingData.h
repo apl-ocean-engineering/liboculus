@@ -66,11 +66,11 @@ class BearingData {
   }
 
   float front() const {
-    return _data[0];
+    return _data[0] / 100.0;
   }
 
   float back() const {
-    return _data[_numBeams-1];
+    return _data[_numBeams-1] / 100.0;
   }
 
  private:

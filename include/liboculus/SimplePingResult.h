@@ -34,6 +34,7 @@
 #include <string>
 #include <vector>
 #include <cassert>
+#include <iomanip>
 
 #include <g3log/g3log.hpp>
 
@@ -179,29 +180,31 @@ void SimplePingResult<Ping_t>::dump() const {
   LOG(DEBUG) << "--------------";
   SimpleFireMsg_t::dump();
 
-  LOG(DEBUG) << "     Ping ID: " << this->ping()->pingId;
-  LOG(DEBUG) << "      Status: " << this->ping()->status;
-  LOG(DEBUG) << "   Ping start time: " << this->ping()->pingStartTime;
+  LOG(DEBUG) << "      Ping ID: " << this->ping()->pingId;
+  LOG(DEBUG) << "       Status: " << this->ping()->status;
+  LOG(DEBUG) << "    Ping start time: " << this->ping()->pingStartTime;
 
-  LOG(DEBUG) << "   Frequency: " << this->ping()->frequency;
-  LOG(DEBUG) << " Temperature: " << this->ping()->temperature;
-  LOG(DEBUG) << "    Pressure: " << this->ping()->pressure;
-  LOG(DEBUG) << "Spd of Sound: " << this->ping()->speedOfSoundUsed;
-  LOG(DEBUG) << "   Range res: " << this->ping()->rangeResolution << " m";
+  LOG(DEBUG) << "    Frequency: " << this->ping()->frequency;
+  LOG(DEBUG) << "  Temperature: " << this->ping()->temperature;
+  LOG(DEBUG) << "     Pressure: " << this->ping()->pressure;
+  LOG(DEBUG) << "Spd of Sound used: " << this->ping()->speedOfSoundUsed;
+  LOG(DEBUG) << "    Range res: " << this->ping()->rangeResolution << " m";
 
   if (this->flags().getRangeAsMeters()) {
-    LOG(DEBUG) << "  Calc range: " << this->ping()->rangeResolution*this->ping()->nRanges << " m";
-  } else {
+    LOG(DEBUG) << "   Calc range: " << this->ping()->rangeResolution*this->ping()->nRanges << " m";
+  } else { 
     LOG(DEBUG) << "   Pct range: " << this->ping()->rangeResolution*this->ping()->nRanges;
   }
 
-  LOG(DEBUG) << "   Num range: " << this->ping()->nRanges;
-  LOG(DEBUG) << "   Num beams: " << this->ping()->nBeams;
+  LOG(DEBUG) << "    Num range: " << this->ping()->nRanges;
+  LOG(DEBUG) << "    Num beams: " << this->ping()->nBeams;
+  LOG(DEBUG) << "Azimuth range: " << std::setprecision(4) << bearings().front() << " - " << bearings().back();
+
 
   LOG(DEBUG) << "  Image size: " << this->ping()->imageSize;
-  LOG(DEBUG) << "Image offset: " << this->ping()->imageOffset;
-  LOG(DEBUG) << "   Data size: " << DataSizeToString(this->ping()->dataSize);
-  LOG(DEBUG) << "Message size: " << this->ping()->messageSize;
+  LOG(DEBUG) << " Image offset: " << this->ping()->imageOffset;
+  LOG(DEBUG) << "    Data size: " << DataSizeToString(this->ping()->dataSize);
+  LOG(DEBUG) << " Message size: " << this->ping()->messageSize;
   LOG(DEBUG) << "--------------";
 }
 

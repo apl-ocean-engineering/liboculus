@@ -162,14 +162,11 @@ int main(int argc, char **argv) {
 
     ping.dump();
 
-    const auto bearings = ping.bearings();
-    LOG(INFO) << "Azimuth range = " << bearings.front() << " - " << bearings.back();
-
-    const auto gains = ping.gains();
-    if (gains.size() > 0) {
-      LOG(INFO) << "First five gains " << gains[10] << ", " << gains[11] << ", " 
-                << gains[12] << ", " << gains[13] << ", " << gains[14];
-    }
+    // const auto gains = ping.gains();
+    // if (gains.size() > 0) {
+    //   LOG(INFO) << "First five gains " << gains[10] << ", " << gains[11] << ", " 
+    //             << gains[12] << ", " << gains[13] << ", " << gains[14];
+    // }
 
     if (output.is_open()) {
       const char *cdata = reinterpret_cast<const char *>(ping.buffer()->data());

@@ -43,7 +43,7 @@ bool checkPingAgreesWithConfig( const SimplePingResult<PingT> &ping,
     OculusSimpleFireFlags flags(ping.fireMsg()->flags);
 
     const auto nBeams = ping.ping()->nBeams;
-    const auto nRanges = ping.ping()->nRanges;
+    // (Not used right now)  const auto nRanges = ping.ping()->nRanges;
     const auto dataSize = ping.ping()->dataSize;
 
     if (config.get512Beams()) {
