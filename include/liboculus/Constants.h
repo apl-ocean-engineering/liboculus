@@ -68,4 +68,20 @@ namespace liboculus {
          const float MaxRange = 10;  // meters
     };
 
+struct FlagBits {
+  // bit 0: 0 = interpret range as percent, 1 = interpret range as meters
+  // bit 1: 0 = 8 bit data, 1 = 16 bit data
+  // bit 2: 0 = wont send gain, 1 = send gain
+  // bit 3: 0 = send full return message, 1 = send simple return message
+  // bit 4: "gain assistance"?
+  // bit 6: use 512 beams (vs 256): email from Blueprint said to set flags |= 0x40
+
+  static const uint8_t RangeAsMeters = (0x01) << 0;
+  static const uint8_t Data16Bits    = (0x01) << 1;
+  static const uint8_t DoSendGain    = (0x01) << 2;
+  static const uint8_t SimpleReturn  = (0x01) << 3;
+  static const uint8_t GainAssistance = (0x01) << 4;
+  static const uint8_t Do512Beams    = (0x01) << 6;
+};
+
 }  // namespace liboculus

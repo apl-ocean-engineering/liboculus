@@ -40,12 +40,32 @@
 #include "Oculus/Oculus.h"
 #include "liboculus/MessageHeader.h"
 #include "liboculus/SonarConfiguration.h"
+#include "liboculus/Constants.h"
 
 namespace liboculus {
 
 using std::shared_ptr;
 using std::vector;
 
+
+
+// A simple parser of flag bytes
+class OculusSimpleFireFlags {
+ public:
+    OculusSimpleFireFlags() = delete;
+    OculusSimpleFireFlags( const uint8_t flags )
+    : _data(flags) {;}
+
+    bool getRangeAsMeters() const  { return _data & FlagBits::RangeAsMeters; }
+    bool getSendGain() const       { return _data & FlagBits::DoSendGain; }
+    bool getData16Bit() const      { return _data & FlagBits::Data16Bits; }
+    bool getSimpleReturn() const   { return _data & FlagBits::SimpleReturn; }
+    bool getGainAssistance() const { return _data & FlagBits::GainAssistance; }
+    bool get512Beams() const       { return _data & FlagBits::Do512Beams; }
+
+ private:
+    uint8_t _data;
+};
 
 template <typename FireMsgT>
 class SimpleFireMessage : public MessageHeader {
