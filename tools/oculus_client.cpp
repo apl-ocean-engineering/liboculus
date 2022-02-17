@@ -40,7 +40,7 @@ bool doStop = false;
 
 // Catch signals
 void signalHandler(int signo) {
-  if(_io_thread) _io_thread->stop();
+  if (_io_thread) _io_thread->stop();
   doStop = true;
 }
 
@@ -112,12 +112,13 @@ int main(int argc, char **argv) {
   SonarConfiguration config;
   config.setPingRate(pingRateNormal);
   config.setRange(range);
+
   if (bitDepth == 8) {
     config.setDataSize(dataSize8Bit);
   } else if (bitDepth == 16) {
     config.setDataSize(dataSize16Bit);
   } else if (bitDepth == 32) {
-    config.dontSendGain()
+    config.sendGain()
           .noGainAssistance()
           .setDataSize(dataSize32Bit);
   }
@@ -126,6 +127,7 @@ int main(int argc, char **argv) {
   DataRx _data_rx(_io_thread->context());
   StatusRx _status_rx(_io_thread->context());
 
+  // Callback for a SimplePingResultV1
   _data_rx.setCallback<liboculus::SimplePingResultV1>([&](const liboculus::SimplePingResultV1 &ping) {
     // Pings send to the callback are always valid
 
@@ -147,6 +149,7 @@ int main(int argc, char **argv) {
     if ((stopAfter > 0) && (count >= stopAfter)) _io_thread->stop();
   });
 
+  // Callback for a SimplePingResultV2
   _data_rx.setCallback<liboculus::SimplePingResultV2>([&](const liboculus::SimplePingResultV2 &ping) {
     // Pings send to the callback are always valid
 
@@ -159,6 +162,15 @@ int main(int argc, char **argv) {
 
     ping.dump();
 
+    const auto bearings = ping.bearings();
+    LOG(INFO) << "Azimuth range = " << bearings.front() << " - " << bearings.back();
+
+    const auto gains = ping.gains();
+    if (gains.size() > 0) {
+      LOG(INFO) << "First five gains " << gains[10] << ", " << gains[11] << ", " 
+                << gains[12] << ", " << gains[13] << ", " << gains[14];
+    }
+
     if (output.is_open()) {
       const char *cdata = reinterpret_cast<const char *>(ping.buffer()->data());
       output.write(cdata, ping.buffer()->size());
@@ -168,13 +180,16 @@ int main(int argc, char **argv) {
     if ((stopAfter > 0) && (count >= stopAfter)) doStop=true;
   });
 
+  // Callback when connection to a sonar
   _data_rx.setOnConnectCallback([&]() {
     config.dump();
     _data_rx.sendSimpleFireMessage(config);
   });
 
-  // Connect client
+  // Connect the client
   if (ipAddr == "auto") {
+    // To auto-detect, when the StatusRx connects, 
+    // configure the DataRx
     _status_rx.setCallback([&](const SonarStatus &status, bool is_valid){
       if (!is_valid || _data_rx.isConnected()) return;
       _data_rx.connect(status.ipAddr());
@@ -184,11 +199,11 @@ int main(int argc, char **argv) {
   }
   _io_thread->start();
 
-  // Imprecise statistic for now...
   int lastCount = 0;
   while (!doStop) {
-    auto c = count;
 
+    // Very rough Hz calculation right now
+    const auto c = count;
     LOG(INFO) << "Received pings at " << c-lastCount << " Hz";
 
     lastCount = c;

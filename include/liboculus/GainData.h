@@ -30,6 +30,10 @@
 
 #pragma once
 
+#include <netinet/in.h>
+#include <vector>
+#include <iostream>
+
 #include <g3log/g3log.hpp>  // needed for CHECK macro
 
 #include "Oculus/Oculus.h"
@@ -45,37 +49,39 @@ class GainData {
   typedef T DataType;
 
   GainData()
-    : _data(nullptr), 
-      _stride(0),
-      _numRanges(0),
-      _imageSize(0)
+    : _data()
     {;}
 
   GainData(const GainData &other)  = default;
 
-  GainData(const T *data, uint32_t imageSz, size_t strideBytes, size_t nRanges)
-      : _data(data),
-        _stride(strideBytes/sizeof(T)),
-        _numRanges(nRanges),
-        _imageSize(imageSz) {}
+  GainData(const T *data, uint32_t imageSz,
+            size_t strideBytes, size_t nRanges)
+    : _data() {
+    // Only works for four-byte types
+    assert(sizeof(T) == 4);
+    for (size_t i = 0; i < nRanges; i++) {
+        const size_t index = (i*strideBytes)/sizeof(T);
 
-  int size() const { return _numRanges; }
+        const uint32_t *d = reinterpret_cast<const uint32_t *>(&data[index]);
+
+        // uint32_t h = ntohl(*d);
+        uint32_t h = *d;
+        T *f = reinterpret_cast<T *>(&h);
+
+        _data.push_back(*f);
+    }
+  }
+
+  int size() const { return _data.size(); }
 
   T at(unsigned int i) const {
-    CHECK(i < _numRanges) << "Requested gain " << i << " out of range";
-
-    const size_t index = i*_stride;
-    CHECK(index*sizeof(T) < _imageSize);
-
-    return _data[index];
+      return _data.at(i);
   }
 
   T operator[](unsigned int i) const { return at(i); }
 
  private:
-  const T *_data;
-  size_t _stride, _numRanges;
-  uint32_t _imageSize;
+  std::vector<T> _data;
 };
 
 }  // namespace liboculus
