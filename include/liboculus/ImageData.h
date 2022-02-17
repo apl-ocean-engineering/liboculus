@@ -84,34 +84,39 @@ class ImageData {
   // This function works for either 1- or 2-byte sonar data
   // For 1-byte, the 8-bit value is simply cast into the 16-bit return
   uint16_t at_uint16(unsigned int beam, unsigned int rangeBin) const {
-  if ((_data == nullptr) || (beam >= _numBeams) || (rangeBin >= _numRanges)) return 0;
+    if ((_data == nullptr) || (beam >= _numBeams) || (rangeBin >= _numRanges)) return 0;
 
-  if(_dataSize == 1) {
-      return at_uint8(beam,rangeBin);
-  } else if (_dataSize == 2) {
-      const size_t offset = (rangeBin * _stride) + (beam * _dataSize) + _offset;
-      CHECK(offset < (_imageSize-1));
-      return (_data[offset] | _data[offset+1] << 8);
+    if (_dataSize == 1) {
+        return at_uint8(beam, rangeBin);
+    } else if (_dataSize == 2) {
+        const size_t offset = (rangeBin * _stride) + (beam * _dataSize) + _offset;
+        CHECK(offset < (_imageSize-1));
+        return (_data[offset] | _data[offset+1] << 8);
+    }
+
+    return 0;
   }
 
-  return 0;
-  }
-
+  // This function will work regardless of whether the raw Oculus
+  // data is 1-, 2- or 4-byte.
   uint32_t at_uint32(unsigned int beam, unsigned int rangeBin) const {
-  if ((_data == nullptr) || (beam >= _numBeams)
-        || (rangeBin >= _numRanges)) return 0;
+    if ((_data == nullptr) || (beam >= _numBeams)
+          || (rangeBin >= _numRanges)) return 0;
 
-  if (_dataSize == 1) {
-      return at_uint8(beam, rangeBin);
-  } else if (_dataSize == 2) {
-      return at_uint16(beam, rangeBin);
-  } else {
-      const size_t offset = (rangeBin * _stride) + (beam * _dataSize) + _offset;
-      CHECK(offset < (_imageSize-1));
-      return (_data[offset] | _data[offset+1] << 8 | _data[offset+2] << 16 | _data[offset+3] << 24);
-  }
+    if (_dataSize == 1) {
+        return at_uint8(beam, rangeBin);
+    } else if (_dataSize == 2) {
+        return at_uint16(beam, rangeBin);
+    } else {
+        const size_t offset = (rangeBin * _stride) + (beam * _dataSize) + _offset;
+        CHECK(offset < (_imageSize-1));
 
-  return 0;
+        // \todo.  Come to think of it, this could be done by mapping the 4 bytes into
+        // a uin32 then maybe using a system call to swap endianness?
+        return (_data[offset] | _data[offset+1] << 8 | _data[offset+2] << 16 | _data[offset+3] << 24);
+    }
+
+    return 0;
   }
 
  private:

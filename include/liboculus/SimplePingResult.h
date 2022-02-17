@@ -57,7 +57,9 @@ using std::vector;
 //   then the rest of OculusSimplePingResult
 
 // Conveniently the OculusSimplePingResult and OculusSimplePingResult2
-// structs have the same fields, but a different structure
+// structs have the same fields, but a different structure.
+// If that weren't the case, we'd use two separate classes instead
+// of templates...
 
 template <typename Ping_t>
 class SimplePingResult : public SimpleFireMessage<typename Ping_t::FireMsg_t> {
@@ -104,15 +106,16 @@ SimplePingResult<Ping_t>::SimplePingResult(const std::shared_ptr<ByteVector> &bu
     _image() {
     assert(buffer->size() >= sizeof(Ping_t));
 
-  // Bearing data is packed into an array of shorts at the end of the
-  // OculusSimpleFireMessage
+  // Bearing data is packed into an array of numBeams shorts immediately
+  // the end of the OculusSimplePing struct
   const int16_t *bearingData = reinterpret_cast<const short*>(buffer->data() + sizeof(Ping_t));
   _bearings = BearingData(bearingData, this->ping()->nBeams);
 
   const uint8_t *imageData = reinterpret_cast<const uint8_t*>(buffer->data() + ping()->imageOffset);
 
-  if (this->flags().getSendGain()) { 
-    // If sent, the gain is included as the first 4 bytes in each "row" of data 
+  if (this->flags().getSendGain()) {
+    // If sent, the gain is included as the first 4 bytes in
+    // each row of data
     const uint16_t offsetBytes = 4;
 
     // The size of one "row" of data in bytes

@@ -38,11 +38,10 @@ namespace liboculus {
 namespace asio = boost::asio;
 
 DataRx::DataRx(const IoServiceThread::IoContextPtr &iosrv)
-    : _socket(*iosrv),
+    : OculusMessageHandler(),
+      _socket(*iosrv),
       _buffer(std::make_shared<ByteVector>()),
-      // _simplePingCallback([](const SimplePingResult<PingV1> &){}),
-      // _simplePing2Callback([](const SimplePingResult<PingV2> &){}),
-      _onConnectCallback([](void){}) {
+      _onConnectCallback() {
 }
 
 DataRx::~DataRx() {
@@ -77,33 +76,8 @@ void DataRx::onConnect(const boost::system::error_code& ec) {
 
   LOG(DEBUG) << "Connected to sonar!";
   restartReceiveCycle();
-  _onConnectCallback();
+  if (_onConnectCallback) _onConnectCallback();
 }
-
-//== Data writers
-
-// void DataRx::sendSimpleFireMessage(const SonarConfiguration &msg) {
-//   if (!isConnected()) {
-//     LOG(WARNING) << "Can't send to sonar, not connected";
-//     return;
-//   }
-
-//   // According to Blueprint, send OculusSimpleFireMessage2
-//   // for 32 bit data
-
-//   std::vector<std::uint8_t> data;
-//   //if (msg.getDataSize() == dataSize32Bit) {
-//     data = msg.serializeFireMsg2();
-//   //} else {
-//   //  data = msg.serializeFireMsg();
-//   //}
-
-//   if (data.size() > 0) {
-//     auto result = _socket.send(asio::buffer(data));
-//     LOG(DEBUG) << "Sent " << result << " bytes to sonar";
-//     haveWritten(data);
-//   }
-// }
 
 //=== Readers
 void DataRx::readUpTo(size_t bytes,
@@ -220,12 +194,12 @@ void DataRx::rxPacket(const boost::system::error_code& ec,
   }
 
   if (bytes_transferred < hdr.payloadSize()) {
-    LOG(WARNING) << "Received short header of " << bytes_transferred << ", expected " << hdr.payloadSize();
+    LOG(WARNING) << "Received short header of " << bytes_transferred
+                 << ", expected " << hdr.payloadSize();
     goto exit;
   }
 
   if (hdr.msgId() == messageSimplePingResult) {
-
     if ((hdr.msgVersion() == 1) || (hdr.msgVersion() == 0)) {
       SimplePingResultV1 ping(_buffer);
 
@@ -253,15 +227,18 @@ void DataRx::rxPacket(const boost::system::error_code& ec,
         LOG(WARNING) << "Incoming packet invalid";
       }
     } else {
-      LOG(WARNING) << "Unknown message version " << hdr.msgVersion() << " ignoring";
+      LOG(WARNING) << "Unknown message version " << hdr.msgVersion()
+                   << " ignoring";
     }
 
 
   } else if (hdr.msgId() == messageLogs) {
     LOG(DEBUG) << "Received " << bytes_transferred << " of LogMessage data";
-    LOG(INFO) << std::string(_buffer->begin()+sizeof(OculusMessageHeader), _buffer->end());
+    LOG(INFO) << std::string(_buffer->begin()+sizeof(OculusMessageHeader),
+                              _buffer->end());
   } else {
-    LOG(WARNING) << "Ignoring " << MessageTypeToString(hdr.msgId()) << " message, id " <<static_cast<int>(hdr.msgId());
+    LOG(WARNING) << "Ignoring " << MessageTypeToString(hdr.msgId())
+                  << " message, id " << static_cast<int>(hdr.msgId());
   }
 
 exit:

@@ -43,8 +43,16 @@ namespace liboculus {
 
 using std::shared_ptr;
 
+// Base class for "things which can produce Oculus SimplePingResults"
+// and will call callbacks when it happens.
+// Both DataRx and SonarPlay inherit from this class.
 class OculusMessageHandler {
  public:
+  OculusMessageHandler()
+    : _simplePingCallback(),
+      _simplePing2Callback()
+      {;}
+
   template <typename T>
   using Callback = std::function< void(const T &) >;
 
@@ -64,4 +72,4 @@ class OculusMessageHandler {
 
 };
 
-};
+}  // namespace liboculus

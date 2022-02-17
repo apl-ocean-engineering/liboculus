@@ -35,7 +35,8 @@
 
 namespace liboculus {
 
-// \TODO develop better API for exposing results
+// \TODO develop better API for returning more descriptive results, esp
+// when the ping and config don't agree.
 template<typename PingT>
 bool checkPingAgreesWithConfig( const SimplePingResult<PingT> &ping,
                                 const SonarConfiguration &config ) {
@@ -57,10 +58,14 @@ bool checkPingAgreesWithConfig( const SimplePingResult<PingT> &ping,
 
     // Check data size
     if (config.getDataSize() != dataSize) {
-        LOG(WARNING) << "Config expected " << 8*SizeOfDataSize(config.getDataSize()) << " bit data, data is " << 8*SizeOfDataSize(dataSize) << " bit";
+        LOG(WARNING) << "Config expected "
+                    << 8*SizeOfDataSize(config.getDataSize())
+                    << " bit data, data is actually "
+                    << 8*SizeOfDataSize(dataSize) << " bit";
     }
 
     return true;
 }
 
 }  // namespace liboculus
+

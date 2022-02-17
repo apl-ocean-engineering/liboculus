@@ -64,6 +64,7 @@ namespace liboculus {
          const float AzimuthBeamwidthRad = 0.4*M_PI/180.0;
 
          // \todo These shouldn't be fixed, should read from Oculus.h
+         // But I don't feel like dealing with their data structure
          const float MaxRange = 10;  // meters
     };
 
