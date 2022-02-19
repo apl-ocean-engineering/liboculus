@@ -84,4 +84,13 @@ struct FlagBits {
   static const uint8_t Do512Beams    = (0x01) << 6;
 };
 
+  // There doesn't appear to be an enum for the masterMode (like there is
+  // for pingRate and dataSize), so creating our own to match comments in
+  // liboculus/thirdparty/Oculus/Oculus.h.
+  typedef enum {
+    OCULUS_LOW_FREQ = 1,
+    OCULUS_HIGH_FREQ = 2
+  } OculusFreqMode;
+
+
 }  // namespace liboculus

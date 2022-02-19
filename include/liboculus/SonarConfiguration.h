@@ -34,6 +34,7 @@
 #include <boost/asio.hpp>
 
 #include "Oculus/Oculus.h"
+#include "liboculus/Constants.h"
 
 namespace liboculus {
 
@@ -56,11 +57,6 @@ class SonarConfiguration {
   SonarConfiguration &setGainPercent(double input);
   SonarConfiguration &setFlags(uint8_t flags);
   SonarConfiguration &setWaterTemperature(double degC);
-
-  typedef enum {
-    OCULUS_LOW_FREQ = 1,
-    OCULUS_HIGH_FREQ = 2
-  } OculusFreqMode;
 
   SonarConfiguration &setFreqMode(OculusFreqMode input);
   OculusFreqMode getFreqMode() const {
@@ -96,9 +92,7 @@ class SonarConfiguration {
   SonarConfiguration &use512Beams()    { return set512Beams(true); }
   bool get512Beams() const                { return _512beams;}
 
-
   bool getSendGain() const                { return _sendGain; }
-  //bool getData16Bit() const               { return _16bitData; }
   bool getSimpleReturn() const            { return _simpleReturn; }
   bool getGainAssistance() const          { return _gainAssistance; }
 
