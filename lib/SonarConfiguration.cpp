@@ -191,11 +191,13 @@ std::vector<uint8_t> SonarConfiguration::serialize<OculusSimpleFireMessage>() co
 
 void SonarConfiguration::updateFlags() const {
   _sfm.extFlags = 0;
-  if (_dataSize == dataSize32Bit) 
+  if (_dataSize == dataSize32Bit) {
     _sfm.extFlags |= 0x00000200;
+  }
 
+  bool more_than_8bit = (_dataSize == dataSize16Bit) || (_dataSize == dataSize32Bit);
   _sfm.flags = (_rangeInMeters  ? FlagBits::RangeAsMeters : 0 ) |
-         (((_dataSize == dataSize16Bit) || (_dataSize == dataSize32Bit)) ? FlagBits::Data16Bits : 0) |
+         (more_than_8bit  ? FlagBits::Data16Bits : 0) |
          (_sendGain       ? FlagBits::DoSendGain : 0) |
          (_simpleReturn   ? FlagBits::SimpleReturn : 0) |
          (_gainAssistance ? FlagBits::GainAssistance : 0) |
@@ -220,8 +222,5 @@ void SonarConfiguration::dump() const {
             << "\n       gain assistance " << getGainAssistance()
             << "\n       use 512 beams   " << get512Beams();
 }
-
-
-
 
 }  // namespace liboculus
