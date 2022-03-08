@@ -195,7 +195,7 @@ void SonarConfiguration::updateFlags() const {
     _sfm.extFlags |= 0x00000200;
   }
 
-  bool more_than_8bit = (_dataSize == dataSize16Bit) || (_dataSize == dataSize32Bit);
+  const bool more_than_8bit = (_dataSize == dataSize16Bit) || (_dataSize == dataSize32Bit);
   _sfm.flags = (_rangeInMeters  ? FlagBits::RangeAsMeters : 0 ) |
          (more_than_8bit  ? FlagBits::Data16Bits : 0) |
          (_sendGain       ? FlagBits::DoSendGain : 0) |
