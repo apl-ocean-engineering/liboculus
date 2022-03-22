@@ -46,6 +46,9 @@ enum OculusPauseReasonType : uint8_t
   oculusPauseBootFromMain,
   oculusPauseFlashError,
   oculusPauseJtagLoad,
+  oculusPauseFirmwareError,
+  oculusPauseCompatibilityError,
+  oculusPauseBrownout
 };
 
 enum OculusTemperatureStatusType : uint8_t

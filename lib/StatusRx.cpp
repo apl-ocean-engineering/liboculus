@@ -29,6 +29,7 @@
  */
 
 #include <string.h>
+#include <iomanip>
 #include <sstream>
 
 #include <arpa/inet.h>
@@ -148,6 +149,15 @@ bool StatusRx::parseStatus(const SonarStatus &status) {
         LOG(WARNING) << "Halt: Flash Error. Update firmware";
       } else if (prt == oculusPauseJtagLoad) {
         LOG(WARNING) << "Halt: JTAG Load";
+      } else if (prt == oculusPauseFirmwareError) {
+        LOG(WARNING) << "Halt: Firmware error";
+      } else if (prt == oculusPauseCompatibilityError) {
+        LOG(WARNING) << "Halt: Compatibility error";
+      } else if (prt == oculusPauseBrownout) {
+        LOG(WARNING) << "Halt: Brownout";
+      } else {
+        LOG(WARNING) << "Halt: unknown error (0x" << std::hex
+                     << static_cast<int>(prt) << ")";
       }
 
       return false;
