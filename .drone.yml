@@ -56,21 +56,21 @@ steps:
         - pull_request
 
 ## ... and all of the serdp_* packages at github
-- name: trigger-github-downstream
-  image: plugins/downstream
-  settings:
-    server: https://github.drone.camhd.science
-    fork: true
-    token:
-      from_secret: github_drone_token
-    repositories:
-      - apl-ocean-engineering/serdp_recorder
-      - apl-ocean-engineering/serdp_player
-      - apl-ocean-engineering/serdp_common
-  when:
-    event:
-      exclude:
-        - pull_request
+# - name: trigger-github-downstream
+#   image: plugins/downstream
+#   settings:
+#     server: https://github.drone.camhd.science
+#     fork: true
+#     token:
+#       from_secret: github_drone_token
+#     repositories:
+#       - apl-ocean-engineering/serdp_recorder
+#       - apl-ocean-engineering/serdp_player
+#       - apl-ocean-engineering/serdp_common
+#   when:
+#     event:
+#       exclude:
+#         - pull_request
 
 - name: slack
   image: plugins/slack
