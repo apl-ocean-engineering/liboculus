@@ -9,20 +9,18 @@ This library contains code for:
 
   - Communicating with a [Blueprint Subsea Oculus](https://www.blueprintsubsea.com/oculus/index.php) imaging sonar over
     its ethernet interface.
-
-  - Requesting that the sonar ping.
-
+  - Requesting that the sonar start pinging.
   - Decoding and parsing fields from the resulting ping messages from the sonar.
-
   - Loading and parsing sonar data recorded as either:
     - Raw streams of binary packets.
-    - Data encoded in the GPMF format by `serdp_recorder`
-    - **Note:** This repo includes scaffold code for reading `.oculus` files saved from the Blueprint GUI, but as that format is proprietary and undocumented **we cannot actually parse `.oculus` files.**
+    - **Note:** This repo includes scaffold code for reading `.oculus` files saved from the Blueprint GUI, but that format is proprietary and undocumented **we cannot parse `.oculus` files.**
 
-The library contains no special provisions for _saving_ sonar data,
+The library contains no special provisions for *saving* sonar data,
 but it's straightforward to write packets as a raw binary stream
-(which the library can read) -- see `tools/oculus_client.cpp` for an example.
+(which the library can read) -- see [`tools/oculus_client.cpp`](https://github.com/apl-ocean-engineering/liboculus/blob/main/tools/oculus_client.cpp) for an example.
 
+
+---
 ## Build/Installation
 
 This is a hybrid repository:
@@ -42,19 +40,16 @@ binary `oc_client` requires [CLI11](https://github.com/CLIUtils/CLI11),
 both of which are also handled by fips.
 
 Internally, the ethernet interface uses
-[Boost::asio](https://www.boost.org/doc/libs/1_66_0/doc/html/boost_asio.html),
-so Boost needs to be installed.
+[Boost::asio](https://www.boost.org/doc/libs/1_66_0/doc/html/boost_asio.html).
 
-
-
+---
 ## oc_client binary
 
 The repo contains one binary, `oc_client` which can read data either from a
 real Oculus sonar via ethernet, or from a file containing raw Ethernet
 data.
 
-As noted above, it **cannot** read
-files saved by the proprietary Oculus GUI as that receives data from the sonar in a proprietary data format (independent from the `SimplePingResult` format used in this code).
+As noted above, it **cannot** read files saved by the proprietary Oculus GUI as that is based on a proprietary data format (independent from the `SimplePingResult` format used in this code).
 
 Here's the help string for `oc_client`:
 
@@ -76,40 +71,16 @@ streams of sonar packets, and can be opened by `oc_client`.
 
 ## Library Design
 
-The driver using this library is expected to instantiate a SonarClient, and hook up two interfaces:
-1. Instantiate a SonarConfig that will be kept updated with desired parameters; the SonarClient takes this as an argument at construction and keeps a reference to it.
-1. implement a callback that will handle data received from the sensor.
+See [oc_client](https://github.com/apl-ocean-engineering/liboculus/blob/main/tools/oculus_client.cpp) as a sample non-ROS client.   A typical client will have instances of two interface classes.  Both use Boost::Asio for network IO and must be given an [`boost::asio::io_context`](https://www.boost.org/doc/libs/1_79_0/doc/html/boost_asio/reference/io_context.html) on construction.
 
-Thus, the data flow is:
-* Updating configuration:
-  - Driver decides configuration needs to be updated. In the case of `oculus_sonar_driver`, this is triggered by `dynamic_reconfigure`. Driver calls `SonarConfiguration::.set{Range,etc.}`. Driver *owns* an instance of SonarConfig.
-  - When updated, `SonarConfig` has a pointer to a callback that it calls, passing a pointer to itself.
-  - That configCallback is responsible for actually sending it to the instrument. This is done by DataRx::sendConfiguration.
-* Receiving
-  - DataRx listens on the specified port. The message is read in two chunks, by `DataRx::readHeader` and `DataRx::readSimplePingResult`. The second of those stuffs the data into a `SimplePingResult` (which in turn is a thin wrapper around the Oculus-defined struct) and calls the provided callback.
-  - This callback was set by ...
+* [DataRx](https://github.com/apl-ocean-engineering/liboculus/blob/main/include/liboculus/DataRx.h) receives packets from the sonar, calling a callback function for each ping.
+* [StatusRx](https://github.com/apl-ocean-engineering/liboculus/blob/main/include/liboculus/StatusRx.h) monitors the UDP broadcast-based protocol used to autodetect sonars on the network.   On receiving a good sonar status, it calls a callback.
 
-* Receiving status
-  - StatusRx
-
-The SonarClient itself owns a StatusRx and a DataRx, each of which listens on a fixed port for the given messages.
-* The StatusRx callback simply prints warnings, and attempts to connect the DataRx using the received address.
-* The DataRx
-
-
-The SonarConfiguration is really obnoxious:
-* the oculus_driver owns it.
-* SonarClient is constructed with a config and keeps a reference
-* SonarClient passes the reference to DataRx
-* DataRx sets the callback that causes ges from the oculus_driver to actually be sent to the instrument.
-
-
+The client must implement callbacks that will handle data from the sonar ([for example](https://github.com/apl-ocean-engineering/liboculus/blob/438f34a469eaf0d495ea515e86290b39cf965a20/tools/oculus_client.cpp#L131)) -- independent callbacks must be defined for the Oculus V1 and V2 packets.   DataRx also has a [callback on successful connection with a sonar](https://github.com/apl-ocean-engineering/liboculus/blob/438f34a469eaf0d495ea515e86290b39cf965a20/tools/oculus_client.cpp#L181) which can be used to send a configuration to the sonar (this will start the sonar pinging).
 
 This library makes liberal use of overlay classes in order to provide
 zero-copy accessor functions into the raw data chunks received from
-the oculus.
-
-These classes overlay the struct hierarchy defined in
+the oculus.  These classes overlay the struct hierarchy defined in
 thirdparty/Oculus/Oculus.h, making it possible to directly cast between the types depending on which accessors you want to use:
 * OculusSimplePingResult carries all image data from the oculus.
 * Its first field is the OculusSimpleFireMessage that triggered data collection
@@ -133,10 +104,18 @@ Other files/classes:
 * StatusRx: Connects to the fixed status port; stuffs messages into a SonarStatus and calls SonarClient's callback with the SonarStatus.
 * SonarStatus: Wrapper around OculusStatusMsg. Only used to dump it to LOG(DEBUG), so I'd like to see it disappear in favor of a log_status helper function.
 
-* IoServiceThread: thin wrapper around boost::asio functions providing a simple worker thread; used by both StatusRx and DataRx
+* IoServiceThread: thin wrapper which runs a [`boost::asio::io_context`](https://www.boost.org/doc/libs/1_79_0/doc/html/boost_asio/reference/io_context.html) within a thread.  Used by both StatusRx and DataRx
 
+----
+# Related Packages
 
-## License
+* [sonar_image_proc](https://github.com/apl-ocean-engineering/sonar_image_proc) contains code to postprocess sonar data, including drawing the sonar data to an OpenCV Mat (contains both a ROS node and non-ROS library).
+* [oculus_sonar_driver](https://gitlab.com/apl-ocean-engineering/oculus_sonar_driver) provides a ROS node for interfacing with the Oculus sonar.
+* [acoustic_msgs](https://github.com/apl-ocean-engineering/hydrographic_msgs/tree/main/acoustic_msgs) defines the ROS [SonarImage](https://github.com/apl-ocean-engineering/hydrographic_msgs/blob/main/acoustic_msgs/msg/SonarImage.msg) message type published by [oculus_sonar_driver](https://gitlab.com/apl-ocean-engineering/oculus_sonar_driver).
+* [rqt_sonar_image_view](https://github.com/apl-ocean-engineering/rqt_sonar_image_view) is an Rqt plugin for displaying sonar imagery (uses [sonar_image_proc](https://github.com/apl-ocean-engineering/sonar_image_proc))
+
+---
+# License
 
 This code is released under the [BSD 3-clause license](LICENSE).
 
