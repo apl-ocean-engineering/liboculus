@@ -142,21 +142,21 @@ bool StatusRx::parseStatus(const SonarStatus &status) {
       OculusPauseReasonType prt = (OculusPauseReasonType)((status_flags & 0x38) >> 3);
 
       if (prt == oculusPauseMagSwitch) {
-        LOG(WARNING) << "Halt: Mag Switch Detected";
+        LOG(FATAL) << "Halt: Mag Switch Detected";
       } else if (prt == oculusPauseBootFromMain) {
-        LOG(WARNING) << "Halt: Boot From Main";
+        LOG(FATAL) << "Halt: Boot From Main";
       } else if (prt == oculusPauseFlashError) {
-        LOG(WARNING) << "Halt: Flash Error. Update firmware";
+        LOG(FATAL) << "Halt: Flash Error. Update firmware";
       } else if (prt == oculusPauseJtagLoad) {
-        LOG(WARNING) << "Halt: JTAG Load";
+        LOG(FATAL) << "Halt: JTAG Load";
       } else if (prt == oculusPauseFirmwareError) {
-        LOG(WARNING) << "Halt: Firmware error";
+        LOG(FATAL) << "Halt: Firmware error";
       } else if (prt == oculusPauseCompatibilityError) {
-        LOG(WARNING) << "Halt: Compatibility error";
+        LOG(FATAL) << "Halt: Compatibility error";
       } else if (prt == oculusPauseBrownout) {
-        LOG(WARNING) << "Halt: Brownout";
+        LOG(FATAL) << "Halt: Brownout";
       } else {
-        LOG(WARNING) << "Halt: unknown error (0x" << std::hex
+        LOG(FATAL) << "Halt: unknown error (0x" << std::hex
                      << static_cast<int>(prt) << ")";
       }
 
@@ -176,7 +176,7 @@ bool StatusRx::parseStatus(const SonarStatus &status) {
 
     const bool transmitError = (status_flags & (1 << 16));
     if (transmitError) {
-      LOG(WARNING) << "Critical: Transmit Circuit Failure";
+      LOG(FATAL) << "Critical: Transmit Circuit Failure";
       return false;
     }
   }
