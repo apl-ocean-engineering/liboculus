@@ -78,6 +78,9 @@ int main(int argc, char **argv) {
   float range = 4;
   app.add_option("-r,--range", range, "Range in meters");
 
+  float gain = 50;
+  app.add_option("-g, --gain", gain, "Gain as a percentage (1-100)");
+
   CLI11_PARSE(app, argc, argv);
 
   if (verbosity == 1) {
@@ -89,6 +92,10 @@ int main(int argc, char **argv) {
   if ((bitDepth != 8) && (bitDepth != 16) && (bitDepth != 32)) {
     LOG(FATAL) << "Invalid bit depth " << bitDepth;
     exit(-1);
+  }
+
+  if ((gain < 1) || (gain > 100)) {
+    LOG(FATAL) << "Invalid gain " << gain;
   }
 
   ofstream output;
@@ -120,11 +127,11 @@ int main(int argc, char **argv) {
   config.setRange(range);
 
   if (bitDepth == 8) {
-    config.setDataSize(dataSize8Bit);
+    config.setGainPercent(gain).setDataSize(dataSize8Bit);
   } else if (bitDepth == 16) {
-    config.setDataSize(dataSize16Bit);
+    config.setGainPercent(gain).setDataSize(dataSize16Bit);
   } else if (bitDepth == 32) {
-    config.sendGain().noGainAssistance().setDataSize(dataSize32Bit);
+    config.setGainPercent(gain).sendGain().noGainAssistance().setDataSize(dataSize32Bit);
   }
 
   _io_thread.reset(new IoServiceThread);
@@ -206,7 +213,6 @@ int main(int argc, char **argv) {
 
   int lastCount = 0;
   while (!doStop) {
-
     // Very rough Hz calculation right now
     const auto c = count;
     LOG(INFO) << "Received pings at " << c - lastCount << " Hz";
