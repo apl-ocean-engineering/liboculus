@@ -1,4 +1,3 @@
-
 #include <fstream>
 #include <memory>
 #include <string>
@@ -95,7 +94,7 @@ int main(int argc, char **argv) {
   }
 
   if ((gain < 1) || (gain > 100)) {
-    LOG(FATAL) << "Invalid gain " << gain;
+    LOG(FATAL) << "Invalid gain " << gain << "; should be in the range of 1-100";
   }
 
   ofstream output;
@@ -124,14 +123,19 @@ int main(int argc, char **argv) {
 
   SonarConfiguration config;
   config.setPingRate(pingRateNormal);
+
+  LOG(INFO) << "Setting range to " << range;
   config.setRange(range);
 
+  LOG(INFO) << "Setting gain to " << gain;
+  config.setGainPercent(gain);
+
   if (bitDepth == 8) {
-    config.setGainPercent(gain).setDataSize(dataSize8Bit);
+    config.setDataSize(dataSize8Bit);
   } else if (bitDepth == 16) {
-    config.setGainPercent(gain).setDataSize(dataSize16Bit);
+    config.setDataSize(dataSize16Bit);
   } else if (bitDepth == 32) {
-    config.setGainPercent(gain).sendGain().noGainAssistance().setDataSize(dataSize32Bit);
+    config.sendGain().noGainAssistance().setDataSize(dataSize32Bit);
   }
 
   _io_thread.reset(new IoServiceThread);
@@ -141,8 +145,8 @@ int main(int argc, char **argv) {
   // Callback for a SimplePingResultV1
   _data_rx.setCallback<liboculus::SimplePingResultV1>(
       [&](const liboculus::SimplePingResultV1 &ping) {
-        // Pings send to the callback are always valid, don't need to check
-        // again
+        // Pings are only sent to the callback if valid()
+        // don't need to check independently
 
         {
           const auto valid = checkPingAgreesWithConfig(ping, config);
@@ -167,8 +171,8 @@ int main(int argc, char **argv) {
   // Callback for a SimplePingResultV2
   _data_rx.setCallback<liboculus::SimplePingResultV2>(
       [&](const liboculus::SimplePingResultV2 &ping) {
-        // Pings send to the callback are always valid, don't need to check
-        // again
+        // Pings are only sent to the callback if valid()
+        // don't need to check independently
 
         {
           const auto valid = checkPingAgreesWithConfig(ping, config);
@@ -190,7 +194,7 @@ int main(int argc, char **argv) {
           doStop = true;
       });
 
-  // Callback when connection to a sonar
+  // When the _data_rx connects, send the configuration
   _data_rx.setOnConnectCallback([&]() {
     config.dump();
     _data_rx.sendSimpleFireMessage(config);
@@ -198,7 +202,8 @@ int main(int argc, char **argv) {
 
   // Connect the client
   if (ipAddr == "auto") {
-    // For auto-deteciont, when the StatusRx connects configure the DataRx
+    // To autoconnect, define a callback for the _status_rx which
+    // connects _data_rx to the received IP address
     _status_rx.setCallback([&](const SonarStatus &status, bool is_valid) {
       if (!is_valid || _data_rx.isConnected())
         return;
@@ -232,7 +237,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-// Playback not currently working
+// !! Playback not currently working
 //
 // int playbackSonarFile(const std::string &filename, ofstream &output,
 //                       int stopAfter) {
