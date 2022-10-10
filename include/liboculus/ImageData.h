@@ -70,6 +70,8 @@ class ImageData {
       _stride(stride == 0 ? nBeams*dataSize : stride),  // Stride is in _bytes_
       _offset(offset) {}
 
+  uint16_t nRanges() const { return _numRanges; }
+  uint16_t nBeams() const { return _numBeams; }
 
   uint8_t at_uint8(unsigned int beam, unsigned int rangeBin) const {
     CHECK(_dataSize == 1) << "This function can only handle 8-bit data, use at_uint16()";

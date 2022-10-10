@@ -118,6 +118,8 @@ void SimpleFireMessage<FireMsgT>::dump() const {
   LOG(DEBUG) << "Flags:  Range is: " << (this->flags().getRangeAsMeters() ? "Meters" : "Percent");
   LOG(DEBUG) << "       Range: " << range();
   LOG(DEBUG) << "Speed of sound: " << this->fireMsg()->speedOfSound;
+  LOG(DEBUG) << "      Gain pct: " << this->fireMsg()->gainPercent;
+
 }
 
 }  // namespace liboculus

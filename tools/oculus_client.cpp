@@ -44,6 +44,18 @@ void signalHandler(int signo) {
   doStop = true;
 }
 
+double mean_image_intensity( const liboculus::ImageData &imageData ) {
+  double f;
+  for ( int r = 0; r < imageData.nRanges(); ++r ) {
+    for ( int a = 0; a < imageData.nBeams(); ++a ) {
+      f += imageData.at_uint32(a,r);
+    }
+  }
+  f /= (imageData.nRanges() * imageData.nBeams());
+  return f;
+}
+
+
 int main(int argc, char **argv) {
   libg3logger::G3Logger logger("ocClient");
 
@@ -128,14 +140,14 @@ int main(int argc, char **argv) {
   config.setRange(range);
 
   LOG(INFO) << "Setting gain to " << gain;
-  config.setGainPercent(gain);
+  config.setGainPercent(gain).noGainAssistance();
 
   if (bitDepth == 8) {
     config.setDataSize(dataSize8Bit);
   } else if (bitDepth == 16) {
     config.setDataSize(dataSize16Bit);
   } else if (bitDepth == 32) {
-    config.sendGain().noGainAssistance().setDataSize(dataSize32Bit);
+    config.sendGain().setDataSize(dataSize32Bit);
   }
 
   _io_thread.reset(new IoServiceThread);
@@ -163,6 +175,8 @@ int main(int argc, char **argv) {
           output.write(cdata, ping.buffer()->size());
         }
 
+        LOG(DEBUG) << "Average intensity: " << mean_image_intensity(ping.image());
+
         count++;
         if ((stopAfter > 0) && (count >= stopAfter))
           _io_thread->stop();
@@ -188,6 +202,8 @@ int main(int argc, char **argv) {
               reinterpret_cast<const char *>(ping.buffer()->data());
           output.write(cdata, ping.buffer()->size());
         }
+
+        LOG(DEBUG) << "Average intensity: " << mean_image_intensity(ping.image());
 
         count++;
         if ((stopAfter > 0) && (count >= stopAfter))
