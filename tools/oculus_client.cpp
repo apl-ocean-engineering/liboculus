@@ -45,10 +45,10 @@ void signalHandler(int signo) {
 }
 
 double mean_image_intensity( const liboculus::ImageData &imageData ) {
-  double f;
+  double f=0;
   for ( int r = 0; r < imageData.nRanges(); ++r ) {
     for ( int a = 0; a < imageData.nBeams(); ++a ) {
-      f += imageData.at_uint32(a,r);
+      f += imageData.at_uint32(a, r);
     }
   }
   f /= (imageData.nRanges() * imageData.nBeams());
