@@ -48,7 +48,7 @@ SonarConfiguration::SonarConfiguration()
   _gainAssistance(true),
   _512beams(true),
   _dataSize(dataSize8Bit) {
-  memset(&_sfm, 0, sizeof(OculusSimpleFireMessage));
+  memset(&_sfm, 0, sizeof(ConfigFireMessage));
 
   // Fill in OculusMessageHeader _sfm.head
   _sfm.head.oculusId    = OCULUS_CHECK_ID;  // 0x4f53
@@ -56,7 +56,7 @@ SonarConfiguration::SonarConfiguration()
   _sfm.head.dstDeviceId = 0;                // n.b. ignored by device
   _sfm.head.msgId       = messageSimpleFire;
   _sfm.head.msgVersion  = 2;
-  _sfm.head.payloadSize = sizeof(OculusSimpleFireMessage2) - sizeof(OculusMessageHeader);
+  _sfm.head.payloadSize = sizeof(ConfigFireMessage) - sizeof(OculusMessageHeader);
 
   _sfm.masterMode = OCULUS_HIGH_FREQ;
   _sfm.pingRate = pingRateNormal;

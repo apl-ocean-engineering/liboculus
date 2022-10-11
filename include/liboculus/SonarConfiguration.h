@@ -102,7 +102,8 @@ class SonarConfiguration {
 
   void updateFlags() const;
 
-  mutable OculusSimpleFireMessage2 _sfm;
+  typedef OculusSimpleFireMessage2 ConfigFireMessage;
+  mutable ConfigFireMessage _sfm;
 
   bool _sendRangeAsMeters;
   float _rangeInMeters;
