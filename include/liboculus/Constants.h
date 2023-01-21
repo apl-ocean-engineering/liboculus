@@ -53,6 +53,8 @@ namespace liboculus {
         const float AzimuthBeamwidthDeg = 0.6;
         const float AzimuthBeamwidthRad = 0.6*M_PI/180.0;
 
+        // NOTE(lindzey): According to the spec sheet, max range is 30 m
+        //    at 1.2 MHz on the M3000d, but 40 m on the M1200d.
         const float MaxRange = 40;
     };
 
@@ -66,6 +68,18 @@ namespace liboculus {
          // \todo These shouldn't be fixed, should read from Oculus.h
          // But I don't feel like dealing with their data structure
          const float MaxRange = 10;  // meters
+    };
+
+    namespace Oculus_3000MHz {
+         const float ElevationBeamwidthDeg = 20.0;
+         const float ElevationBeamwidthRad = 20.0*M_PI/180.0;
+
+         const float AzimuthBeamwidthDeg = 0.4;
+         const float AzimuthBeamwidthRad = 0.4*M_PI/180.0;
+
+         // \todo These shouldn't be fixed, should read from Oculus.h
+         // But I don't feel like dealing with their data structure
+         const float MaxRange = 5;  // meters
     };
 
 struct FlagBits {
