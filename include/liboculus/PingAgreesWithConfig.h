@@ -37,35 +37,34 @@ namespace liboculus {
 
 // \TODO develop better API for returning more descriptive results, esp
 // when the ping and config don't agree.
-template<typename PingT>
-bool checkPingAgreesWithConfig( const SimplePingResult<PingT> &ping,
-                                const SonarConfiguration &config ) {
-    OculusSimpleFireFlags flags(ping.fireMsg()->flags);
+template <typename PingT>
+bool checkPingAgreesWithConfig(const SimplePingResult<PingT> &ping,
+                               const SonarConfiguration &config) {
+  OculusSimpleFireFlags flags(ping.fireMsg()->flags);
 
-    const auto nBeams = ping.ping()->nBeams;
-    // (Not used right now)  const auto nRanges = ping.ping()->nRanges;
-    const auto dataSize = ping.ping()->dataSize;
+  const auto nBeams = ping.ping()->nBeams;
+  // (Not used right now)  const auto nRanges = ping.ping()->nRanges;
+  const auto dataSize = ping.ping()->dataSize;
 
-    if (config.get512Beams()) {
-        if (nBeams != 512) {
-            LOG(WARNING) << "Config expects 512 beams, ping has " << nBeams;
-        }
-    } else {
-        if (nBeams != 256) {
-            LOG(WARNING) << "Config expects 256 beams, ping has " << nBeams;
-        }
+  if (config.get512Beams()) {
+    if (nBeams != 512) {
+      LOG(WARNING) << "Config expects 512 beams, ping has " << nBeams;
     }
-
-    // Check data size
-    if (config.getDataSize() != dataSize) {
-        LOG(WARNING) << "Config expected "
-                    << 8*SizeOfDataSize(config.getDataSize())
-                    << " bit data, data is actually "
-                    << 8*SizeOfDataSize(dataSize) << " bit";
+  } else {
+    if (nBeams != 256) {
+      LOG(WARNING) << "Config expects 256 beams, ping has " << nBeams;
     }
+  }
 
-    return true;
+  // Check data size
+  if (config.getDataSize() != dataSize) {
+    LOG(WARNING) << "Config expected "
+                 << 8 * SizeOfDataSize(config.getDataSize())
+                 << " bit data, data is actually "
+                 << 8 * SizeOfDataSize(dataSize) << " bit";
+  }
+
+  return true;
 }
 
 }  // namespace liboculus
-

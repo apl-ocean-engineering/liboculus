@@ -33,40 +33,37 @@
 #include <fstream>
 #include <memory>
 
+#include "liboculus/OculusMessageHandler.h"
 #include "liboculus/SimplePingResult.h"
 #include "liboculus/expected.hpp"
-#include "liboculus/OculusMessageHandler.h"
 
 namespace liboculus {
 
 class SonarPlayerBase : public OculusMessageHandler {
-public:
-  //typedef tl::expected<SimplePingResult<PingV1>, bool> SonarPlayerResult_t;
+ public:
+  // typedef tl::expected<SimplePingResult<PingV1>, bool> SonarPlayerResult_t;
 
-  SonarPlayerBase()           {;}
-  virtual ~SonarPlayerBase()  {;}
+  SonarPlayerBase() { ; }
+  virtual ~SonarPlayerBase() { ; }
 
   virtual bool open(const std::string &filename);
-  virtual bool isOpen() const
-    { return _input.is_open(); }
+  virtual bool isOpen() const { return _input.is_open(); }
 
-  virtual bool eof() const
-    { return _input.eof(); }
+  virtual bool eof() const { return _input.eof(); }
 
-  virtual void rewind()
-    { _input.seekg(0); }
+  virtual void rewind() { _input.seekg(0); }
 
   virtual bool nextPing() = 0;
 
   static std::shared_ptr<SonarPlayerBase> OpenFile(const std::string &filename);
 
-// #ifdef WITH_GPMF
-//   virtual bool setStream(GPMF_stream *stream) { return false; }
-//
-//   static std::shared_ptr<SonarPlayerBase> createGPMFSonarPlayer();
-// #endif
+  // #ifdef WITH_GPMF
+  //   virtual bool setStream(GPMF_stream *stream) { return false; }
+  //
+  //   static std::shared_ptr<SonarPlayerBase> createGPMFSonarPlayer();
+  // #endif
 
-protected:
+ protected:
   std::ifstream _input;
 };
 
@@ -75,16 +72,13 @@ protected:
 ///
 class RawSonarPlayer : public SonarPlayerBase {
  public:
-  RawSonarPlayer()
-    : SonarPlayerBase() {;}
+  RawSonarPlayer() : SonarPlayerBase() { ; }
 
-  virtual ~RawSonarPlayer()
-    {;}
+  virtual ~RawSonarPlayer() { ; }
 
   bool nextPing() override;
 
  private:
 };
 
-
-} // namespace liboculus
+}  // namespace liboculus

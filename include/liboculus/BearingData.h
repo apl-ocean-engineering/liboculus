@@ -39,15 +39,12 @@ namespace liboculus {
 
 class BearingData {
  public:
-  BearingData()
-    : _data(nullptr), _numBeams(0)
-    {;}
+  BearingData() : _data(nullptr), _numBeams(0) { ; }
 
-  BearingData(const BearingData &other)  = default;
+  BearingData(const BearingData &other) = default;
 
   BearingData(const int16_t *data, int nBeams)
-      : _data(data),
-        _numBeams(nBeams) {}
+      : _data(data), _numBeams(nBeams) {}
 
   int size() const { return _numBeams; }
 
@@ -61,17 +58,11 @@ class BearingData {
     return _data[i] / 100.0;
   }
 
-  float at_rad(unsigned int i) const {
-    return deg2rad(at(i));
-  }
+  float at_rad(unsigned int i) const { return deg2rad(at(i)); }
 
-  float front() const {
-    return _data[0] / 100.0;
-  }
+  float front() const { return _data[0] / 100.0; }
 
-  float back() const {
-    return _data[_numBeams-1] / 100.0;
-  }
+  float back() const { return _data[_numBeams - 1] / 100.0; }
 
  private:
   const int16_t *_data;

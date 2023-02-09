@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "test_data.h"
-
 #include "liboculus/SimplePingResult.h"
+#include "test_data.h"
 
 using namespace liboculus;
 

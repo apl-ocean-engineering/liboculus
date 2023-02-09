@@ -30,8 +30,8 @@
 
 #pragma once
 
-#include <vector>
 #include <boost/asio.hpp>
+#include <vector>
 
 #include "Oculus/Oculus.h"
 #include "liboculus/Constants.h"
@@ -45,7 +45,6 @@ namespace liboculus {
 // just make it at time of serialization.
 class SonarConfiguration {
  public:
-
   SonarConfiguration();
 
   template <typename FireMsg_t>
@@ -67,19 +66,18 @@ class SonarConfiguration {
   }
 
   SonarConfiguration &setDataSize(DataSizeType sz);
-  DataSizeType getDataSize() const         { return _dataSize; }
+  DataSizeType getDataSize() const { return _dataSize; }
 
   SonarConfiguration &setRange(double input);
 
   SonarConfiguration &sendRangeAsMeters(bool v);
-  SonarConfiguration &sendRangeAsMeters()  { return sendRangeAsMeters(true); }
+  SonarConfiguration &sendRangeAsMeters() { return sendRangeAsMeters(true); }
   SonarConfiguration &sendRangeAsPercent() { return sendRangeAsMeters(false); }
-  bool getSendRangeAsMeters() const        { return _sendRangeAsMeters; }
-
+  bool getSendRangeAsMeters() const { return _sendRangeAsMeters; }
 
   SonarConfiguration &setSendGain(bool v);
-  SonarConfiguration &sendGain()       { return setSendGain(true); }
-  SonarConfiguration &dontSendGain()   { return setSendGain(false); }
+  SonarConfiguration &sendGain() { return setSendGain(true); }
+  SonarConfiguration &dontSendGain() { return setSendGain(false); }
 
   SonarConfiguration &setSimpleReturn(bool v);
 
@@ -88,18 +86,17 @@ class SonarConfiguration {
   SonarConfiguration &noGainAssistance() { return setGainAssistance(false); }
 
   SonarConfiguration &set512Beams(bool v);
-  SonarConfiguration &use256Beams()    { return set512Beams(false); }
-  SonarConfiguration &use512Beams()    { return set512Beams(true); }
-  bool get512Beams() const                { return _512beams;}
+  SonarConfiguration &use256Beams() { return set512Beams(false); }
+  SonarConfiguration &use512Beams() { return set512Beams(true); }
+  bool get512Beams() const { return _512beams; }
 
-  bool getSendGain() const                { return _sendGain; }
-  bool getSimpleReturn() const            { return _simpleReturn; }
-  bool getGainAssistance() const          { return _gainAssistance; }
+  bool getSendGain() const { return _sendGain; }
+  bool getSimpleReturn() const { return _simpleReturn; }
+  bool getGainAssistance() const { return _gainAssistance; }
 
   void dump() const;
 
  private:
-
   void updateFlags() const;
 
   typedef OculusSimpleFireMessage2 ConfigFireMessage;

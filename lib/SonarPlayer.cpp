@@ -28,33 +28,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "liboculus/SonarPlayer.h"
+
 #include <fstream>
 #include <iostream>
 
 #include "Oculus/Oculus.h"
-
 #include "g3log/g3log.hpp"
-
+#include "liboculus/Constants.h"
 #include "liboculus/DataTypes.h"
 #include "liboculus/MessageHeader.h"
 #include "liboculus/SimplePingResult.h"
-#include "liboculus/SonarPlayer.h"
-#include "liboculus/Constants.h"
 
 namespace liboculus {
 
-using std::shared_ptr;
 using std::ios_base;
+using std::shared_ptr;
 
 using liboculus::MessageHeader;
 using liboculus::SimplePingResult;
 
 /// Static function which automatically detects file type
-shared_ptr<SonarPlayerBase> SonarPlayerBase::OpenFile(const std::string &filename) {
+shared_ptr<SonarPlayerBase> SonarPlayerBase::OpenFile(
+    const std::string &filename) {
   std::ifstream f(filename);
 
-  if (!f.is_open())
-    return nullptr;
+  if (!f.is_open()) return nullptr;
 
   char c;
   f.get(c);
@@ -63,7 +62,8 @@ shared_ptr<SonarPlayerBase> SonarPlayerBase::OpenFile(const std::string &filenam
     f.get(d);
 
     if (d == 0x45) {
-      LOG(INFO) << "I think this is an GPMF file, unfortunately I cannot parse GPMF";
+      LOG(INFO)
+          << "I think this is an GPMF file, unfortunately I cannot parse GPMF";
       return nullptr;
     }
 
@@ -97,9 +97,11 @@ bool RawSonarPlayer::nextPing() {
     }
   }
 
-  LOG_IF(INFO, skipped_bytes > 0) << "Skipped " << skipped_bytes << " before reading start of header";
+  LOG_IF(INFO, skipped_bytes > 0)
+      << "Skipped " << skipped_bytes << " before reading start of header";
 
-  std::shared_ptr<ByteVector> buffer = std::make_shared<ByteVector>(sizeof(MessageHeader));
+  std::shared_ptr<ByteVector> buffer =
+      std::make_shared<ByteVector>(sizeof(MessageHeader));
   _input.get(reinterpret_cast<char *>(buffer->data()), sizeof(MessageHeader));
 
   MessageHeader header(buffer);
@@ -107,18 +109,18 @@ bool RawSonarPlayer::nextPing() {
 
   // Read the rest of the data
   buffer->resize(header.packetSize());
-  _input.get(reinterpret_cast<char *>(buffer->data()[sizeof(MessageHeader)]),header.payloadSize());
+  _input.get(reinterpret_cast<char *>(buffer->data()[sizeof(MessageHeader)]),
+             header.payloadSize());
 
   if (header.msgId() == messageSimplePingResult) {
     if (header.msgVersion() == 2) {
       callback(SimplePingResultV2(buffer));
     } else {
       callback(SimplePingResultV1(buffer));
-    }    
+    }
   }
 
-  return true; 
+  return true;
 }
-
 
 }  // namespace liboculus

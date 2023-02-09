@@ -32,55 +32,55 @@
 
 #pragma once
 
+#include <cmath>
 #include <cstddef>  // for size_t
 #include <string>
 #include <vector>
-#include <cmath>
 
 #include "Oculus/Oculus.h"
 
 namespace liboculus {
-    const uint16_t StatusBroadcastPort = 52102;
-    const uint16_t DataPort = 52100;
+const uint16_t StatusBroadcastPort = 52102;
+const uint16_t DataPort = 52100;
 
-    const uint8_t PacketHeaderLSB = (OCULUS_CHECK_ID & 0x00FF);
-    const uint8_t PacketHeaderMSB = (OCULUS_CHECK_ID & 0xFF00) >> 8;
+const uint8_t PacketHeaderLSB = (OCULUS_CHECK_ID & 0x00FF);
+const uint8_t PacketHeaderMSB = (OCULUS_CHECK_ID & 0xFF00) >> 8;
 
-    namespace Oculus_1200MHz {
-        const float ElevationBeamwidthDeg = 20.0;
-        const float ElevationBeamwidthRad = 20.0*M_PI/180.0;
+namespace Oculus_1200MHz {
+const float ElevationBeamwidthDeg = 20.0;
+const float ElevationBeamwidthRad = 20.0 * M_PI / 180.0;
 
-        const float AzimuthBeamwidthDeg = 0.6;
-        const float AzimuthBeamwidthRad = 0.6*M_PI/180.0;
+const float AzimuthBeamwidthDeg = 0.6;
+const float AzimuthBeamwidthRad = 0.6 * M_PI / 180.0;
 
-        // NOTE(lindzey): According to the spec sheet, max range is 30 m
-        //    at 1.2 MHz on the M3000d, but 40 m on the M1200d.
-        const float MaxRange = 40;
-    };
+// NOTE(lindzey): According to the spec sheet, max range is 30 m
+//    at 1.2 MHz on the M3000d, but 40 m on the M1200d.
+const float MaxRange = 40;
+};  // namespace Oculus_1200MHz
 
-    namespace Oculus_2100MHz {
-         const float ElevationBeamwidthDeg = 12.0;
-         const float ElevationBeamwidthRad = 12.0*M_PI/180.0;
+namespace Oculus_2100MHz {
+const float ElevationBeamwidthDeg = 12.0;
+const float ElevationBeamwidthRad = 12.0 * M_PI / 180.0;
 
-         const float AzimuthBeamwidthDeg = 0.4;
-         const float AzimuthBeamwidthRad = 0.4*M_PI/180.0;
+const float AzimuthBeamwidthDeg = 0.4;
+const float AzimuthBeamwidthRad = 0.4 * M_PI / 180.0;
 
-         // \todo These shouldn't be fixed, should read from Oculus.h
-         // But I don't feel like dealing with their data structure
-         const float MaxRange = 10;  // meters
-    };
+// \todo These shouldn't be fixed, should read from Oculus.h
+// But I don't feel like dealing with their data structure
+const float MaxRange = 10;  // meters
+};                          // namespace Oculus_2100MHz
 
-    namespace Oculus_3000MHz {
-         const float ElevationBeamwidthDeg = 20.0;
-         const float ElevationBeamwidthRad = 20.0*M_PI/180.0;
+namespace Oculus_3000MHz {
+const float ElevationBeamwidthDeg = 20.0;
+const float ElevationBeamwidthRad = 20.0 * M_PI / 180.0;
 
-         const float AzimuthBeamwidthDeg = 0.4;
-         const float AzimuthBeamwidthRad = 0.4*M_PI/180.0;
+const float AzimuthBeamwidthDeg = 0.4;
+const float AzimuthBeamwidthRad = 0.4 * M_PI / 180.0;
 
-         // \todo These shouldn't be fixed, should read from Oculus.h
-         // But I don't feel like dealing with their data structure
-         const float MaxRange = 5;  // meters
-    };
+// \todo These shouldn't be fixed, should read from Oculus.h
+// But I don't feel like dealing with their data structure
+const float MaxRange = 5;  // meters
+};                         // namespace Oculus_3000MHz
 
 struct FlagBits {
   // bit 0: 0 = interpret range as percent, 1 = interpret range as meters
@@ -88,23 +88,20 @@ struct FlagBits {
   // bit 2: 0 = wont send gain, 1 = send gain
   // bit 3: 0 = send full return message, 1 = send simple return message
   // bit 4: "gain assistance"?
-  // bit 6: use 512 beams (vs 256): email from Blueprint said to set flags |= 0x40
+  // bit 6: use 512 beams (vs 256): email from Blueprint said to set flags |=
+  // 0x40
 
   static const uint8_t RangeAsMeters = (0x01) << 0;
-  static const uint8_t Data16Bits    = (0x01) << 1;
-  static const uint8_t DoSendGain    = (0x01) << 2;
-  static const uint8_t SimpleReturn  = (0x01) << 3;
+  static const uint8_t Data16Bits = (0x01) << 1;
+  static const uint8_t DoSendGain = (0x01) << 2;
+  static const uint8_t SimpleReturn = (0x01) << 3;
   static const uint8_t GainAssistance = (0x01) << 4;
-  static const uint8_t Do512Beams    = (0x01) << 6;
+  static const uint8_t Do512Beams = (0x01) << 6;
 };
 
-  // There doesn't appear to be an enum for the masterMode (like there is
-  // for pingRate and dataSize), so creating our own to match comments in
-  // liboculus/thirdparty/Oculus/Oculus.h.
-  typedef enum {
-    OCULUS_LOW_FREQ = 1,
-    OCULUS_HIGH_FREQ = 2
-  } OculusFreqMode;
-
+// There doesn't appear to be an enum for the masterMode (like there is
+// for pingRate and dataSize), so creating our own to match comments in
+// liboculus/thirdparty/Oculus/Oculus.h.
+typedef enum { OCULUS_LOW_FREQ = 1, OCULUS_HIGH_FREQ = 2 } OculusFreqMode;
 
 }  // namespace liboculus

@@ -30,28 +30,30 @@
 
 #include "liboculus/OculusMessageHandler.h"
 
-
 namespace liboculus {
 
 template <>
-void OculusMessageHandler::setCallback<SimplePingResultV1>(SimplePingCallback callback) {
+void OculusMessageHandler::setCallback<SimplePingResultV1>(
+    SimplePingCallback callback) {
   _simplePingCallback = callback;
 }
 
 template <>
-void OculusMessageHandler::setCallback<SimplePingResultV2>(SimplePing2Callback callback) {
+void OculusMessageHandler::setCallback<SimplePingResultV2>(
+    SimplePing2Callback callback) {
   _simplePing2Callback = callback;
 }
 
-template<>
-void OculusMessageHandler::callback<SimplePingResultV1>(const SimplePingResultV1 &data) {
-    if (_simplePingCallback) _simplePingCallback(data);
+template <>
+void OculusMessageHandler::callback<SimplePingResultV1>(
+    const SimplePingResultV1 &data) {
+  if (_simplePingCallback) _simplePingCallback(data);
 }
 
-template<>
-void OculusMessageHandler::callback<SimplePingResultV2>(const SimplePingResultV2 &data) {
-    if (_simplePing2Callback) _simplePing2Callback(data);
+template <>
+void OculusMessageHandler::callback<SimplePingResultV2>(
+    const SimplePingResultV2 &data) {
+  if (_simplePing2Callback) _simplePing2Callback(data);
 }
 
-
-};   // namespace liboculus
+};  // namespace liboculus
