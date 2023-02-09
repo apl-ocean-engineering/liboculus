@@ -30,21 +30,19 @@
 
 #pragma once
 
-#include <mutex>
+#include <boost/asio.hpp>
 #include <chrono>
 #include <memory>
-
-#include <boost/asio.hpp>
+#include <mutex>
 
 #include "Oculus/Oculus.h"
-
 #include "liboculus/IoServiceThread.h"
 #include "liboculus/SonarStatus.h"
 
 namespace liboculus {
 
-using boost::asio::ip::udp;
 using boost::asio::deadline_timer;
+using boost::asio::ip::udp;
 
 // ----------------------------------------------------------------------------
 // StatusRx - a listening socket for oculus status messages
@@ -56,9 +54,9 @@ class StatusRx {
 
   ~StatusRx() {}
 
-  typedef std::function< void(const SonarStatus &, bool) > SonarStatusCallback;
+  typedef std::function<void(const SonarStatus &, bool)> SonarStatusCallback;
 
-  void setCallback( SonarStatusCallback callback ) {
+  void setCallback(SonarStatusCallback callback) {
     _sonarStatusCallback = callback;
   }
 
@@ -66,15 +64,16 @@ class StatusRx {
   void doConnect();
 
   void scheduleRead();
-  void handleRead(const boost::system::error_code& ec, std::size_t bytes_transferred );
+  void handleRead(const boost::system::error_code &ec,
+                  std::size_t bytes_transferred);
 
   bool parseStatus(const SonarStatus &status);
 
   std::vector<uint8_t> _buffer;
 
-  //uint16_t     _port;       // Port to listen on
-  uint16_t     _num_valid_rx;      // Number of valid status messages
-  uint16_t     _num_invalid_rx;    // Number of invalid status messages
+  // uint16_t     _port;       // Port to listen on
+  uint16_t _num_valid_rx;    // Number of valid status messages
+  uint16_t _num_invalid_rx;  // Number of invalid status messages
 
   udp::socket _socket;
 

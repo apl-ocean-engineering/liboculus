@@ -28,25 +28,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "liboculus/SimpleFireMessage.h"
 
 #include <iomanip>
-
-#include "liboculus/SimpleFireMessage.h"
 
 namespace liboculus {
 
 // Specializations for the cases where the behavior actually varies between
 // the two SimpleFireMessage types
 
-template<>
+template <>
 float SimpleFireMessage<OculusSimpleFireMessage>::range() const {
   return fireMsg()->range;
 }
 
-template<>
- float SimpleFireMessage<OculusSimpleFireMessage2>::range() const {
+template <>
+float SimpleFireMessage<OculusSimpleFireMessage2>::range() const {
   return fireMsg()->rangePercent;
 }
 
-
-}
+}  // namespace liboculus

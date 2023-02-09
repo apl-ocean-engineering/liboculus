@@ -28,47 +28,47 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-#include <iomanip>
-
 #include "liboculus/SonarConfiguration.h"
-#include "liboculus/DataTypes.h"
-#include "liboculus/Constants.h"
 
 #include <boost/asio.hpp>
 #include <g3log/g3log.hpp>
+#include <iomanip>
+
+#include "liboculus/Constants.h"
+#include "liboculus/DataTypes.h"
 
 namespace liboculus {
 
 SonarConfiguration::SonarConfiguration()
-: _sendRangeAsMeters(true),
-  _rangeInMeters(5),
-  _sendGain(true),
-  _simpleReturn(true),
-  _gainAssistance(true),
-  _512beams(true),
-  _dataSize(dataSize8Bit) {
+    : _sendRangeAsMeters(true),
+      _rangeInMeters(5),
+      _sendGain(true),
+      _simpleReturn(true),
+      _gainAssistance(true),
+      _512beams(true),
+      _dataSize(dataSize8Bit) {
   memset(&_sfm, 0, sizeof(ConfigFireMessage));
 
   // Fill in OculusMessageHeader _sfm.head
-  _sfm.head.oculusId    = OCULUS_CHECK_ID;  // 0x4f53
+  _sfm.head.oculusId = OCULUS_CHECK_ID;  // 0x4f53
   _sfm.head.srcDeviceId = 0;
-  _sfm.head.dstDeviceId = 0;                // n.b. ignored by device
-  _sfm.head.msgId       = messageSimpleFire;
-  _sfm.head.msgVersion  = 2;
-  _sfm.head.payloadSize = sizeof(ConfigFireMessage) - sizeof(OculusMessageHeader);
+  _sfm.head.dstDeviceId = 0;  // n.b. ignored by device
+  _sfm.head.msgId = messageSimpleFire;
+  _sfm.head.msgVersion = 2;
+  _sfm.head.payloadSize =
+      sizeof(ConfigFireMessage) - sizeof(OculusMessageHeader);
 
   _sfm.masterMode = OCULUS_HIGH_FREQ;
   _sfm.pingRate = pingRateNormal;
-  _sfm.networkSpeed = 0xff;    // uint8_t; can reduce network speed for bad links
+  _sfm.networkSpeed = 0xff;  // uint8_t; can reduce network speed for bad links
   _sfm.gammaCorrection = 127;  // uint8_t; for 127, gamma = 0.5
 
-  updateFlags();   // Set to defaults
+  updateFlags();  // Set to defaults
 
   _sfm.rangePercent = 2;  // 2 m; can be percent or meters, flag controlled
   _sfm.gainPercent = 50;
   _sfm.speedOfSound = 0.0;  // m/s  0 to calculate SoS from salinity
-  _sfm.salinity = 0.0;  // ppt; 0 for freshwater, 35 for seawater
+  _sfm.salinity = 0.0;      // ppt; 0 for freshwater, 35 for seawater
 }
 
 SonarConfiguration &SonarConfiguration::setRange(double input) {
@@ -140,34 +140,36 @@ SonarConfiguration &SonarConfiguration::set512Beams(bool v) {
   return *this;
 }
 
-
 //== Serialization functions
 
 template <>
-std::vector<uint8_t> SonarConfiguration::serialize<OculusSimpleFireMessage2>() const {
+std::vector<uint8_t> SonarConfiguration::serialize<OculusSimpleFireMessage2>()
+    const {
   updateFlags();
 
   // Corner case.  If in 32bit mode, range is always a percentage of max range
   // if ((_dataSize == dataSize32Bit) || (!_sendRangeAsMeters)) {
-  //   const float maxRange = ((getFreqMode()==OCULUS_LOW_FREQ) ? Oculus_1200MHz::MaxRange : Oculus_2100MHz::MaxRange);
+  //   const float maxRange = ((getFreqMode()==OCULUS_LOW_FREQ) ?
+  //   Oculus_1200MHz::MaxRange : Oculus_2100MHz::MaxRange);
 
   //   _sfm.rangePercent = std::min(_rangeInMeters/maxRange * 100.0,100.0);
 
-
-  //   LOG(INFO) << "In 32bit mode, setting range to " << _rangeInMeters << " which is " << _sfm.rangePercent << " percent";
+  //   LOG(INFO) << "In 32bit mode, setting range to " << _rangeInMeters
+  //   << " which is " << _sfm.rangePercent << " percent";
   // } else {
-    _sfm.rangePercent = _rangeInMeters;
+  _sfm.rangePercent = _rangeInMeters;
   //}
 
   std::vector<uint8_t> v;
-  const auto ptr = reinterpret_cast<const char*>(&_sfm);
+  const auto ptr = reinterpret_cast<const char *>(&_sfm);
   v.insert(v.end(), ptr, ptr + sizeof(OculusSimpleFireMessage2));
 
   return v;
 }
 
 template <>
-std::vector<uint8_t> SonarConfiguration::serialize<OculusSimpleFireMessage>() const {
+std::vector<uint8_t> SonarConfiguration::serialize<OculusSimpleFireMessage>()
+    const {
   updateFlags();
 
   // As of right now, since OculusSimpleFireMessage and OculusSimpleFireMessage2
@@ -175,16 +177,17 @@ std::vector<uint8_t> SonarConfiguration::serialize<OculusSimpleFireMessage>() co
   // Just memcpy and revise and necessary fields
 
   OculusSimpleFireMessage sfm;
-  memcpy(reinterpret_cast<void *>(&sfm), 
-         reinterpret_cast<const void *>(&_sfm), 
+  memcpy(reinterpret_cast<void *>(&sfm), reinterpret_cast<const void *>(&_sfm),
          sizeof(OculusSimpleFireMessage));
 
-  // Rewrite any fields which are different between SimpleFireMessage and SimpleFireMessage2
+  // Rewrite any fields which are different between SimpleFireMessage and
+  // SimpleFireMessage2
   sfm.head.msgVersion = 1;
-  sfm.head.payloadSize = sizeof(OculusSimpleFireMessage) - sizeof(OculusMessageHeader);
+  sfm.head.payloadSize =
+      sizeof(OculusSimpleFireMessage) - sizeof(OculusMessageHeader);
 
   std::vector<uint8_t> v;
-  const auto ptr = reinterpret_cast<const char*>(&sfm);
+  const auto ptr = reinterpret_cast<const char *>(&sfm);
   v.insert(v.end(), ptr, ptr + sizeof(OculusSimpleFireMessage));
   return v;
 }
@@ -195,26 +198,23 @@ void SonarConfiguration::updateFlags() const {
     _sfm.extFlags |= 0x00000200;
   }
 
-  const bool more_than_8bit = (_dataSize == dataSize16Bit) || (_dataSize == dataSize32Bit);
-  _sfm.flags = (_rangeInMeters  ? FlagBits::RangeAsMeters : 0 ) |
-         (more_than_8bit  ? FlagBits::Data16Bits : 0) |
-         (_sendGain       ? FlagBits::DoSendGain : 0) |
-         (_simpleReturn   ? FlagBits::SimpleReturn : 0) |
-         (_gainAssistance ? FlagBits::GainAssistance : 0) |
-         (_512beams       ? FlagBits::Do512Beams : 0);
+  const bool more_than_8bit =
+      (_dataSize == dataSize16Bit) || (_dataSize == dataSize32Bit);
+  _sfm.flags = (_rangeInMeters ? FlagBits::RangeAsMeters : 0) |
+               (more_than_8bit ? FlagBits::Data16Bits : 0) |
+               (_sendGain ? FlagBits::DoSendGain : 0) |
+               (_simpleReturn ? FlagBits::SimpleReturn : 0) |
+               (_gainAssistance ? FlagBits::GainAssistance : 0) |
+               (_512beams ? FlagBits::Do512Beams : 0);
 }
 
-
 void SonarConfiguration::dump() const {
-    updateFlags();
+  updateFlags();
 
-    LOG(INFO) << "\n             Flags 0x"
-            << std::hex << std::setw(2) << std::setfill('0')
-            << static_cast<unsigned int>(_sfm.flags)
-            << std::setw(8)
-            << "\n            Ext flags 0x"
-            << std::setw(8) << static_cast<uint32_t>(_sfm.extFlags)
-            << std::dec << std::setw(0)
+  LOG(INFO) << "\n             Flags 0x" << std::hex << std::setw(2)
+            << std::setfill('0') << static_cast<unsigned int>(_sfm.flags)
+            << std::setw(8) << "\n            Ext flags 0x" << std::setw(8)
+            << static_cast<uint32_t>(_sfm.extFlags) << std::dec << std::setw(0)
             << "\n  send range is meters " << getSendRangeAsMeters()
             << "\n       data size       " << DataSizeToString(getDataSize())
             << "\n       send gain       " << getSendGain()

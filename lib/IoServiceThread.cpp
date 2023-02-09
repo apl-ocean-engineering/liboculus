@@ -28,48 +28,45 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <boost/bind.hpp>
-
 #include "liboculus/IoServiceThread.h"
+
+#include <boost/bind.hpp>
 
 namespace liboculus {
 
-  IoServiceThread::IoServiceThread()
+IoServiceThread::IoServiceThread()
 #if BOOST_VERSION >= 106600
-      : _context(std::make_shared<boost::asio::io_context>()),
-        _work_guard(_context->get_executor()),
+    : _context(std::make_shared<boost::asio::io_context>()),
+      _work_guard(_context->get_executor()),
 #else
-      : _context(std::make_shared<boost::asio::io_service>()),
+    : _context(std::make_shared<boost::asio::io_service>()),
 #endif
-        _thread() {}
+      _thread() {
+}
 
-  IoServiceThread::~IoServiceThread() {
-  }
+IoServiceThread::~IoServiceThread() {}
 
-  void IoServiceThread::start() {
-    if (_thread) return; // running
-    _thread.reset(new std::thread(boost::bind(&IoServiceThread::threadExec,
-                                               this)));
-  }
+void IoServiceThread::start() {
+  if (_thread) return;  // running
+  _thread.reset(
+      new std::thread(boost::bind(&IoServiceThread::threadExec, this)));
+}
 
-  void IoServiceThread::stop() {
-    if (!_thread) return;
+void IoServiceThread::stop() {
+  if (!_thread) return;
 #if BOOST_VERSION >= 106600
-    _work_guard.reset();
+  _work_guard.reset();
 #endif
-    _context->stop();
-  }
+  _context->stop();
+}
 
-  void IoServiceThread::join() {
-    if (!_thread) return;
-    _thread->join();
-    _context->reset();
-    _thread.reset();
-  }
+void IoServiceThread::join() {
+  if (!_thread) return;
+  _thread->join();
+  _context->reset();
+  _thread.reset();
+}
 
-  void IoServiceThread::threadExec() {
-    _context->run();
-  }
-
+void IoServiceThread::threadExec() { _context->run(); }
 
 }  // namespace liboculus

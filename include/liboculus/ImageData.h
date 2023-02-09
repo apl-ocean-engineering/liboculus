@@ -33,9 +33,8 @@
 
 #pragma once
 
-#include <iostream>
-
 #include <g3log/g3log.hpp>  // needed for CHECK macro
+#include <iostream>
 
 #include "DataTypes.h"
 #include "Oculus/Oculus.h"
@@ -44,38 +43,38 @@ namespace liboculus {
 
 class ImageData {
  public:
-  ImageData() 
-    : _data(nullptr),
-      _dataSize(0),
-      _imageSize(0),
-      _numRanges(0),
-      _numBeams(0),
-      _stride(0),
-      _offset(0) {}
+  ImageData()
+      : _data(nullptr),
+        _dataSize(0),
+        _imageSize(0),
+        _numRanges(0),
+        _numBeams(0),
+        _stride(0),
+        _offset(0) {}
 
   ImageData(const ImageData &other) = default;
 
-  ImageData( const uint8_t *data,
-            uint32_t imageSize,
-            uint16_t nRanges,
-            uint16_t nBeams,
-            uint8_t dataSize,
-            uint16_t stride = 0,
-            uint16_t offset = 0 )
-    : _data(data),
-      _dataSize(dataSize),
-      _imageSize(imageSize),
-      _numRanges(nRanges),
-      _numBeams(nBeams),
-      _stride(stride == 0 ? nBeams*dataSize : stride),  // Stride is in _bytes_
-      _offset(offset) {}
+  ImageData(const uint8_t *data, uint32_t imageSize, uint16_t nRanges,
+            uint16_t nBeams, uint8_t dataSize, uint16_t stride = 0,
+            uint16_t offset = 0)
+      : _data(data),
+        _dataSize(dataSize),
+        _imageSize(imageSize),
+        _numRanges(nRanges),
+        _numBeams(nBeams),
+        _stride(stride == 0 ? nBeams * dataSize
+                            : stride),  // Stride is in _bytes_
+        _offset(offset) {}
 
   uint16_t nRanges() const { return _numRanges; }
   uint16_t nBeams() const { return _numBeams; }
 
   uint8_t at_uint8(unsigned int beam, unsigned int rangeBin) const {
-    CHECK(_dataSize == 1) << "This function can only handle 8-bit data, use at_uint16()";
-    if ((_data == nullptr) || (beam >= _numBeams) || (rangeBin >= _numRanges)) return 0;
+    CHECK(_dataSize == 1)
+        << "This function can only handle 8-bit data, use at_uint16()";
+    if ((_data == nullptr) || (beam >= _numBeams) || (rangeBin >= _numRanges)) {
+      return 0;
+    }
 
     // Simplified calculation assumes 1-byte data
     const size_t index = rangeBin * _stride + beam + _offset;
@@ -86,14 +85,16 @@ class ImageData {
   // This function works for either 1- or 2-byte sonar data
   // For 1-byte, the 8-bit value is simply cast into the 16-bit return
   uint16_t at_uint16(unsigned int beam, unsigned int rangeBin) const {
-    if ((_data == nullptr) || (beam >= _numBeams) || (rangeBin >= _numRanges)) return 0;
+    if ((_data == nullptr) || (beam >= _numBeams) || (rangeBin >= _numRanges)) {
+      return 0;
+    }
 
     if (_dataSize == 1) {
-        return at_uint8(beam, rangeBin);
+      return at_uint8(beam, rangeBin);
     } else if (_dataSize == 2) {
-        const size_t offset = (rangeBin * _stride) + (beam * _dataSize) + _offset;
-        CHECK(offset < (_imageSize-1));
-        return (_data[offset] | _data[offset+1] << 8);
+      const size_t offset = (rangeBin * _stride) + (beam * _dataSize) + _offset;
+      CHECK(offset < (_imageSize - 1));
+      return (_data[offset] | _data[offset + 1] << 8);
     }
 
     return 0;
@@ -102,20 +103,22 @@ class ImageData {
   // This function will work regardless of whether the raw Oculus
   // data is 1-, 2- or 4-byte.
   uint32_t at_uint32(unsigned int beam, unsigned int rangeBin) const {
-    if ((_data == nullptr) || (beam >= _numBeams)
-          || (rangeBin >= _numRanges)) return 0;
+    if ((_data == nullptr) || (beam >= _numBeams) || (rangeBin >= _numRanges)) {
+      return 0;
+    }
 
     if (_dataSize == 1) {
-        return at_uint8(beam, rangeBin);
+      return at_uint8(beam, rangeBin);
     } else if (_dataSize == 2) {
-        return at_uint16(beam, rangeBin);
+      return at_uint16(beam, rangeBin);
     } else {
-        const size_t offset = (rangeBin * _stride) + (beam * _dataSize) + _offset;
-        CHECK(offset < (_imageSize-1));
+      const size_t offset = (rangeBin * _stride) + (beam * _dataSize) + _offset;
+      CHECK(offset < (_imageSize - 1));
 
-        // \todo.  Come to think of it, this could be done by mapping the 4 bytes into
-        // a uin32 then maybe using a system call to swap endianness?
-        return (_data[offset] | _data[offset+1] << 8 | _data[offset+2] << 16 | _data[offset+3] << 24);
+      // \todo.  Come to think of it, this could be done by mapping the 4 bytes
+      // into a uin32 then maybe using a system call to swap endianness?
+      return (_data[offset] | _data[offset + 1] << 8 | _data[offset + 2] << 16 |
+              _data[offset + 3] << 24);
     }
 
     return 0;

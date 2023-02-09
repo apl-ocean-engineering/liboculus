@@ -30,20 +30,18 @@
 
 #pragma once
 
+#include <cassert>
+#include <g3log/g3log.hpp>
+#include <iomanip>
 #include <memory>
 #include <string>
 #include <vector>
-#include <cassert>
-#include <iomanip>
-
-#include <g3log/g3log.hpp>
-
-#include "liboculus/BearingData.h"
-#include "liboculus/GainData.h"
-#include "liboculus/DataTypes.h"
-#include "liboculus/ImageData.h"
 
 #include "Oculus/Oculus.h"
+#include "liboculus/BearingData.h"
+#include "liboculus/DataTypes.h"
+#include "liboculus/GainData.h"
+#include "liboculus/ImageData.h"
 #include "liboculus/SimpleFireMessage.h"
 #include "liboculus/SonarConfiguration.h"
 
@@ -78,8 +76,8 @@ class SimplePingResult : public SimpleFireMessage<typename Ping_t::FireMsg_t> {
   const Ping_t *ping() const;
 
   const BearingData &bearings() const { return _bearings; }
-  const GainData_t  &gains() const     { return _gains; }
-  const ImageData   &image() const      { return _image; }
+  const GainData_t &gains() const { return _gains; }
+  const ImageData &image() const { return _image; }
 
   uint8_t dataSize() const { return SizeOfDataSize(ping()->dataSize); }
 
@@ -94,25 +92,23 @@ class SimplePingResult : public SimpleFireMessage<typename Ping_t::FireMsg_t> {
   ImageData _image;
 };  // class SimplePingResult
 
-
 typedef SimplePingResult<OculusSimplePingResult> SimplePingResultV1;
 typedef SimplePingResult<OculusSimplePingResult2> SimplePingResultV2;
 
-
-template<typename Ping_t>
-SimplePingResult<Ping_t>::SimplePingResult(const std::shared_ptr<ByteVector> &buffer)
-  : SimpleFireMsg_t(buffer),
-    _bearings(),
-    _gains(),
-    _image() {
-    assert(buffer->size() >= sizeof(Ping_t));
+template <typename Ping_t>
+SimplePingResult<Ping_t>::SimplePingResult(
+    const std::shared_ptr<ByteVector> &buffer)
+    : SimpleFireMsg_t(buffer), _bearings(), _gains(), _image() {
+  assert(buffer->size() >= sizeof(Ping_t));
 
   // Bearing data is packed into an array of numBeams shorts immediately
   // the end of the OculusSimplePing struct
-  const int16_t *bearingData = reinterpret_cast<const short*>(buffer->data() + sizeof(Ping_t));
+  const int16_t *bearingData =
+      reinterpret_cast<const short *>(buffer->data() + sizeof(Ping_t));
   _bearings = BearingData(bearingData, this->ping()->nBeams);
 
-  const uint8_t *imageData = reinterpret_cast<const uint8_t*>(buffer->data() + ping()->imageOffset);
+  const uint8_t *imageData =
+      reinterpret_cast<const uint8_t *>(buffer->data() + ping()->imageOffset);
 
   if (this->flags().getSendGain()) {
     // If sent, the gain is included as the first 4 bytes in
@@ -120,34 +116,29 @@ SimplePingResult<Ping_t>::SimplePingResult(const std::shared_ptr<ByteVector> &bu
     const uint16_t offsetBytes = 4;
 
     // The size of one "row" of data in bytes
-    const uint16_t strideBytes = SizeOfDataSize(ping()->dataSize)*this->ping()->nBeams + offsetBytes;
-    _image = ImageData(imageData,
-                          this->ping()->imageSize,
-                          this->ping()->nRanges,
-                          this->ping()->nBeams,
-                          SizeOfDataSize(this->ping()->dataSize),
-                          strideBytes,
-                          offsetBytes);
+    const uint16_t strideBytes =
+        SizeOfDataSize(ping()->dataSize) * this->ping()->nBeams + offsetBytes;
+    _image =
+        ImageData(imageData, this->ping()->imageSize, this->ping()->nRanges,
+                  this->ping()->nBeams, SizeOfDataSize(this->ping()->dataSize),
+                  strideBytes, offsetBytes);
 
-    _gains = GainData_t(reinterpret_cast<const GainData_t::DataType *>(imageData),
-                          this->ping()->imageSize,
-                          strideBytes,
-                          this->ping()->nRanges);
+    _gains =
+        GainData_t(reinterpret_cast<const GainData_t::DataType *>(imageData),
+                   this->ping()->imageSize, strideBytes, this->ping()->nRanges);
   } else {
-    _image = ImageData(imageData,
-                          this->ping()->imageSize,
-                          this->ping()->nRanges,
-                          this->ping()->nBeams,
-                          SizeOfDataSize(this->ping()->dataSize));
+    _image =
+        ImageData(imageData, this->ping()->imageSize, this->ping()->nRanges,
+                  this->ping()->nBeams, SizeOfDataSize(this->ping()->dataSize));
   }
 }
 
-template<typename Ping_t>
+template <typename Ping_t>
 const Ping_t *SimplePingResult<Ping_t>::ping() const {
   return reinterpret_cast<const Ping_t *>(this->buffer()->data());
 }
 
-template<typename Ping_t>
+template <typename Ping_t>
 bool SimplePingResult<Ping_t>::valid() const {
   if (this->buffer()->size() < sizeof(OculusMessageHeader)) return false;
   if (this->buffer()->size() < this->packetSize()) return false;
@@ -166,8 +157,7 @@ bool SimplePingResult<Ping_t>::valid() const {
 
   if (ping()->imageSize != expected_size) {
     LOG(WARNING) << "ImageSize in header " << ping()->imageSize
-                 << " does not match expected data size of "
-                 << expected_size;
+                 << " does not match expected data size of " << expected_size;
     return false;
   }
 
@@ -175,7 +165,7 @@ bool SimplePingResult<Ping_t>::valid() const {
   return true;
 }
 
-template<typename Ping_t>
+template <typename Ping_t>
 void SimplePingResult<Ping_t>::dump() const {
   LOG(DEBUG) << "--------------";
   SimpleFireMsg_t::dump();
@@ -191,15 +181,17 @@ void SimplePingResult<Ping_t>::dump() const {
   LOG(DEBUG) << "    Range res: " << this->ping()->rangeResolution << " m";
 
   if (this->flags().getRangeAsMeters()) {
-    LOG(DEBUG) << "   Calc range: " << this->ping()->rangeResolution*this->ping()->nRanges << " m";
-  } else { 
-    LOG(DEBUG) << "   Pct range: " << this->ping()->rangeResolution*this->ping()->nRanges;
+    LOG(DEBUG) << "   Calc range: "
+               << this->ping()->rangeResolution * this->ping()->nRanges << " m";
+  } else {
+    LOG(DEBUG) << "   Pct range: "
+               << this->ping()->rangeResolution * this->ping()->nRanges;
   }
 
   LOG(DEBUG) << "    Num range: " << this->ping()->nRanges;
   LOG(DEBUG) << "    Num beams: " << this->ping()->nBeams;
-  LOG(DEBUG) << "Azimuth range: " << std::setprecision(4) << bearings().front() << " - " << bearings().back();
-
+  LOG(DEBUG) << "Azimuth range: " << std::setprecision(4) << bearings().front()
+             << " - " << bearings().back();
 
   LOG(DEBUG) << "  Image size: " << this->ping()->imageSize;
   LOG(DEBUG) << " Image offset: " << this->ping()->imageOffset;

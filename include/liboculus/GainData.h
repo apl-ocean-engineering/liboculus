@@ -31,10 +31,10 @@
 #pragma once
 
 #include <netinet/in.h>
-#include <vector>
-#include <iostream>
 
 #include <g3log/g3log.hpp>  // needed for CHECK macro
+#include <iostream>
+#include <vector>
 
 #include "Oculus/Oculus.h"
 #include "liboculus/DataTypes.h"
@@ -48,35 +48,30 @@ class GainData {
  public:
   typedef T DataType;
 
-  GainData()
-    : _data()
-    {;}
+  GainData() : _data() { ; }
 
-  GainData(const GainData &other)  = default;
+  GainData(const GainData &other) = default;
 
-  GainData(const T *data, uint32_t imageSz,
-            size_t strideBytes, size_t nRanges)
-    : _data() {
+  GainData(const T *data, uint32_t imageSz, size_t strideBytes, size_t nRanges)
+      : _data() {
     // Only works for four-byte types
     assert(sizeof(T) == 4);
     for (size_t i = 0; i < nRanges; i++) {
-        const size_t index = (i*strideBytes)/sizeof(T);
+      const size_t index = (i * strideBytes) / sizeof(T);
 
-        const uint32_t *d = reinterpret_cast<const uint32_t *>(&data[index]);
+      const uint32_t *d = reinterpret_cast<const uint32_t *>(&data[index]);
 
-        // uint32_t h = ntohl(*d);
-        uint32_t h = *d;
-        T *f = reinterpret_cast<T *>(&h);
+      // uint32_t h = ntohl(*d);
+      uint32_t h = *d;
+      T *f = reinterpret_cast<T *>(&h);
 
-        _data.push_back(*f);
+      _data.push_back(*f);
     }
   }
 
   int size() const { return _data.size(); }
 
-  T at(unsigned int i) const {
-      return _data.at(i);
-  }
+  T at(unsigned int i) const { return _data.at(i); }
 
   T operator[](unsigned int i) const { return at(i); }
 

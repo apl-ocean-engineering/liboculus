@@ -32,10 +32,10 @@
 
 #pragma once
 
+#include <cmath>
 #include <cstddef>  // for size_t
 #include <string>
 #include <vector>
-#include <cmath>
 
 #include "Oculus/Oculus.h"
 
@@ -44,10 +44,12 @@ namespace liboculus {
 typedef std::vector<uint8_t> ByteVector;
 
 template <typename T>
-T deg2rad(const T &value) { return M_PI/180.0 * value; }
+T deg2rad(const T &value) {
+  return M_PI / 180.0 * value;
+}
 
-inline const char *DataSizeToString( DataSizeType d ) {
-  switch(d) {
+inline const char *DataSizeToString(DataSizeType d) {
+  switch (d) {
     case dataSize8Bit:
       return "8-bit";
     case dataSize16Bit:
@@ -61,8 +63,8 @@ inline const char *DataSizeToString( DataSizeType d ) {
   return "unknown";
 }
 
-inline size_t SizeOfDataSize( DataSizeType d ) {
-  switch(d) {
+inline size_t SizeOfDataSize(DataSizeType d) {
+  switch (d) {
     case dataSize8Bit:
       return 1;
     case dataSize16Bit:
@@ -78,52 +80,58 @@ inline size_t SizeOfDataSize( DataSizeType d ) {
 
 //=== Message types
 
-inline const char *MessageTypeToString( OculusMessageType t ) {
-  switch(t) {
+inline const char *MessageTypeToString(OculusMessageType t) {
+  switch (t) {
     case messageSimpleFire:
-        return "messageSimpleFire";
+      return "messageSimpleFire";
     case messagePingResult:
-        return "messagePingResult";
+      return "messagePingResult";
     case messageSimplePingResult:
-        return "messageSimplePingResult";
+      return "messageSimplePingResult";
     case messageUserConfig:
-        return "messageUserConfig";
+      return "messageUserConfig";
     case messageLogs:
-        return "messageLogs";
+      return "messageLogs";
     case messageDummy:
-        return "messageDummy";
+      return "messageDummy";
   }
 
-    return "(unknown)";
+  return "(unknown)";
 }
 
 //=== Ping rate to string
 
-inline unsigned int PingRateToHz( PingRateType p ) {
-  switch(p) {
-    case pingRateNormal:   return 10;
-    case pingRateHigh:     return 15;
-    case pingRateHighest:  return 40;
-    case pingRateLow:      return 5;
-    case pingRateLowest:   return 2;
-    case pingRateStandby:  return 0;
+inline unsigned int PingRateToHz(PingRateType p) {
+  switch (p) {
+    case pingRateNormal:
+      return 10;
+    case pingRateHigh:
+      return 15;
+    case pingRateHighest:
+      return 40;
+    case pingRateLow:
+      return 5;
+    case pingRateLowest:
+      return 2;
+    case pingRateStandby:
+      return 0;
   }
 
   return -1;
 }
 
-inline unsigned int PingRateToHz( int p ) {
-  return PingRateToHz( static_cast<PingRateType>(p) );
+inline unsigned int PingRateToHz(int p) {
+  return PingRateToHz(static_cast<PingRateType>(p));
 }
 
-inline std::string FreqModeToString( uint8_t mode  ) {
-  if( mode == 1 ) {
+inline std::string FreqModeToString(uint8_t mode) {
+  if (mode == 1) {
     return "Low Freq";
-  } else if (mode == 2 ) {
+  } else if (mode == 2) {
     return "High Freq";
   }
 
   return "(unknown)";
 }
 
-}
+}  // namespace liboculus

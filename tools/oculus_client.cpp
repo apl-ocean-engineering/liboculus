@@ -5,11 +5,11 @@
 
 using std::string;
 
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <libg3logger/g3logger.h>
 
 #include <CLI/CLI.hpp>
-#include <libg3logger/g3logger.h>
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
 
 #include "liboculus/DataRx.h"
 #include "liboculus/IoServiceThread.h"
@@ -39,22 +39,20 @@ bool doStop = false;
 
 // Catch signals
 void signalHandler(int signo) {
-  if (_io_thread)
-    _io_thread->stop();
+  if (_io_thread) _io_thread->stop();
   doStop = true;
 }
 
-double mean_image_intensity( const liboculus::ImageData &imageData ) {
-  double f=0;
-  for ( int r = 0; r < imageData.nRanges(); ++r ) {
-    for ( int a = 0; a < imageData.nBeams(); ++a ) {
+double mean_image_intensity(const liboculus::ImageData &imageData) {
+  double f = 0;
+  for (int r = 0; r < imageData.nRanges(); ++r) {
+    for (int a = 0; a < imageData.nBeams(); ++a) {
       f += imageData.at_uint32(a, r);
     }
   }
   f /= (imageData.nRanges() * imageData.nBeams());
   return f;
 }
-
 
 int main(int argc, char **argv) {
   libg3logger::G3Logger logger("ocClient");
@@ -106,7 +104,8 @@ int main(int argc, char **argv) {
   }
 
   if ((gain < 1) || (gain > 100)) {
-    LOG(FATAL) << "Invalid gain " << gain << "; should be in the range of 1-100";
+    LOG(FATAL) << "Invalid gain " << gain
+               << "; should be in the range of 1-100";
   }
 
   ofstream output;
@@ -175,11 +174,11 @@ int main(int argc, char **argv) {
           output.write(cdata, ping.buffer()->size());
         }
 
-        LOG(DEBUG) << "Average intensity: " << mean_image_intensity(ping.image());
+        LOG(DEBUG) << "Average intensity: "
+                   << mean_image_intensity(ping.image());
 
         count++;
-        if ((stopAfter > 0) && (count >= stopAfter))
-          _io_thread->stop();
+        if ((stopAfter > 0) && (count >= stopAfter)) _io_thread->stop();
       });
 
   // Callback for a SimplePingResultV2
@@ -203,11 +202,11 @@ int main(int argc, char **argv) {
           output.write(cdata, ping.buffer()->size());
         }
 
-        LOG(DEBUG) << "Average intensity: " << mean_image_intensity(ping.image());
+        LOG(DEBUG) << "Average intensity: "
+                   << mean_image_intensity(ping.image());
 
         count++;
-        if ((stopAfter > 0) && (count >= stopAfter))
-          doStop = true;
+        if ((stopAfter > 0) && (count >= stopAfter)) doStop = true;
       });
 
   // When the _data_rx connects, send the configuration
@@ -221,8 +220,7 @@ int main(int argc, char **argv) {
     // To autoconnect, define a callback for the _status_rx which
     // connects _data_rx to the received IP address
     _status_rx.setCallback([&](const SonarStatus &status, bool is_valid) {
-      if (!is_valid || _data_rx.isConnected())
-        return;
+      if (!is_valid || _data_rx.isConnected()) return;
       _data_rx.connect(status.ipAddr());
     });
   } else {
@@ -245,8 +243,7 @@ int main(int argc, char **argv) {
   _io_thread->stop();
   _io_thread->join();
 
-  if (output.is_open())
-    output.close();
+  if (output.is_open()) output.close();
 
   LOG(INFO) << "At exit";
 
