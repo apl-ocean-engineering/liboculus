@@ -101,16 +101,20 @@ bool RawSonarPlayer::nextPing() {
       << "Skipped " << skipped_bytes << " before reading start of header";
 
   std::shared_ptr<ByteVector> buffer =
-      std::make_shared<ByteVector>(sizeof(MessageHeader));
-  _input.get(reinterpret_cast<char *>(buffer->data()), sizeof(MessageHeader));
+      std::make_shared<ByteVector>(sizeof(OculusMessageHeader));
+  _input.get(reinterpret_cast<char *>(buffer->data()),
+             sizeof(OculusMessageHeader));
 
   MessageHeader header(buffer);
   if (!header.valid()) return false;
 
+  LOG(DEBUG) << "Reading " << header.payloadSize() << " additional bytes";
+
   // Read the rest of the data
   buffer->resize(header.packetSize());
-  _input.get(reinterpret_cast<char *>(buffer->data()[sizeof(MessageHeader)]),
-             header.payloadSize());
+  _input.get(
+      reinterpret_cast<char *>(buffer->data() + sizeof(OculusMessageHeader)),
+      header.payloadSize());
 
   if (header.msgId() == messageSimplePingResult) {
     if (header.msgVersion() == 2) {

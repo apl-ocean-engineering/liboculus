@@ -72,11 +72,10 @@ int main(int argc, char **argv) {
                  "Saves raw sonar data to specified file.");
 
   // Playback currently not working
-  // string inputFilename("");
-  // app.add_option("-i,--input", inputFilename,
-  //                "Reads raw sonar data from specified file.   Plays file "
-  //                "contents rather than contacting \"real\" sonar on
-  //                network.");
+  string inputFilename("");
+  app.add_option("-i,--input", inputFilename,
+                 "Reads raw sonar data from specified file.   Plays file "
+                 "contents rather than contacting \"real\" sonar on network.");
 
   int bitDepth(8);
   app.add_option("-b,--bits", bitDepth, "Bit depth oof data (8,16,32)");
@@ -121,10 +120,11 @@ int main(int argc, char **argv) {
   }
 
   // If playing back an input file, run a different main loop ...
-  // if (!inputFilename.empty()) {
-  //   playbackSonarFile(inputFilename, output, stopAfter);
-  //   return 0;
-  // }
+  if (!inputFilename.empty()) {
+    LOG(INFO) << "Playing back file " << inputFilename;
+    playbackSonarFile(inputFilename, output, stopAfter);
+    return 0;
+  }
 
   int count = 0;
 
@@ -250,43 +250,69 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-// !! Playback not currently working
-//
-// int playbackSonarFile(const std::string &filename, ofstream &output,
-//                       int stopAfter) {
-//   shared_ptr<SonarPlayerBase> player(SonarPlayerBase::OpenFile(filename));
+int playbackSonarFile(const std::string &filename, ofstream &output,
+                      int stopAfter) {
+  shared_ptr<SonarPlayerBase> player(SonarPlayerBase::OpenFile(filename));
 
-//   if (!player) {
-//     LOG(WARNING) << "Unable to open sonar file";
-//     return -1;
-//   }
+  if (!player) {
+    LOG(WARNING) << "Unable to open sonar file";
+    return -1;
+  }
 
-//   if (!player->open(filename)) {
-//     LOG(INFO) << "Failed to open " << filename;
-//     return -1;
-//   }
+  if (!player->open(filename)) {
+    LOG(INFO) << "Failed to open " << filename;
+    return -1;
+  }
 
-//   int count = 0;
-//   // SimplePingResult ping;
-//   // while( player->nextPing(ping) && !player->eof() ) {
-//   //   if (!ping.valid()) {
-//   //     LOG(WARNING) << "Invalid ping";
-//   //     continue;
-//   //   }
+  int count = 0;
 
-//   //   ping.dump();
+  // Callback for a SimplePingResultV1
+  player->setCallback<liboculus::SimplePingResultV1>(
+      [&](const liboculus::SimplePingResultV1 &ping) {
+        // Pings are only sent to the callback if valid()
+        // don't need to check independently
 
-//   //   if (output.is_open()) {
-//   // const char *cdata = reinterpret_cast<const char
-//   *>(ping.buffer().data());
-//   //     output.write(cdata, ping.buffer().size());
-//   //   }
+        ping.dump();
 
-//   //   count++;
-//   //   if( (stopAfter > 0) && (count >= stopAfter) ) break;
-//   // }
+        if (output.is_open()) {
+          const char *cdata =
+              reinterpret_cast<const char *>(ping.buffer()->data());
+          output.write(cdata, ping.buffer()->size());
+        }
 
-//   LOG(INFO) << count << " sonar packets decoded";
+        LOG(DEBUG) << "Average intensity: "
+                   << mean_image_intensity(ping.image());
 
-//   return 0;
-// }
+        count++;
+      });
+
+  // Callback for a SimplePingResultV2
+  player->setCallback<liboculus::SimplePingResultV2>(
+      [&](const liboculus::SimplePingResultV2 &ping) {
+        // Pings are only sent to the callback if valid()
+        // don't need to check independently
+
+        ping.dump();
+
+        if (output.is_open()) {
+          const char *cdata =
+              reinterpret_cast<const char *>(ping.buffer()->data());
+          output.write(cdata, ping.buffer()->size());
+        }
+
+        LOG(DEBUG) << "Average intensity: "
+                   << mean_image_intensity(ping.image());
+
+        count++;
+      });
+
+  // SimplePingResult ping;
+  while (player->nextPing() && !player->eof()) {
+    LOG(DEBUG) << "Read a ping";
+    ;
+  }
+
+  LOG(INFO) << count << " sonar packets decoded";
+
+  return 0;
+}
