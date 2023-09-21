@@ -46,6 +46,30 @@ const uint16_t DataPort = 52100;
 const uint8_t PacketHeaderLSB = (OCULUS_CHECK_ID & 0x00FF);
 const uint8_t PacketHeaderMSB = (OCULUS_CHECK_ID & 0xFF00) >> 8;
 
+namespace Oculus_750KHz {
+const float ElevationBeamwidthDeg = 20.0;
+const float ElevationBeamwidthRad = 20.0 * M_PI / 180.0;
+
+const float AzimuthBeamwidthDeg = 1.0;
+const float AzimuthBeamwidthRad = 1.0 * M_PI / 180.0;
+
+const float MaxRange = 120;  // meters
+};  // namespace Oculus_750KHz
+
+namespace Oculus_1200MHz_Old {
+const float ElevationBeamwidthDeg = 12.0;
+const float ElevationBeamwidthRad = 12.0 * M_PI / 180.0;
+
+const float AzimuthBeamwidthDeg = 0.6;
+const float AzimuthBeamwidthRad = 0.6 * M_PI / 180.0;
+
+//! NOTE:(by LinZhao) for old generation 1.2MHz, 
+//        M750d max range is 40m, M1200d max range is 30m
+//        Maybe set a specfic name for 1.2MHz, since
+//        the beamwidth changes between generation and model ? 
+const float MaxRange = 40;
+};  // namespace Oculus_1200MHz_Old
+
 namespace Oculus_1200MHz {
 const float ElevationBeamwidthDeg = 20.0;
 const float ElevationBeamwidthRad = 20.0 * M_PI / 180.0;
