@@ -46,65 +46,90 @@ const uint16_t DataPort = 52100;
 const uint8_t PacketHeaderLSB = (OCULUS_CHECK_ID & 0x00FF);
 const uint8_t PacketHeaderMSB = (OCULUS_CHECK_ID & 0xFF00) >> 8;
 
-namespace Oculus_750KHz {
+#define DEG2RAD(x) (x * M_PI / 180.0)
+
+//===================================================================
+//
+// New constants API which separates constants by both model
+// and frequency band
+
+namespace Oculus_M750d {
+namespace Freq_750kHz {
 const float ElevationBeamwidthDeg = 20.0;
-const float ElevationBeamwidthRad = 20.0 * M_PI / 180.0;
+const float ElevationBeamwidthRad = DEG2RAD(ElevationBeamwidthDeg);
 
 const float AzimuthBeamwidthDeg = 1.0;
-const float AzimuthBeamwidthRad = 1.0 * M_PI / 180.0;
+const float AzimuthBeamwidthRad = DEG2RAD(AzimuthBeamwidthDeg);
 
-const float MaxRange = 120;  // meters
-};  // namespace Oculus_750KHz
+const float MaxRange = 120;
+};  // namespace Freq_750kHz
 
-namespace Oculus_1200MHz_Old {
+namespace Freq_1200kHz {
 const float ElevationBeamwidthDeg = 12.0;
-const float ElevationBeamwidthRad = 12.0 * M_PI / 180.0;
+const float ElevationBeamwidthRad = DEG2RAD(ElevationBeamwidthDeg);
 
 const float AzimuthBeamwidthDeg = 0.6;
-const float AzimuthBeamwidthRad = 0.6 * M_PI / 180.0;
+const float AzimuthBeamwidthRad = DEG2RAD(AzimuthBeamwidthDeg);
 
-//! NOTE:(by LinZhao) for old generation 1.2MHz, 
-//        M750d max range is 40m, M1200d max range is 30m
-//        Maybe set a specfic name for 1.2MHz, since
-//        the beamwidth changes between generation and model ? 
 const float MaxRange = 40;
-};  // namespace Oculus_1200MHz_Old
+};  // namespace Freq_1200kHz
+};  // namespace Oculus_M750d
 
-namespace Oculus_1200MHz {
+namespace Oculus_M1200d {
+namespace Freq_1200kHz {
 const float ElevationBeamwidthDeg = 20.0;
-const float ElevationBeamwidthRad = 20.0 * M_PI / 180.0;
+const float ElevationBeamwidthRad = DEG2RAD(ElevationBeamwidthDeg);
 
 const float AzimuthBeamwidthDeg = 0.6;
-const float AzimuthBeamwidthRad = 0.6 * M_PI / 180.0;
+const float AzimuthBeamwidthRad = DEG2RAD(AzimuthBeamwidthDeg);
 
-// NOTE(lindzey): According to the spec sheet, max range is 30 m
-//    at 1.2 MHz on the M3000d, but 40 m on the M1200d.
 const float MaxRange = 40;
-};  // namespace Oculus_1200MHz
+};  // namespace Freq_1200kHz
 
-namespace Oculus_2100MHz {
+namespace Freq_2100kHz {
 const float ElevationBeamwidthDeg = 12.0;
-const float ElevationBeamwidthRad = 12.0 * M_PI / 180.0;
+const float ElevationBeamwidthRad = DEG2RAD(ElevationBeamwidthDeg);
 
 const float AzimuthBeamwidthDeg = 0.4;
-const float AzimuthBeamwidthRad = 0.4 * M_PI / 180.0;
+const float AzimuthBeamwidthRad = DEG2RAD(AzimuthBeamwidthDeg);
 
-// \todo These shouldn't be fixed, should read from Oculus.h
-// But I don't feel like dealing with their data structure
-const float MaxRange = 10;  // meters
-};                          // namespace Oculus_2100MHz
+const float MaxRange = 10;
+};  // namespace Freq_2100kHz
+};  // namespace Oculus_M1200d
 
-namespace Oculus_3000MHz {
+namespace Oculus_M3000d {
+namespace Freq_1200kHz {
 const float ElevationBeamwidthDeg = 20.0;
-const float ElevationBeamwidthRad = 20.0 * M_PI / 180.0;
+const float ElevationBeamwidthRad = DEG2RAD(ElevationBeamwidthDeg);
+
+const float AzimuthBeamwidthDeg = 0.6;
+const float AzimuthBeamwidthRad = DEG2RAD(AzimuthBeamwidthDeg);
+
+const float MaxRange = 30;
+};  // namespace Freq_1200kHz
+
+namespace Freq_3000kHz {
+const float ElevationBeamwidthDeg = 20.0;
+const float ElevationBeamwidthRad = DEG2RAD(ElevationBeamwidthDeg);
 
 const float AzimuthBeamwidthDeg = 0.4;
-const float AzimuthBeamwidthRad = 0.4 * M_PI / 180.0;
+const float AzimuthBeamwidthRad = DEG2RAD(AzimuthBeamwidthDeg);
 
-// \todo These shouldn't be fixed, should read from Oculus.h
-// But I don't feel like dealing with their data structure
-const float MaxRange = 5;  // meters
-};                         // namespace Oculus_3000MHz
+const float MaxRange = 5;
+};  // namespace Freq_3000kHz
+};  // namespace Oculus_M3000d
+
+//===================================================================
+//
+// "Old"" constants API which only considered nominal frequency.
+// So it can't handle the case where different models may have
+// different performance at the same nominal center frequency.
+
+// For backwards compatibility
+namespace Oculus_750KHz = Oculus_M750d::Freq_750kHz;
+namespace Oculus_1200MHz = Oculus_M1200d::Freq_1200kHz;
+namespace Oculus_2100MHz = Oculus_M1200d::Freq_2100kHz;
+namespace Oculus_3000MHz = Oculus_M3000d::Freq_3000kHz;
 
 struct FlagBits {
   // bit 0: 0 = interpret range as percent, 1 = interpret range as meters
