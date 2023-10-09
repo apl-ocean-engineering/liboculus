@@ -71,10 +71,6 @@ const float ElevationBeamwidthRad = DEG2RAD(ElevationBeamwidthDeg);
 const float AzimuthBeamwidthDeg = 0.6;
 const float AzimuthBeamwidthRad = DEG2RAD(AzimuthBeamwidthDeg);
 
-//! NOTE:(by LinZhao) for old generation 1.2MHz,
-//        M750d max range is 40m, M1200d max range is 30m
-//        Maybe set a specfic name for 1.2MHz, since
-//        the beamwidth changes between generation and model ?
 const float MaxRange = 40;
 };  // namespace Freq_1200kHz
 };  // namespace Oculus_M750d
