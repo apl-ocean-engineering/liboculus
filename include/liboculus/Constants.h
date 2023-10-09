@@ -134,6 +134,7 @@ namespace Oculus_750KHz = Oculus_M750d::Freq_750kHz;
 namespace Oculus_1200MHz = Oculus_M1200d::Freq_1200kHz;
 namespace Oculus_2100MHz = Oculus_M1200d::Freq_2100kHz;
 namespace Oculus_3000MHz = Oculus_M3000d::Freq_3000kHz;
+
 struct FlagBits {
   // bit 0: 0 = interpret range as percent, 1 = interpret range as meters
   // bit 1: 0 = 8 bit data, 1 = 16 bit data
