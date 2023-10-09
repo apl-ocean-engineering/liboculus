@@ -45,7 +45,7 @@ RUN groupadd --gid $USER_GID $USERNAME \
   && chmod 0440 /etc/sudoers.d/$USERNAME
 
 USER $USERNAME
-WORKDIR /home/apl
+WORKDIR /home/$USERNAME
 
 CMD ["/bin/bash"]
 
@@ -54,17 +54,17 @@ CMD ["/bin/bash"]
 #====================================================================
 FROM ci as git_checkout
 
-ARG WS_DIR=/home/$USERNAME/ros_ws
-ONBUILD WORKDIR ${WS_DIR}/src
+ARG WS_DIR=/home/$USERNAME
+WORKDIR ${WS_DIR}
 
 ARG LIBOCULUS_REPO=https://github.com/apl-ocean-engineering/liboculus.git
 ARG LIBOCULUS_BRANCH=main
-ONBUILD RUN echo "Cloning from ${LIBOCULUS_BRANCH} branch ${LIBOCULUS_ROS_REPO}"
+RUN echo "Cloning from ${LIBOCULUS_BRANCH} branch ${LIBOCULUS_ROS_REPO}"
 
-ONBUILD RUN git clone --depth 1 -b ${LIBOCULUS_BRANCH} ${LIBOCULUS_REPO}
+RUN git clone --depth 1 -b ${LIBOCULUS_BRANCH} ${LIBOCULUS_REPO}
 
 #====================================================================
-# Final image with built ROS packages
+# Final image with built fips package
 #====================================================================
 # dockerfile_lint - ignore
 FROM git_checkout as liboculus
