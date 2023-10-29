@@ -1,0 +1,15 @@
+## Start a development stack with the current repo mounted into ros_ws/src/
+
+version: "3.9"
+services:
+  ci:
+    build:
+      dockerfile: Dockerfile
+      target: ci
+    image: ghcr.io/apl-ocean-engineering/liboculus/liboculus:latest
+    stdin_open: true
+    tty: true
+    volumes:
+      - type: bind
+        source: ..
+        target: /home/apl/liboculus
