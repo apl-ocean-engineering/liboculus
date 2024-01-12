@@ -233,8 +233,8 @@ void DataRx::rxPacket(const boost::system::error_code& ec,
     LOG(INFO) << std::string(_buffer->begin() + sizeof(OculusMessageHeader),
                              _buffer->end());
   } else {
-    LOG(WARNING) << "Ignoring " << MessageTypeToString(hdr.msgId())
-                 << " message, id " << static_cast<int>(hdr.msgId());
+    LOG(DEBUG) << "Ignoring " << MessageTypeToString(hdr.msgId())
+               << " message, id " << static_cast<int>(hdr.msgId());
   }
 
 exit:
