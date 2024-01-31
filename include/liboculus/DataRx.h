@@ -126,9 +126,14 @@ void DataRx::sendSimpleFireMessage(const SonarConfiguration &config) {
   data = config.serialize<FireMsg_t>();
 
   if (data.size() > 0) {
-    auto result = _socket.send(boost::asio::buffer(data));
-    LOG(DEBUG) << "Sent " << result << " bytes to sonar";
-    haveWritten(data);
+    try {
+      auto result = _socket.send(boost::asio::buffer(data));
+      LOG(DEBUG) << "Sent " << result << " bytes to sonar";
+      haveWritten(data);
+    } catch (boost::system::system_error &ex) {
+      LOG(WARNING) << "Exception when sending: " << ex.what();
+      _is_connected = false;
+    }
   }
 }
 
