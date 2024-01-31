@@ -49,7 +49,10 @@ class DataRx : public OculusMessageHandler {
   explicit DataRx(const IoServiceThread::IoContextPtr &iosrv);
   ~DataRx();
 
-  bool isConnected() const { return _socket.is_open(); }
+  // The socket interface can't actually track if a socket is _good_
+  // just that it's _open_.
+  // So we track this state outselves.
+  bool isConnected() const { return _is_connected; }
 
   void connect(const boost::asio::ip::address &addr);
   void connect(const std::string &strAddr);
@@ -105,6 +108,7 @@ class DataRx : public OculusMessageHandler {
   shared_ptr<ByteVector> _buffer;
 
   OnConnectCallback _onConnectCallback;
+  bool _is_connected;
 
 };  // class DataRx
 

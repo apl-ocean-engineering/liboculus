@@ -42,7 +42,8 @@ DataRx::DataRx(const IoServiceThread::IoContextPtr& iosrv)
     : OculusMessageHandler(),
       _socket(*iosrv),
       _buffer(std::make_shared<ByteVector>()),
-      _onConnectCallback() {}
+      _onConnectCallback(),
+      _is_connected(false) {}
 
 DataRx::~DataRx() {}
 
@@ -68,12 +69,14 @@ void DataRx::connect(const std::string& strAddr) {
 void DataRx::onConnect(const boost::system::error_code& ec) {
   if (ec) {
     LOG(WARNING) << "Error on connect: " << ec.message();
+    _is_connected = false;
     _socket.close();
 
     return;
   }
 
   LOG(DEBUG) << "Connected to sonar!";
+  _is_connected = true;
   restartReceiveCycle();
   if (_onConnectCallback) _onConnectCallback();
 }
