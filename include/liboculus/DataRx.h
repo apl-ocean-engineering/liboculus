@@ -30,6 +30,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <thread>
@@ -57,9 +58,21 @@ class DataRx : public OculusMessageHandler {
   void connect(const boost::asio::ip::address &addr);
   void connect(const std::string &strAddr);
 
+  void disconnect();
+
   typedef std::function<void()> OnConnectCallback;
   void setOnConnectCallback(OnConnectCallback callback) {
     _onConnectCallback = callback;
+  }
+
+  typedef std::function<void()> OnDisconnectCallback;
+  void setOnDisconnectCallback(OnDisconnectCallback callback) {
+    _onDisconnectCallback = callback;
+  }
+
+  typedef std::function<void()> OnTimeoutCallback;
+  void setOnTimeoutCallback(OnTimeoutCallback callback) {
+    _onTimeoutCallback = callback;
   }
 
   // By default, this function sends the config to the sonar
@@ -77,6 +90,7 @@ class DataRx : public OculusMessageHandler {
 
  private:
   void onConnect(const boost::system::error_code &error);
+  void onTimeout(const boost::system::error_code &error);
 
   // Initiates a network read.
   // Note this function reads until the **total number of bytes
@@ -108,8 +122,11 @@ class DataRx : public OculusMessageHandler {
   shared_ptr<ByteVector> _buffer;
 
   OnConnectCallback _onConnectCallback;
-  bool _is_connected;
+  OnDisconnectCallback _onDisconnectCallback;
+  OnTimeoutCallback _onTimeoutCallback;
+  boost::asio::deadline_timer timeout_timer_;
 
+  bool _is_connected;
 };  // class DataRx
 
 template <typename FireMsg_t = OculusSimpleFireMessage2>
@@ -132,7 +149,7 @@ void DataRx::sendSimpleFireMessage(const SonarConfiguration &config) {
       haveWritten(data);
     } catch (boost::system::system_error &ex) {
       LOG(WARNING) << "Exception when sending: " << ex.what();
-      _is_connected = false;
+      disconnect();
     }
   }
 }

@@ -43,7 +43,8 @@ DataRx::DataRx(const IoServiceThread::IoContextPtr& iosrv)
       _socket(*iosrv),
       _buffer(std::make_shared<ByteVector>()),
       _onConnectCallback(),
-      _is_connected(false) {}
+      _is_connected(false),
+      timeout_timer_(*iosrv, boost::posix_time::seconds(2)) {}
 
 DataRx::~DataRx() {}
 
@@ -53,7 +54,8 @@ void DataRx::connect(const asio::ip::address& addr) {
   uint16_t port = liboculus::DataPort;
 
   boost::asio::ip::tcp::endpoint sonarEndpoint(addr, port);
-  LOG(INFO) << "Connecting to sonar at " << sonarEndpoint;
+  LOG(DEBUG) << "Connecting to sonar at " << sonarEndpoint;
+  _is_connected = true;
 
   _socket.async_connect(sonarEndpoint,
                         boost::bind(&DataRx::onConnect, this, _1));
@@ -68,17 +70,31 @@ void DataRx::connect(const std::string& strAddr) {
 
 void DataRx::onConnect(const boost::system::error_code& ec) {
   if (ec) {
-    LOG(WARNING) << "Error on connect: " << ec.message();
-    _is_connected = false;
-    _socket.close();
-
+    LOG(DEBUG) << "Error on connect: " << ec.message();
+    disconnect();
     return;
   }
 
-  LOG(DEBUG) << "Connected to sonar!";
-  _is_connected = true;
+  LOG(WARNING) << "Successful connection to sonar!";
   restartReceiveCycle();
   if (_onConnectCallback) _onConnectCallback();
+}
+
+void DataRx::disconnect() {
+  LOG(DEBUG) << " ... disconnecting";
+  _socket.close();
+  _is_connected = false;
+  if (_onDisconnectCallback) _onDisconnectCallback();
+}
+
+void DataRx::onTimeout(const boost::system::error_code& ec) {
+  if (ec == boost::asio::error::operation_aborted) {
+    return;
+  } else if (ec) {
+    LOG(WARNING) << "Error on timeout " << ec.message();
+  }
+  LOG(DEBUG) << "!! timeout";
+  if (_onTimeoutCallback) _onTimeoutCallback();
 }
 
 //=== Readers
@@ -104,6 +120,12 @@ void DataRx::restartReceiveCycle() {
   } else {
     _buffer->clear();
   }
+
+  // Reset timeout timer; this should cancel existing pending timeouts
+  timeout_timer_.expires_from_now(boost::posix_time::seconds(2));
+  timeout_timer_.async_wait(
+      boost::bind(&DataRx::onTimeout, this, boost::placeholders::_1));
+
   readUpTo(sizeof(uint8_t),
            boost::bind(&DataRx::rxFirstByteOculusId, this, _1, _2));
 }
@@ -113,22 +135,21 @@ void DataRx::restartReceiveCycle() {
 void DataRx::rxFirstByteOculusId(const boost::system::error_code& ec,
                                  std::size_t bytes_transferred) {
   if (ec) {
+    // Failure of this first read usually indicates a network failure
     LOG(WARNING) << "Error on receive of header: " << ec.message();
-    goto exit;
+    disconnect();
+    return;
   }
 
   if (bytes_transferred != sizeof(uint8_t)) {
-    goto exit;
+    restartReceiveCycle();
+    return;
   }
 
   if (_buffer->data()[0] == liboculus::PacketHeaderLSB) {
     readUpTo(sizeof(uint16_t),
              boost::bind(&DataRx::rxSecondByteOculusId, this, _1, _2));
-    return;
   }
-
-exit:
-  restartReceiveCycle();
 }
 
 void DataRx::rxSecondByteOculusId(const boost::system::error_code& ec,
