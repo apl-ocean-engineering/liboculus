@@ -45,6 +45,28 @@ namespace liboculus {
 
 using std::shared_ptr;
 
+template <typename T>
+class MutexedVariable {
+ public:
+  MutexedVariable(const T &initial_value) : var_(initial_value), mutex_() { ; }
+
+  T get() const {
+    std::lock_guard<std::mutex> guard(mutex_);
+    return var_;
+  }
+
+  T set(const T &value) {
+    std::lock_guard<std::mutex> guard(mutex_);
+    var_ = value;
+    return var_;
+  }
+
+ private:
+  // Mutable to allow locking mutex w/o breaking const correctness
+  mutable std::mutex mutex_;
+  T var_;
+};
+
 class DataRx : public OculusMessageHandler {
  public:
   explicit DataRx(const IoServiceThread::IoContextPtr &iosrv);
@@ -53,7 +75,7 @@ class DataRx : public OculusMessageHandler {
   // The socket interface can't actually track if a socket is _good_
   // just that it's _open_.
   // So we track this state outselves.
-  bool isConnected() const { return _is_connected; }
+  bool isConnected() const { return is_connected_.get(); }
 
   void connect(const boost::asio::ip::address &addr);
   void connect(const std::string &strAddr);
@@ -124,9 +146,19 @@ class DataRx : public OculusMessageHandler {
   OnConnectCallback _onConnectCallback;
   OnDisconnectCallback _onDisconnectCallback;
   OnTimeoutCallback _onTimeoutCallback;
+
+  int timeout_secs_;
   boost::asio::deadline_timer timeout_timer_;
 
-  bool _is_connected;
+  MutexedVariable<bool> is_connected_;
+
+  // There are many cases where a sonar disappearing (e.g. failing)
+  // can't be distinguished from a sonar simply not being present.
+  //
+  // This flag is essentially "send each error message once"
+  // to reduce driver verbosity.  It is reset on good communications
+  // with the sonar.
+  bool has_complained_;
 };  // class DataRx
 
 template <typename FireMsg_t = OculusSimpleFireMessage2>

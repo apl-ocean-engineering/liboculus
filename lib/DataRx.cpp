@@ -43,8 +43,9 @@ DataRx::DataRx(const IoServiceThread::IoContextPtr& iosrv)
       _socket(*iosrv),
       _buffer(std::make_shared<ByteVector>()),
       _onConnectCallback(),
-      _is_connected(false),
-      timeout_timer_(*iosrv, boost::posix_time::seconds(2)) {}
+      is_connected_(false),
+      timeout_secs_(2),
+      timeout_timer_(*iosrv) {}
 
 DataRx::~DataRx() {}
 
@@ -54,8 +55,8 @@ void DataRx::connect(const asio::ip::address& addr) {
   uint16_t port = liboculus::DataPort;
 
   boost::asio::ip::tcp::endpoint sonarEndpoint(addr, port);
-  LOG(DEBUG) << "Connecting to sonar at " << sonarEndpoint;
-  _is_connected = true;
+  LOG(DEBUG) << "Attempting to connect to sonar at " << sonarEndpoint;
+  is_connected_.set(true);
 
   _socket.async_connect(sonarEndpoint,
                         boost::bind(&DataRx::onConnect, this, _1));
@@ -73,9 +74,12 @@ void DataRx::onConnect(const boost::system::error_code& ec) {
     LOG(DEBUG) << "Error on connect: " << ec.message();
     disconnect();
     return;
+  } else if (!isConnected()) {
+    // A separate thread could have failed independently..
+    return;
   }
 
-  LOG(WARNING) << "Successful connection to sonar!";
+  LOG(INFO) << "Successful connection to sonar!";
   restartReceiveCycle();
   if (_onConnectCallback) _onConnectCallback();
 }
@@ -83,7 +87,7 @@ void DataRx::onConnect(const boost::system::error_code& ec) {
 void DataRx::disconnect() {
   LOG(DEBUG) << " ... disconnecting";
   _socket.close();
-  _is_connected = false;
+  is_connected_.set(false);
   if (_onDisconnectCallback) _onDisconnectCallback();
 }
 
@@ -93,7 +97,8 @@ void DataRx::onTimeout(const boost::system::error_code& ec) {
   } else if (ec) {
     LOG(WARNING) << "Error on timeout " << ec.message();
   }
-  LOG(DEBUG) << "!! timeout";
+  LOG(DEBUG) << "!! No data from sonar in " << timeout_secs_
+             << " seconds, timeout";
   if (_onTimeoutCallback) _onTimeoutCallback();
 }
 
@@ -122,7 +127,8 @@ void DataRx::restartReceiveCycle() {
   }
 
   // Reset timeout timer; this should cancel existing pending timeouts
-  timeout_timer_.expires_from_now(boost::posix_time::seconds(2));
+  const auto timeout = boost::posix_time::seconds(timeout_secs_);
+  timeout_timer_.expires_from_now(timeout);
   timeout_timer_.async_wait(
       boost::bind(&DataRx::onTimeout, this, boost::placeholders::_1));
 
@@ -134,9 +140,13 @@ void DataRx::restartReceiveCycle() {
 
 void DataRx::rxFirstByteOculusId(const boost::system::error_code& ec,
                                  std::size_t bytes_transferred) {
-  if (ec) {
+  if (ec.value() == boost::asio::error::basic_errors::operation_aborted) {
+    LOG(DEBUG) << "Receive cancelled, giving up...";
+    return;
+  } else if (ec) {
     // Failure of this first read usually indicates a network failure
-    LOG(WARNING) << "Error on receive of header: " << ec.message();
+    LOG(WARNING) << "Error on receive of header: " << ec.value() << " "
+                 << ec.message();
     disconnect();
     return;
   }
@@ -154,8 +164,12 @@ void DataRx::rxFirstByteOculusId(const boost::system::error_code& ec,
 
 void DataRx::rxSecondByteOculusId(const boost::system::error_code& ec,
                                   std::size_t bytes_transferred) {
-  if (ec) {
-    LOG(WARNING) << "Error on receive of header: " << ec.message();
+  if (ec.value() == boost::asio::error::basic_errors::operation_aborted) {
+    LOG(DEBUG) << "Receive ancelled, giving up...";
+    return;
+  } else if (ec) {
+    LOG(WARNING) << "Error on receive of header: " << ec.value() << " "
+                 << ec.message();
     goto exit;
   }
 
@@ -177,8 +191,12 @@ exit:
 
 void DataRx::rxHeader(const boost::system::error_code& ec,
                       std::size_t bytes_transferred) {
-  if (ec) {
-    LOG(WARNING) << "Error on receive of header: " << ec.message();
+  if (ec.value() == boost::asio::error::basic_errors::operation_aborted) {
+    LOG(DEBUG) << "Receive cancelled, giving up...";
+    return;
+  } else if (ec) {
+    LOG(WARNING) << "Error on receive of header: " << ec.value() << " "
+                 << ec.message();
     return;
   }
 
@@ -209,8 +227,12 @@ void DataRx::rxPacket(const boost::system::error_code& ec,
                       std::size_t bytes_transferred) {
   MessageHeader hdr(_buffer);
 
-  if (ec) {
-    LOG(WARNING) << "Error on receive of packet data: " << ec.message();
+  if (ec.value() == boost::asio::error::basic_errors::operation_aborted) {
+    LOG(DEBUG) << "Receive cancelled, giving up...";
+    return;
+  } else if (ec) {
+    LOG(WARNING) << "Error on receive of packet data: " << ec.value() << " "
+                 << ec.message();
     goto exit;
   }
 
