@@ -1,0 +1,10 @@
+# - Config file for the oculus package
+# It defines the following variables
+#  oculus_INCLUDE_DIRS - include directories for oculus
+#  oculus_LIBRARY_DIRS - directories for oculus library
+
+# Compute paths
+get_filename_component(oculus_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(oculus_INCLUDE_DIRS "@oculus_include_dirs@")
+set(oculus_LIBRARY_DIRS "@oculus_library_dirs@")
+set(oculus_LIBRARIES "@oculus_libraries@")
