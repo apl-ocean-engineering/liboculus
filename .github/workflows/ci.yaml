@@ -10,7 +10,7 @@ on:
 jobs:
   industrial-ci:
     name: Run Industrial CI
-
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -31,9 +31,6 @@ jobs:
   cmake:
     name: Build with CMake
     runs-on: ubuntu-24.04
-
-    strategy:
-      fail-fast: false
 
     steps:
       - name: Checkout repository
