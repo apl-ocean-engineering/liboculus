@@ -27,3 +27,19 @@ jobs:
         environment:
           CI_ROS_DISTRO: ${{ matrix.ros_distro }}
           UPSTREAM_WORKSPACE: liboculus.repos
+
+  cmake:
+    name: Build with CMake
+    runs-on: ubuntu-24.04
+
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Build Project
+        uses: threeal/cmake-action@v2.1.0
