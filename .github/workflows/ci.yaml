@@ -14,7 +14,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ros_distro: ["noetic", "kilted", "rolling"]
+        env:
+          - {UPSTREAM_WORKSPACE: liboculus.repos, ROS_DISTRO: noetic}
+          - {UPSTREAM_WORKSPACE: liboculus.repos, ROS_DISTRO: kilted}
+          - {UPSTREAM_WORKSPACE: liboculus.repos, ROS_DISTRO: rolling}
 
     steps:
       - name: Checkout repository
@@ -24,9 +27,7 @@ jobs:
 
       - name: Run ROS Industrial CI
         uses: ros-industrial/industrial_ci@master
-        env:
-          CI_ROS_DISTRO: ${{ matrix.ros_distro }}
-          UPSTREAM_WORKSPACE: liboculus.repos
+        env: ${{matrix.env}}
 
   cmake:
     name: Build with CMake
