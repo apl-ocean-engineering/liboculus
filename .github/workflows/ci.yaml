@@ -33,6 +33,12 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
+      - name: Install dependencesi with awalsh128/cache-apt-pkgs-action
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libboost-all-dev
+          version: 1.0
+
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
