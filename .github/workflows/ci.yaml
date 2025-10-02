@@ -24,7 +24,7 @@ jobs:
 
       - name: Run ROS Industrial CI
         uses: ros-industrial/industrial_ci@master
-        environment:
+        env:
           CI_ROS_DISTRO: ${{ matrix.ros_distro }}
           UPSTREAM_WORKSPACE: liboculus.repos
 
