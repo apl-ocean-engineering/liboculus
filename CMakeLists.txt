@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.8)
 project(liboculus)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_compile_options(-std=c++17)
+
 # == Code common to all builds =======================================
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -28,10 +32,6 @@ if(${ros_environment_FOUND})
         find_package(ament_cmake REQUIRED)
         find_package(Boost REQUIRED COMPONENTS system)
         find_package(g3log_ros REQUIRED)
-
-        set(CMAKE_CXX_STANDARD 17)
-        set(CMAKE_CXX_STANDARD_REQUIRED ON)
-        add_compile_options(-std=c++17)
 
         add_library(oculus SHARED ${oculus_SRCS})
         target_link_libraries(oculus PUBLIC Boost::system g3log_ros::g3log)
@@ -76,8 +76,6 @@ if(${ros_environment_FOUND})
             INCLUDE_DIRS include thirdparty
             LIBRARIES liboculus
         )
-
-        add_compile_options(-std=c++14)
 
         add_library(liboculus ${oculus_SRCS})
 
