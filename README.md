@@ -17,7 +17,9 @@ This library contains code for:
     - Raw streams of binary packets.
     - **Note:** This repo includes scaffold code for reading `.oculus` files saved from the Blueprint GUI, but that format is proprietary and undocumented. **We cannot parse `.oculus` files!!**
 
-This package is designed to build in both ROS1 (catkin) and ROS2 (colcon) environments, however it contains no ROS-specific code and could be integrated into other non-ROS environments with some work.
+This package is designed to build in both ROS1 (catkin) and ROS2 (colcon) environments, however it contains no ROS-specific code and could be integrated into other non-ROS environments with some work.  
+
+It also contains the options to build a "bare" library with `cmake`.
 
 The library contains no special provisions for *saving* sonar data,
 but it's straightforward to write packets as a raw binary stream
@@ -47,6 +49,18 @@ binary `oc_client` requires [CLI11](https://github.com/CLIUtils/CLI11).
 
 Internally, the ethernet interface uses
 [Boost::asio](https://www.boost.org/doc/libs/1_66_0/doc/html/boost_asio.html).
+
+## Build with cmake
+
+This package can be built with the standard cmake process:
+
+```
+mkdir build && cd build
+cmake ..
+make
+```
+
+Note the `CMakelists.txt` attempts to auto-detect ROS.  Cmake build should be done in a session where ROS has not been loaded.
 
 ---
 ## oc_client binary
