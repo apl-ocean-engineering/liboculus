@@ -33,6 +33,7 @@ if(${ros_environment_FOUND})
         set(CMAKE_CXX_STANDARD_REQUIRED ON)
         add_compile_options(-std=c++17)
 
+        add_library(oculus SHARED ${oculus_SRCS})
         target_link_libraries(oculus PUBLIC Boost::system g3log_ros::g3log)
 
         target_include_directories(
@@ -43,8 +44,6 @@ if(${ros_environment_FOUND})
                 "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
                 "$<INSTALL_INTERFACE:include/thirdparty>"
         )
-
-        target_link_libraries(oculus PUBLIC Boost::system g3log_ros::g3log_ros)
 
         install(
             TARGETS oculus
