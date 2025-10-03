@@ -2,4 +2,4 @@ repositories:
     g3log_ros:
         type: git
         url:  https://gitlab.com/apl-ocean-engineering/g3log_ros.git
-        version: main
+        version: dev/ros1_ros2_hybrid
