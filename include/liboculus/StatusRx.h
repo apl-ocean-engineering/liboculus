@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2022 University of Washington
+ * Copyright (c) 2017-2025 University of Washington
  * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
@@ -71,7 +71,6 @@ private:
 
   std::vector<uint8_t> _buffer;
 
-  // uint16_t     _port;       // Port to listen on
   uint16_t _num_valid_rx;   // Number of valid status messages
   uint16_t _num_invalid_rx; // Number of invalid status messages
 

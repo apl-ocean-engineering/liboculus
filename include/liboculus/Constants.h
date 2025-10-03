@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2022 University of Washington
+ * Copyright (c) 2017-2025 University of Washington
  * Author: Aaron Marburg <amarburg@uw.edu>
  * All rights reserved.
  *
@@ -40,6 +40,7 @@
 #include "Oculus/Oculus.h"
 
 namespace liboculus {
+
 const uint16_t StatusBroadcastPort = 52102;
 const uint16_t DataPort = 52100;
 

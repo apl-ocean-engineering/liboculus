@@ -39,7 +39,7 @@ The primary dependency is on [g3log](https://github.com/KjellKod/g3log).
 * If using either ROS1 or ROS2, use the provided `liboculus.rosinstall` file:
 
 ```
-cd <catkin_ws>/src`; `vcs import --input liboculus/liboculus.repos
+cd <catkin_ws>/src`; `vcs import --recursive --input liboculus/liboculus.repos
 ```
 
 The `main` branch of `g3log_ros` is also a ROS1-ROS2 hybrid.
