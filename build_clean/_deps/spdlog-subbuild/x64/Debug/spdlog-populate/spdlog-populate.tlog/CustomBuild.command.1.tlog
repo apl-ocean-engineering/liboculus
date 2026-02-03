@@ -1,0 +1,150 @@
+^F:\PROJECTS\LIBOCULUS\BUILD_CLEAN\_DEPS\SPDLOG-SUBBUILD\CMAKEFILES\90D5625D4329C76D296F64D78C5D9CFD\SPDLOG-POPULATE-MKDIR.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -Dcfgdir=/Debug -P F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/spdlog-populate-prefix/tmp/spdlog-populate-mkdirs.cmake
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/Debug/spdlog-populate-mkdir
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\PROJECTS\LIBOCULUS\BUILD_CLEAN\_DEPS\SPDLOG-SUBBUILD\CMAKEFILES\90D5625D4329C76D296F64D78C5D9CFD\SPDLOG-POPULATE-DOWNLOAD.RULE
+setlocal
+cd F:\Projects\liboculus\build_clean\_deps
+if %errorlevel% neq 0 goto :cmEnd
+F:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -P F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/spdlog-populate-prefix/tmp/spdlog-populate-gitclone.cmake
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/Debug/spdlog-populate-download
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\PROJECTS\LIBOCULUS\BUILD_CLEAN\_DEPS\SPDLOG-SUBBUILD\CMAKEFILES\90D5625D4329C76D296F64D78C5D9CFD\SPDLOG-POPULATE-UPDATE.RULE
+setlocal
+cd F:\Projects\liboculus\build_clean\_deps\spdlog-src
+if %errorlevel% neq 0 goto :cmEnd
+F:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -Dcan_fetch=YES -P F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/spdlog-populate-prefix/tmp/spdlog-populate-gitupdate.cmake
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\PROJECTS\LIBOCULUS\BUILD_CLEAN\_DEPS\SPDLOG-SUBBUILD\CMAKEFILES\90D5625D4329C76D296F64D78C5D9CFD\SPDLOG-POPULATE-PATCH.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/Debug/spdlog-populate-patch
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\PROJECTS\LIBOCULUS\BUILD_CLEAN\_DEPS\SPDLOG-SUBBUILD\CMAKEFILES\90D5625D4329C76D296F64D78C5D9CFD\SPDLOG-POPULATE-CONFIGURE.RULE
+setlocal
+cd F:\Projects\liboculus\build_clean\_deps\spdlog-build
+if %errorlevel% neq 0 goto :cmEnd
+F:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/Debug/spdlog-populate-configure
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\PROJECTS\LIBOCULUS\BUILD_CLEAN\_DEPS\SPDLOG-SUBBUILD\CMAKEFILES\90D5625D4329C76D296F64D78C5D9CFD\SPDLOG-POPULATE-BUILD.RULE
+setlocal
+cd F:\Projects\liboculus\build_clean\_deps\spdlog-build
+if %errorlevel% neq 0 goto :cmEnd
+F:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/Debug/spdlog-populate-build
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\PROJECTS\LIBOCULUS\BUILD_CLEAN\_DEPS\SPDLOG-SUBBUILD\CMAKEFILES\90D5625D4329C76D296F64D78C5D9CFD\SPDLOG-POPULATE-INSTALL.RULE
+setlocal
+cd F:\Projects\liboculus\build_clean\_deps\spdlog-build
+if %errorlevel% neq 0 goto :cmEnd
+F:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/Debug/spdlog-populate-install
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\PROJECTS\LIBOCULUS\BUILD_CLEAN\_DEPS\SPDLOG-SUBBUILD\CMAKEFILES\90D5625D4329C76D296F64D78C5D9CFD\SPDLOG-POPULATE-TEST.RULE
+setlocal
+cd F:\Projects\liboculus\build_clean\_deps\spdlog-build
+if %errorlevel% neq 0 goto :cmEnd
+F:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/Debug/spdlog-populate-test
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\PROJECTS\LIBOCULUS\BUILD_CLEAN\_DEPS\SPDLOG-SUBBUILD\CMAKEFILES\1AA71237A69000B6072D784EEE27357C\SPDLOG-POPULATE-COMPLETE.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/CMakeFiles/Debug
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/CMakeFiles/Debug/spdlog-populate-complete
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/spdlog-populate-prefix/src/spdlog-populate-stamp/Debug/spdlog-populate-done
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\PROJECTS\LIBOCULUS\BUILD_CLEAN\_DEPS\SPDLOG-SUBBUILD\CMAKEFILES\C1CFC6CCEE22D1CD00018B762E6C3298\SPDLOG-POPULATE.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\PROJECTS\LIBOCULUS\BUILD_CLEAN\_DEPS\SPDLOG-SUBBUILD\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/Projects/liboculus/build_clean/_deps/spdlog-subbuild -BF:/Projects/liboculus/build_clean/_deps/spdlog-subbuild --check-stamp-file F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

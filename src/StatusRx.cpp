@@ -31,7 +31,12 @@
 #include "liboculus/StatusRx.h"
 #include "liboculus/Logger.h"
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <arpa/inet.h>
+#endif
 #include <string.h>
 
 #include <iomanip>

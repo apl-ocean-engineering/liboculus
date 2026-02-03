@@ -57,6 +57,12 @@ make
 
 Note the `CMakelists.txt` attempts to auto-detect ROS.  Cmake build should be done in a session where ROS has not been loaded.
 
+### Windows (MSVC)
+
+See `BUILD_WINDOWS.md` for a repeatable Windows build flow that uses a clean
+out-of-source directory and forces fetching fmt/spdlog to avoid version
+conflicts.
+
 ## Logging
 
 > [!NOTE] [fips](http://floooh.github.io/fips/) support has been removed from this version.

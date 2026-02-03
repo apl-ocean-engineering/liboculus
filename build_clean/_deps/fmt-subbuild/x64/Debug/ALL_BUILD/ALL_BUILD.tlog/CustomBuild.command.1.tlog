@@ -1,0 +1,10 @@
+^F:\PROJECTS\LIBOCULUS\BUILD_CLEAN\_DEPS\FMT-SUBBUILD\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/Projects/liboculus/build_clean/_deps/fmt-subbuild -BF:/Projects/liboculus/build_clean/_deps/fmt-subbuild --check-stamp-file F:/Projects/liboculus/build_clean/_deps/fmt-subbuild/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/fmt-subbuild/CMakeFiles/fmt-populate"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/fmt-subbuild/CMakeFiles/8dc4cdd2e11c87b73a3d8879cc6bcf23/fmt-populate.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/fmt-subbuild/CMakeFiles/588fa9c3aac8e88cdf47e06f242215ab/fmt-populate-complete.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/fmt-subbuild/CMakeFiles/84763929291837ac3f5f9d8dfc095f7c/fmt-populate-build.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/fmt-subbuild/CMakeFiles/84763929291837ac3f5f9d8dfc095f7c/fmt-populate-configure.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/fmt-subbuild/CMakeFiles/84763929291837ac3f5f9d8dfc095f7c/fmt-populate-download.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/fmt-subbuild/CMakeFiles/84763929291837ac3f5f9d8dfc095f7c/fmt-populate-install.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/fmt-subbuild/CMakeFiles/84763929291837ac3f5f9d8dfc095f7c/fmt-populate-mkdir.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/fmt-subbuild/CMakeFiles/84763929291837ac3f5f9d8dfc095f7c/fmt-populate-patch.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/fmt-subbuild/CMakeFiles/84763929291837ac3f5f9d8dfc095f7c/fmt-populate-test.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/fmt-subbuild/CMakeFiles/84763929291837ac3f5f9d8dfc095f7c/fmt-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"fmt-populate"
+		],
+		"name" : "fmt-populate"
+	}
+}

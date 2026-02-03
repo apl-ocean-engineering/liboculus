@@ -40,6 +40,7 @@
 #include "liboculus/DataTypes.h"
 #include "liboculus/GainData.h"
 #include "liboculus/ImageData.h"
+#include "liboculus/Logger.h"
 #include "liboculus/SimpleFireMessage.h"
 #include "liboculus/SonarConfiguration.h"
 #include "liboculus/thirdparty/Oculus/Oculus.h"
@@ -98,7 +99,40 @@ template <typename Ping_t>
 SimplePingResult<Ping_t>::SimplePingResult(
     const std::shared_ptr<ByteVector> &buffer)
     : SimpleFireMsg_t(buffer), _bearings(), _gains(), _image() {
-  assert(buffer->size() >= sizeof(Ping_t));
+  if (buffer->size() < sizeof(Ping_t)) {
+    oclog::error("SimplePingResult: buffer too small ({} < {})",
+                 buffer->size(), sizeof(Ping_t));
+    return;
+  }
+
+  const auto nBeams = this->ping()->nBeams;
+  const auto nRanges = this->ping()->nRanges;
+  const auto imageOffset = this->ping()->imageOffset;
+  const auto imageSize = this->ping()->imageSize;
+
+  oclog::debug(
+      "SimplePingResult: beams={} ranges={} imageOffset={} imageSize={} "
+      "dataSize={}",
+      nBeams, nRanges, imageOffset, imageSize,
+      static_cast<int>(this->ping()->dataSize));
+
+  const size_t bearingsOffset = sizeof(Ping_t);
+  const size_t bearingsBytes = static_cast<size_t>(nBeams) * sizeof(int16_t);
+  if (bearingsOffset + bearingsBytes > buffer->size()) {
+    oclog::error(
+        "SimplePingResult: bearing data out of range (offset={}, bytes={}, "
+        "buffer={})",
+        bearingsOffset, bearingsBytes, buffer->size());
+    return;
+  }
+
+  if (static_cast<size_t>(imageOffset) + imageSize > buffer->size()) {
+    oclog::error(
+        "SimplePingResult: image data out of range (offset={}, size={}, "
+        "buffer={})",
+        imageOffset, imageSize, buffer->size());
+    return;
+  }
 
   // Bearing data is packed into an array of numBeams shorts immediately
   // the end of the OculusSimplePing struct
@@ -148,6 +182,18 @@ template <typename Ping_t> bool SimplePingResult<Ping_t>::valid() const {
     return false;
   }
 
+  const size_t bearingsOffset = sizeof(Ping_t);
+  const size_t bearingsBytes =
+      static_cast<size_t>(ping()->nBeams) * sizeof(int16_t);
+  if (bearingsOffset + bearingsBytes > this->buffer()->size()) {
+    return false;
+  }
+
+  if (static_cast<size_t>(ping()->imageOffset) + ping()->imageSize >
+      this->buffer()->size()) {
+    return false;
+  }
+
   int num_pixels = ping()->nRanges * ping()->nBeams;
   size_t expected_size = SizeOfDataSize(ping()->dataSize) * num_pixels;
 
@@ -162,7 +208,9 @@ template <typename Ping_t> bool SimplePingResult<Ping_t>::valid() const {
     return false;
   }
 
-  assert(ping()->imageOffset > sizeof(OculusSimplePingResult));
+  if (ping()->imageOffset <= sizeof(OculusSimplePingResult)) {
+    return false;
+  }
   return true;
 }
 

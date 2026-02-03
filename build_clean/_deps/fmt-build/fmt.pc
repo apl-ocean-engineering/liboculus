@@ -1,0 +1,11 @@
+prefix=C:/Program Files (x86)/liboculus
+exec_prefix=C:/Program Files (x86)/liboculus
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: fmt
+Description: A modern formatting library
+Version: 10.2.1
+Libs: -L${libdir} -lfmt
+Cflags: -I${includedir}
+

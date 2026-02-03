@@ -3,7 +3,9 @@ project(liboculus)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-add_compile_options(-std=c++17)
+if(NOT MSVC)
+    add_compile_options(-std=c++17)
+endif()
 
 # == Code common to all builds =======================================
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)

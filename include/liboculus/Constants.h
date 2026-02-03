@@ -41,6 +41,10 @@
 
 namespace liboculus {
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 const uint16_t StatusBroadcastPort = 52102;
 const uint16_t DataPort = 52100;
 

@@ -29,6 +29,7 @@
  */
 
 #include "liboculus/OculusMessageHandler.h"
+#include "liboculus/Logger.h"
 
 namespace liboculus {
 
@@ -47,15 +48,23 @@ void OculusMessageHandler::setCallback<SimplePingResultV2>(
 template <>
 void OculusMessageHandler::callback<SimplePingResultV1>(
     const SimplePingResultV1 &data) {
-  if (_simplePingCallback)
-    _simplePingCallback(data);
+  if (!_simplePingCallback) {
+    oclog::warn("OculusMessageHandler: v1 callback not set");
+    return;
+  }
+  oclog::debug("OculusMessageHandler: calling v1 callback");
+  _simplePingCallback(data);
 }
 
 template <>
 void OculusMessageHandler::callback<SimplePingResultV2>(
     const SimplePingResultV2 &data) {
-  if (_simplePing2Callback)
-    _simplePing2Callback(data);
+  if (!_simplePing2Callback) {
+    oclog::warn("OculusMessageHandler: v2 callback not set");
+    return;
+  }
+  oclog::debug("OculusMessageHandler: calling v2 callback");
+  _simplePing2Callback(data);
 }
 
 }; // namespace liboculus

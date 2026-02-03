@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/CMakeFiles/spdlog-populate"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/CMakeFiles/c1cfc6ccee22d1cd00018b762e6c3298/spdlog-populate.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/CMakeFiles/1aa71237a69000b6072d784eee27357c/spdlog-populate-complete.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/CMakeFiles/90d5625d4329c76d296f64d78c5d9cfd/spdlog-populate-build.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/CMakeFiles/90d5625d4329c76d296f64d78c5d9cfd/spdlog-populate-configure.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/CMakeFiles/90d5625d4329c76d296f64d78c5d9cfd/spdlog-populate-download.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/CMakeFiles/90d5625d4329c76d296f64d78c5d9cfd/spdlog-populate-install.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/CMakeFiles/90d5625d4329c76d296f64d78c5d9cfd/spdlog-populate-mkdir.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/CMakeFiles/90d5625d4329c76d296f64d78c5d9cfd/spdlog-populate-patch.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/CMakeFiles/90d5625d4329c76d296f64d78c5d9cfd/spdlog-populate-test.rule"
+		},
+		{
+			"file" : "F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/CMakeFiles/90d5625d4329c76d296f64d78c5d9cfd/spdlog-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"spdlog-populate"
+		],
+		"name" : "spdlog-populate"
+	}
+}

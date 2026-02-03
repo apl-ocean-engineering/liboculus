@@ -1,3 +1,5 @@
+#include <chrono>
+#include <csignal>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -80,12 +82,12 @@ int main(int argc, char **argv) {
   app.add_option("ip", ipAddr,
                  "IP address of sonar or \"auto\" to automatically detect.");
 
-  string outputFilename("");
+  string outputFilename("F:\\Projects\\liboculus\\test\\data\\out.raw");
   app.add_option("-o,--output", outputFilename,
                  "Saves raw sonar data to specified file.");
 
   // Playback currently not working
-  string inputFilename("");
+  string inputFilename("F:\\Projects\\liboculus\\test\\data\\one_ping_8bit.raw");
   app.add_option("-i,--input", inputFilename,
                  "Reads raw sonar data from specified file.   Plays file "
                  "contents rather than contacting \"real\" sonar on network.");
@@ -140,7 +142,11 @@ int main(int argc, char **argv) {
 
   int count = 0;
 
+#ifdef _WIN32
+  signal(SIGINT, signalHandler);
+#else
   signal(SIGHUP, signalHandler);
+#endif
 
   spdlog::debug("Starting loop");
 
@@ -168,6 +174,7 @@ int main(int argc, char **argv) {
   // Callback for a SimplePingResultV1
   _data_rx.setCallback<liboculus::SimplePingResultV1>(
       [&](const liboculus::SimplePingResultV1 &ping) {
+        spdlog::debug("PingV1: begin");
         // Pings are only sent to the callback if valid()
         // don't need to check independently
 
@@ -179,6 +186,7 @@ int main(int argc, char **argv) {
         }
 
         std::vector<std::string> dump_vec;
+        spdlog::debug("PingV1: dump");
         ping.dump(dump_vec);
 
         for (auto const &l : dump_vec) {
@@ -191,17 +199,20 @@ int main(int argc, char **argv) {
           output.write(cdata, ping.buffer()->size());
         }
 
-        spdlog::info("Average intensity: ()",
+        spdlog::debug("PingV1: mean");
+        spdlog::info("Average intensity: {}",
                      mean_image_intensity(ping.image()));
 
         count++;
         if ((stopAfter > 0) && (count >= stopAfter))
           _io_thread->stop();
+        spdlog::debug("PingV1: end");
       });
 
   // Callback for a SimplePingResultV2
   _data_rx.setCallback<liboculus::SimplePingResultV2>(
       [&](const liboculus::SimplePingResultV2 &ping) {
+        spdlog::debug("PingV2: begin");
         // Pings are only sent to the callback if valid()
         // don't need to check independently
 
@@ -213,6 +224,7 @@ int main(int argc, char **argv) {
         }
 
         std::vector<std::string> dump_vec;
+        spdlog::debug("PingV2: dump");
         ping.dump(dump_vec);
 
         for (auto const &l : dump_vec) {
@@ -225,12 +237,14 @@ int main(int argc, char **argv) {
           output.write(cdata, ping.buffer()->size());
         }
 
+        spdlog::debug("PingV2: mean");
         spdlog::debug("Average intensity: {}",
                       mean_image_intensity(ping.image()));
 
         count++;
         if ((stopAfter > 0) && (count >= stopAfter))
           doStop = true;
+        spdlog::debug("PingV2: end");
       });
 
   // When the _data_rx connects, send the configuration
@@ -268,7 +282,7 @@ int main(int argc, char **argv) {
     spdlog::info("Received pings at {} Hz", c - lastCount);
 
     lastCount = c;
-    sleep(1);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 
   _io_thread->stop();
@@ -301,11 +315,20 @@ int playbackSonarFile(const std::string &filename, ofstream &output,
   // Callback for a SimplePingResultV1
   player->setCallback<liboculus::SimplePingResultV1>(
       [&](const liboculus::SimplePingResultV1 &ping) {
+        spdlog::debug("Playback V1: begin");
         // Pings are only sent to the callback if valid()
         // don't need to check independently
 
         std::vector<std::string> dump_vec;
-        ping.dump(dump_vec);
+        try {
+          ping.dump(dump_vec);
+        } catch (const std::exception &e) {
+          spdlog::error("Playback V1: dump exception: {}", e.what());
+          return;
+        } catch (...) {
+          spdlog::error("Playback V1: dump exception: unknown");
+          return;
+        }
 
         for (auto const &l : dump_vec) {
           spdlog::debug("PingV1: {}", l);
@@ -315,22 +338,42 @@ int playbackSonarFile(const std::string &filename, ofstream &output,
           const char *cdata =
               reinterpret_cast<const char *>(ping.buffer()->data());
           output.write(cdata, ping.buffer()->size());
+          spdlog::debug("Playback V1: wrote {} bytes",
+                        ping.buffer()->size());
         }
 
-        spdlog::info("Average intensity: {}",
-                     mean_image_intensity(ping.image()));
+        try {
+          spdlog::info("Average intensity: {}",
+                       mean_image_intensity(ping.image()));
+        } catch (const std::exception &e) {
+          spdlog::error("Playback V1: mean exception: {}", e.what());
+          return;
+        } catch (...) {
+          spdlog::error("Playback V1: mean exception: unknown");
+          return;
+        }
 
         count++;
+        spdlog::debug("Playback V1: end");
       });
 
   // Callback for a SimplePingResultV2
   player->setCallback<liboculus::SimplePingResultV2>(
       [&](const liboculus::SimplePingResultV2 &ping) {
+        spdlog::debug("Playback V2: begin");
         // Pings are only sent to the callback if valid()
         // don't need to check independently
 
         std::vector<std::string> dump_vec;
-        ping.dump(dump_vec);
+        try {
+          ping.dump(dump_vec);
+        } catch (const std::exception &e) {
+          spdlog::error("Playback V2: dump exception: {}", e.what());
+          return;
+        } catch (...) {
+          spdlog::error("Playback V2: dump exception: unknown");
+          return;
+        }
 
         for (auto const &l : dump_vec) {
           spdlog::debug("PingV2: {}", l);
@@ -340,12 +383,23 @@ int playbackSonarFile(const std::string &filename, ofstream &output,
           const char *cdata =
               reinterpret_cast<const char *>(ping.buffer()->data());
           output.write(cdata, ping.buffer()->size());
+          spdlog::debug("Playback V2: wrote {} bytes",
+                        ping.buffer()->size());
         }
 
-        spdlog::info("Average intensity: {}",
-                     mean_image_intensity(ping.image()));
+        try {
+          spdlog::info("Average intensity: {}",
+                       mean_image_intensity(ping.image()));
+        } catch (const std::exception &e) {
+          spdlog::error("Playback V2: mean exception: {}", e.what());
+          return;
+        } catch (...) {
+          spdlog::error("Playback V2: mean exception: unknown");
+          return;
+        }
 
         count++;
+        spdlog::debug("Playback V2: end");
       });
 
   // SimplePingResult ping;

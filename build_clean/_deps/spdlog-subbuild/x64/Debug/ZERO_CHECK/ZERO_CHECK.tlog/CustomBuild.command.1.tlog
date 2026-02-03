@@ -1,0 +1,10 @@
+^F:\PROJECTS\LIBOCULUS\BUILD_CLEAN\_DEPS\SPDLOG-SUBBUILD\CMAKEFILES\C1CFC6CCEE22D1CD00018B762E6C3298\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/Projects/liboculus/build_clean/_deps/spdlog-subbuild -BF:/Projects/liboculus/build_clean/_deps/spdlog-subbuild --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file F:/Projects/liboculus/build_clean/_deps/spdlog-subbuild/spdlog-populate.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
