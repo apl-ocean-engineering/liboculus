@@ -168,11 +168,17 @@ void DataRx::sendSimpleFireMessage(const SonarConfiguration &config) {
 
   if (data.size() > 0) {
     try {
-      auto result = _socket.send(boost::asio::buffer(data));
-      // LOG(DEBUG) << "Sent " << result << " bytes to sonar";
+      boost::system::error_code ec;
+      auto result = _socket.send(boost::asio::buffer(data), 0, ec);
+      if (ec) {
+        oclog::error("DataRx send failed: {} ({})", ec.message(), ec.value());
+        disconnect();
+        return;
+      }
+      oclog::info("DataRx sent {} bytes to sonar", result);
       haveWritten(data);
     } catch (boost::system::system_error &ex) {
-      // LOG(WARNING) << "Exception when sending: " << ex.what();
+      oclog::error("DataRx send exception: {}", ex.what());
       disconnect();
     }
   }

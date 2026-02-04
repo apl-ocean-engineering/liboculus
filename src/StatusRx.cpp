@@ -64,16 +64,36 @@ void StatusRx::doConnect() {
 
   boost::system::error_code error;
   _socket.open(boost::asio::ip::udp::v4(), error);
+  if (error) {
+    oclog::error("StatusRx open failed: {} ({})", error.message(),
+                 error.value());
+    return;
+  }
 
   boost::asio::socket_base::broadcast option(true);
-  _socket.set_option(option);
-
-  if (!error) {
-    _socket.bind(local);
-    scheduleRead();
-  } else {
-    oclog::warn("Unable to start reader");
+  _socket.set_option(option, error);
+  if (error) {
+    oclog::error("StatusRx set broadcast failed: {} ({})", error.message(),
+                 error.value());
+    return;
   }
+
+  boost::asio::socket_base::reuse_address reuse(true);
+  _socket.set_option(reuse, error);
+  if (error) {
+    oclog::error("StatusRx set reuse_address failed: {} ({})", error.message(),
+                 error.value());
+    return;
+  }
+
+  _socket.bind(local, error);
+  if (error) {
+    oclog::error("StatusRx bind failed: {} ({})", error.message(),
+                 error.value());
+    return;
+  }
+
+  scheduleRead();
 }
 
 void StatusRx::scheduleRead() {
@@ -93,7 +113,7 @@ void StatusRx::handleRead(const boost::system::error_code &ec,
     scheduleRead();
   }
 
-  oclog::trace("Read {} bytes", bytes_transferred);
+  oclog::info("StatusRx received {} bytes", bytes_transferred);
 
   if (bytes_transferred != sizeof(OculusStatusMsg)) {
     oclog::warn("Got {} bytes, expected OculusStatusMsg of size ",

@@ -134,6 +134,17 @@ set_target_properties(
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin/$<CONFIG>"
 )
 
+add_executable(ocview ${PROJECT_SOURCE_DIR}/tools/oculus_view.cpp)
+target_link_libraries(ocview oculus)
+if(LIBOCULUS_FETCH_DEPS AND DEFINED fmt_SOURCE_DIR)
+    target_include_directories(ocview BEFORE PUBLIC "${fmt_SOURCE_DIR}/include")
+endif()
+set_target_properties(
+    ocview
+    PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin/$<CONFIG>"
+)
+
 # =============================================
 # to allow find_package()
 # =============================================
