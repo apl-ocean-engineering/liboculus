@@ -207,6 +207,8 @@ void DataRx::rxHeader(const boost::system::error_code &ec,
     // LOG(WARNING) << "Received short header of " << bytes_transferred
     //              << " expected " << sizeof(OculusMessageHeader);
     restartReceiveCycle();
+    // Short header means our buffer is incomplete; restart before parsing.
+    return;
   }
 
   MessageHeader hdr(_buffer);

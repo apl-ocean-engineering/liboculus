@@ -111,14 +111,17 @@ void StatusRx::handleRead(const boost::system::error_code &ec,
   if (ec) {
     oclog::warn("Error on receive: {}", ec.message());
     scheduleRead();
+    // Don't try to parse a partial buffer after a receive error.
+    return;
   }
 
   oclog::info("StatusRx received {} bytes", bytes_transferred);
 
   if (bytes_transferred != sizeof(OculusStatusMsg)) {
-    oclog::warn("Got {} bytes, expected OculusStatusMsg of size ",
+    oclog::warn("Got {} bytes, expected OculusStatusMsg of size {}",
                 bytes_transferred, sizeof(OculusStatusMsg));
     _num_invalid_rx++;
+    scheduleRead();
     return;
   }
 
