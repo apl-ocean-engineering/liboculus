@@ -76,9 +76,19 @@ or a sink can be added to the library's logger:
 auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt >();  liboculus::Logger::add_sink( stdout_sink );
 ```
 
+### Fetching `spdlog` and `fmt` to avoid dependencies
 
+Export the `FETCH_SPDLOG` variable to download and build static libraries for `spdlog` and `fmt`:
 
-
+```
+$ export FETCH_SPDLOG=1
+$ cmake ../ # In build directory
+[...]
+-- {fmt} version: 12.1.0
+-- Build type:
+-- Build spdlog: 1.17.0
+[...]
+```
 
 ---
 ## oc_client binary

@@ -8,6 +8,23 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -Wl,--no-as-needed")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 
+if(DEFINED ENV{FETCH_SPDLOG})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+
+    include(FetchContent)
+    FetchContent_Declare(
+      fmt
+      GIT_REPOSITORY https://github.com/fmtlib/fmt
+      GIT_TAG        407c905e45ad75fc29bf0f9bb7c5c2fd3475976f) # 12.1.0
+    FetchContent_MakeAvailable(fmt)
+
+    FetchContent_Declare(
+      spdlog
+      GIT_REPOSITORY https://github.com/gabime/spdlog
+      GIT_TAG        79524ddd08a4ec981b7fea76afd08ee05f83755d) # 1.17.0
+    FetchContent_MakeAvailable(spdlog)
+endif()
+
 # ###########################################
 # The following folders will be included  #
 # ###########################################
