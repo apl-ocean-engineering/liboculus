@@ -123,9 +123,10 @@ install(
     COMPONENT dev
 )
 
-install(DIRECTORY include/${PROJECT_NAME}/
-    DESTINATION include/${PROJECT_NAME})
+install(DIRECTORY include/
+    TYPE INCLUDE
+)
 
 install(TARGETS oculus
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY
 )
