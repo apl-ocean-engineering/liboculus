@@ -122,3 +122,11 @@ install(
     DESTINATION share/oculus/cmake
     COMPONENT dev
 )
+
+install(DIRECTORY include/
+    TYPE INCLUDE
+)
+
+install(TARGETS oculus
+    LIBRARY
+)
