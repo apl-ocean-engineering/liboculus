@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="F:\Projects\liboculus\build_clean\CMakeFiles\c6591b38e0a7add7be28c2afad30e6f0\INSTALL_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{5452DAE2-34ED-3BE1-9357-BF0D24A6F395}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

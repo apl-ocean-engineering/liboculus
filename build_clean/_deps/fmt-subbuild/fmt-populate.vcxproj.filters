@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="F:\Projects\liboculus\build_clean\_deps\fmt-subbuild\CMakeFiles\84763929291837ac3f5f9d8dfc095f7c\fmt-populate-mkdir.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\Projects\liboculus\build_clean\_deps\fmt-subbuild\CMakeFiles\84763929291837ac3f5f9d8dfc095f7c\fmt-populate-download.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\Projects\liboculus\build_clean\_deps\fmt-subbuild\CMakeFiles\84763929291837ac3f5f9d8dfc095f7c\fmt-populate-update.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\Projects\liboculus\build_clean\_deps\fmt-subbuild\CMakeFiles\84763929291837ac3f5f9d8dfc095f7c\fmt-populate-patch.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\Projects\liboculus\build_clean\_deps\fmt-subbuild\CMakeFiles\84763929291837ac3f5f9d8dfc095f7c\fmt-populate-configure.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\Projects\liboculus\build_clean\_deps\fmt-subbuild\CMakeFiles\84763929291837ac3f5f9d8dfc095f7c\fmt-populate-build.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\Projects\liboculus\build_clean\_deps\fmt-subbuild\CMakeFiles\84763929291837ac3f5f9d8dfc095f7c\fmt-populate-install.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\Projects\liboculus\build_clean\_deps\fmt-subbuild\CMakeFiles\84763929291837ac3f5f9d8dfc095f7c\fmt-populate-test.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\Projects\liboculus\build_clean\_deps\fmt-subbuild\CMakeFiles\588fa9c3aac8e88cdf47e06f242215ab\fmt-populate-complete.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\Projects\liboculus\build_clean\_deps\fmt-subbuild\CMakeFiles\8dc4cdd2e11c87b73a3d8879cc6bcf23\fmt-populate.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="F:\Projects\liboculus\build_clean\_deps\fmt-subbuild\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="F:\Projects\liboculus\build_clean\_deps\fmt-subbuild\CMakeFiles\fmt-populate" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{D4074039-98E5-3540-BFBC-769267FB5287}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

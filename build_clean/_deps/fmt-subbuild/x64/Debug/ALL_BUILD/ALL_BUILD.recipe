@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ProjectOutputs>
+    <ProjectOutput>
+      <FullPath>F:\Projects\liboculus\build_clean\_deps\fmt-subbuild\x64\Debug\ZERO_CHECK</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>F:\Projects\liboculus\build_clean\_deps\fmt-subbuild\x64\Debug\fmt-populate</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>F:\Projects\liboculus\build_clean\_deps\fmt-subbuild\x64\Debug\ALL_BUILD</FullPath>
+    </ProjectOutput>
+  </ProjectOutputs>
+  <ContentFiles />
+  <SatelliteDlls />
+  <NonRecipeFileRefs />
+</Project>

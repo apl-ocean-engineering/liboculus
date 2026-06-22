@@ -1,0 +1,401 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{AD369C4A-DCA7-3D0B-986F-01D5ABCEABEA}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>spdlog</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\Projects\liboculus\build_clean\_deps\spdlog-build\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">spdlog.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">spdlogd</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\Projects\liboculus\build_clean\_deps\spdlog-build\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">spdlog.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">spdlog</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">F:\Projects\liboculus\build_clean\_deps\spdlog-build\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">spdlog.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">spdlog</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">F:\Projects\liboculus\build_clean\_deps\spdlog-build\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">spdlog.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">spdlog</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\Projects\liboculus\include;F:\Projects\liboculus\build_clean\_deps\spdlog-src\include;F:\Projects\liboculus\build_clean\_deps\fmt-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /Zc:__cplusplus</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;SPDLOG_COMPILED_LIB;SPDLOG_FMT_EXTERNAL;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;SPDLOG_COMPILED_LIB;SPDLOG_FMT_EXTERNAL;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\Projects\liboculus\include;F:\Projects\liboculus\build_clean\_deps\spdlog-src\include;F:\Projects\liboculus\build_clean\_deps\fmt-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>F:\Projects\liboculus\include;F:\Projects\liboculus\build_clean\_deps\spdlog-src\include;F:\Projects\liboculus\build_clean\_deps\fmt-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\Projects\liboculus\include;F:\Projects\liboculus\build_clean\_deps\spdlog-src\include;F:\Projects\liboculus\build_clean\_deps\fmt-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /Zc:__cplusplus</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SPDLOG_COMPILED_LIB;SPDLOG_FMT_EXTERNAL;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SPDLOG_COMPILED_LIB;SPDLOG_FMT_EXTERNAL;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\Projects\liboculus\include;F:\Projects\liboculus\build_clean\_deps\spdlog-src\include;F:\Projects\liboculus\build_clean\_deps\fmt-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>F:\Projects\liboculus\include;F:\Projects\liboculus\build_clean\_deps\spdlog-src\include;F:\Projects\liboculus\build_clean\_deps\fmt-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\Projects\liboculus\include;F:\Projects\liboculus\build_clean\_deps\spdlog-src\include;F:\Projects\liboculus\build_clean\_deps\fmt-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /Zc:__cplusplus</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SPDLOG_COMPILED_LIB;SPDLOG_FMT_EXTERNAL;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SPDLOG_COMPILED_LIB;SPDLOG_FMT_EXTERNAL;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\Projects\liboculus\include;F:\Projects\liboculus\build_clean\_deps\spdlog-src\include;F:\Projects\liboculus\build_clean\_deps\fmt-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>F:\Projects\liboculus\include;F:\Projects\liboculus\build_clean\_deps\spdlog-src\include;F:\Projects\liboculus\build_clean\_deps\fmt-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\Projects\liboculus\include;F:\Projects\liboculus\build_clean\_deps\spdlog-src\include;F:\Projects\liboculus\build_clean\_deps\fmt-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /Zc:__cplusplus</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SPDLOG_COMPILED_LIB;SPDLOG_FMT_EXTERNAL;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SPDLOG_COMPILED_LIB;SPDLOG_FMT_EXTERNAL;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\Projects\liboculus\include;F:\Projects\liboculus\build_clean\_deps\spdlog-src\include;F:\Projects\liboculus\build_clean\_deps\fmt-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>F:\Projects\liboculus\include;F:\Projects\liboculus\build_clean\_deps\spdlog-src\include;F:\Projects\liboculus\build_clean\_deps\fmt-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule F:/Projects/liboculus/build_clean/_deps/spdlog-src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/Projects/liboculus -BF:/Projects/liboculus/build_clean --check-stamp-file F:/Projects/liboculus/build_clean/_deps/spdlog-build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\CMake\share\cmake-3.28\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\GNUInstallDirs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Internal\CheckSourceCompiles.cmake;F:\Projects\liboculus\build_clean\_deps\spdlog-src\cmake\ide.cmake;F:\Projects\liboculus\build_clean\_deps\spdlog-src\cmake\utils.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\Projects\liboculus\build_clean\_deps\spdlog-build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule F:/Projects/liboculus/build_clean/_deps/spdlog-src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/Projects/liboculus -BF:/Projects/liboculus/build_clean --check-stamp-file F:/Projects/liboculus/build_clean/_deps/spdlog-build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\CMake\share\cmake-3.28\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\GNUInstallDirs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Internal\CheckSourceCompiles.cmake;F:\Projects\liboculus\build_clean\_deps\spdlog-src\cmake\ide.cmake;F:\Projects\liboculus\build_clean\_deps\spdlog-src\cmake\utils.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\Projects\liboculus\build_clean\_deps\spdlog-build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule F:/Projects/liboculus/build_clean/_deps/spdlog-src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/Projects/liboculus -BF:/Projects/liboculus/build_clean --check-stamp-file F:/Projects/liboculus/build_clean/_deps/spdlog-build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Program Files\CMake\share\cmake-3.28\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\GNUInstallDirs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Internal\CheckSourceCompiles.cmake;F:\Projects\liboculus\build_clean\_deps\spdlog-src\cmake\ide.cmake;F:\Projects\liboculus\build_clean\_deps\spdlog-src\cmake\utils.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">F:\Projects\liboculus\build_clean\_deps\spdlog-build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule F:/Projects/liboculus/build_clean/_deps/spdlog-src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/Projects/liboculus -BF:/Projects/liboculus/build_clean --check-stamp-file F:/Projects/liboculus/build_clean/_deps/spdlog-build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\CMake\share\cmake-3.28\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\GNUInstallDirs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Internal\CheckSourceCompiles.cmake;F:\Projects\liboculus\build_clean\_deps\spdlog-src\cmake\ide.cmake;F:\Projects\liboculus\build_clean\_deps\spdlog-src\cmake\utils.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">F:\Projects\liboculus\build_clean\_deps\spdlog-build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\src\spdlog.cpp" />
+    <ClCompile Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\src\stdout_sinks.cpp" />
+    <ClCompile Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\src\color_sinks.cpp" />
+    <ClCompile Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\src\file_sinks.cpp" />
+    <ClCompile Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\src\async.cpp" />
+    <ClCompile Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\src\cfg.cpp" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\async.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\async_logger-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\async_logger.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\common-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\common.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\formatter.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fwd.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\logger-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\logger.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\pattern_formatter-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\pattern_formatter.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\spdlog-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\spdlog.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\stopwatch.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\tweakme.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\version.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\backtracer-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\backtracer.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\circular_q.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\console_globals.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\file_helper-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\file_helper.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\fmt_helper.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\log_msg-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\log_msg.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\log_msg_buffer-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\log_msg_buffer.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\mpmc_blocking_q.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\null_mutex.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\os-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\os.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\periodic_worker-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\periodic_worker.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\registry-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\registry.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\synchronous_factory.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\tcp_client-windows.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\tcp_client.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\thread_pool-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\thread_pool.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\udp_client-windows.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\udp_client.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\windows_include.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\android_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\ansicolor_sink-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\ansicolor_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\base_sink-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\base_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\basic_file_sink-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\basic_file_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\callback_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\daily_file_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\dist_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\dup_filter_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\hourly_file_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\kafka_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\mongo_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\msvc_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\null_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\ostream_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\qt_sinks.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\ringbuffer_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\rotating_file_sink-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\rotating_file_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\sink-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\stdout_color_sinks-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\stdout_color_sinks.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\stdout_sinks-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\stdout_sinks.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\syslog_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\systemd_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\tcp_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\udp_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\win_eventlog_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\wincolor_sink-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\wincolor_sink.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bin_to_hex.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\chrono.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\compile.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\fmt.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\ostr.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\ranges.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\std.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\xchar.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\args.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\chrono.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\color.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\compile.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\core.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\format-inl.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\format.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\locale.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\os.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\ostream.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\printf.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\ranges.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\std.h" />
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\xchar.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="F:\Projects\liboculus\build_clean\ZERO_CHECK.vcxproj">
+      <Project>{01F63164-BE1F-3EAC-B55E-CC9856C463C3}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="F:\Projects\liboculus\build_clean\_deps\fmt-build\fmt.vcxproj">
+      <Project>{248AB58D-0A27-3451-AB2F-9F4063E13A67}</Project>
+      <Name>fmt</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

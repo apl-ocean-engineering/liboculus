@@ -1,0 +1,348 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\src\spdlog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\src\stdout_sinks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\src\color_sinks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\src\file_sinks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\src\async.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\src\cfg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\async.h">
+      <Filter>Header Files\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\async_logger-inl.h">
+      <Filter>Header Files\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\async_logger.h">
+      <Filter>Header Files\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\common-inl.h">
+      <Filter>Header Files\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\common.h">
+      <Filter>Header Files\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\formatter.h">
+      <Filter>Header Files\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fwd.h">
+      <Filter>Header Files\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\logger-inl.h">
+      <Filter>Header Files\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\logger.h">
+      <Filter>Header Files\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\pattern_formatter-inl.h">
+      <Filter>Header Files\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\pattern_formatter.h">
+      <Filter>Header Files\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\spdlog-inl.h">
+      <Filter>Header Files\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\spdlog.h">
+      <Filter>Header Files\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\stopwatch.h">
+      <Filter>Header Files\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\tweakme.h">
+      <Filter>Header Files\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\version.h">
+      <Filter>Header Files\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\backtracer-inl.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\backtracer.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\circular_q.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\console_globals.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\file_helper-inl.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\file_helper.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\fmt_helper.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\log_msg-inl.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\log_msg.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\log_msg_buffer-inl.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\log_msg_buffer.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\mpmc_blocking_q.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\null_mutex.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\os-inl.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\os.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\periodic_worker-inl.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\periodic_worker.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\registry-inl.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\registry.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\synchronous_factory.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\tcp_client-windows.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\tcp_client.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\thread_pool-inl.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\thread_pool.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\udp_client-windows.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\udp_client.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\details\windows_include.h">
+      <Filter>Header Files\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\android_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\ansicolor_sink-inl.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\ansicolor_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\base_sink-inl.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\base_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\basic_file_sink-inl.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\basic_file_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\callback_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\daily_file_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\dist_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\dup_filter_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\hourly_file_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\kafka_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\mongo_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\msvc_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\null_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\ostream_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\qt_sinks.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\ringbuffer_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\rotating_file_sink-inl.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\rotating_file_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\sink-inl.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\stdout_color_sinks-inl.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\stdout_color_sinks.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\stdout_sinks-inl.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\stdout_sinks.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\syslog_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\systemd_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\tcp_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\udp_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\win_eventlog_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\wincolor_sink-inl.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\sinks\wincolor_sink.h">
+      <Filter>Header Files\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bin_to_hex.h">
+      <Filter>Header Files\spdlog\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\chrono.h">
+      <Filter>Header Files\spdlog\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\compile.h">
+      <Filter>Header Files\spdlog\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\fmt.h">
+      <Filter>Header Files\spdlog\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\ostr.h">
+      <Filter>Header Files\spdlog\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\ranges.h">
+      <Filter>Header Files\spdlog\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\std.h">
+      <Filter>Header Files\spdlog\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\xchar.h">
+      <Filter>Header Files\spdlog\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\args.h">
+      <Filter>Header Files\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\chrono.h">
+      <Filter>Header Files\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\color.h">
+      <Filter>Header Files\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\compile.h">
+      <Filter>Header Files\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\core.h">
+      <Filter>Header Files\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\format-inl.h">
+      <Filter>Header Files\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\format.h">
+      <Filter>Header Files\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\locale.h">
+      <Filter>Header Files\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\os.h">
+      <Filter>Header Files\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\ostream.h">
+      <Filter>Header Files\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\printf.h">
+      <Filter>Header Files\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\ranges.h">
+      <Filter>Header Files\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\std.h">
+      <Filter>Header Files\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\include\spdlog\fmt\bundled\xchar.h">
+      <Filter>Header Files\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\Projects\liboculus\build_clean\_deps\spdlog-src\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{CA099077-FA06-3370-B8A4-F78603ABAEB9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\spdlog">
+      <UniqueIdentifier>{57B1E9B5-F13C-3B7C-8CE7-88FBA965EB34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\spdlog\details">
+      <UniqueIdentifier>{390E64F5-9697-3169-8E6F-362E60B99480}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\spdlog\fmt">
+      <UniqueIdentifier>{96F74674-A109-3942-B32F-ED314B2329E9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\spdlog\fmt\bundled">
+      <UniqueIdentifier>{6B8154C5-470B-3A9E-8B34-4CE26554EBFC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\spdlog\sinks">
+      <UniqueIdentifier>{749FA576-DEE2-339B-8F23-78546C8C8ABB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{F68D873A-1EB1-3763-9D9A-472A77062F9F}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

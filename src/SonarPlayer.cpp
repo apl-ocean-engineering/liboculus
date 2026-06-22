@@ -34,6 +34,7 @@
 
 #include "liboculus/Constants.h"
 #include "liboculus/DataTypes.h"
+#include "liboculus/Logger.h"
 #include "liboculus/MessageHeader.h"
 #include "liboculus/SimplePingResult.h"
 #include "liboculus/thirdparty/Oculus/Oculus.h"
@@ -51,8 +52,10 @@ shared_ptr<SonarPlayerBase>
 SonarPlayerBase::OpenFile(const std::string &filename) {
   std::ifstream f(filename);
 
-  if (!f.is_open())
+  if (!f.is_open()) {
+    oclog::warn("OpenFile: unable to open {}", filename);
     return nullptr;
+  }
 
   char c;
   f.get(c);
@@ -68,6 +71,7 @@ SonarPlayerBase::OpenFile(const std::string &filename) {
     }
 
   } else if (c == 0x53) {
+    oclog::debug("OpenFile: raw sonar data detected");
     // LOG(INFO) << "I think this is an raw sonar data.";
     return shared_ptr<SonarPlayerBase>(new RawSonarPlayer());
   }
@@ -80,12 +84,20 @@ SonarPlayerBase::OpenFile(const std::string &filename) {
 
 bool SonarPlayerBase::open(const std::string &filename) {
   _input.open(filename, ios_base::binary | ios_base::in);
+  if (!_input.is_open()) {
+    oclog::error("SonarPlayerBase: failed to open {}", filename);
+  }
   return _input.is_open();
 }
 
 //--- RawSonarPlayer --
 
 bool RawSonarPlayer::nextPing() {
+  if (!_input.is_open()) {
+    oclog::warn("RawSonarPlayer: input not open");
+    return false;
+  }
+
   unsigned int skipped_bytes = 0;
   while (_input.peek() != PacketHeaderLSB) {
     char c;
@@ -97,31 +109,76 @@ bool RawSonarPlayer::nextPing() {
     }
   }
 
-  // LOG_IF(INFO, skipped_bytes > 0)
-  //     << "Skipped " << skipped_bytes << " before reading start of header";
+  if (skipped_bytes > 0) {
+    oclog::debug("RawSonarPlayer: skipped {} bytes", skipped_bytes);
+  }
 
   std::shared_ptr<ByteVector> buffer =
       std::make_shared<ByteVector>(sizeof(OculusMessageHeader));
-  _input.get(reinterpret_cast<char *>(buffer->data()),
-             sizeof(OculusMessageHeader));
+  _input.read(reinterpret_cast<char *>(buffer->data()),
+              sizeof(OculusMessageHeader));
+  if (_input.gcount() !=
+      static_cast<std::streamsize>(sizeof(OculusMessageHeader))) {
+    oclog::warn("RawSonarPlayer: short read on header (got {})",
+                _input.gcount());
+    return false;
+  }
 
   MessageHeader header(buffer);
-  if (!header.valid())
+  if (!header.valid()) {
+    oclog::warn("RawSonarPlayer: invalid header oculusId={:#04x}",
+                header.oculusId());
     return false;
+  }
+
+  oclog::debug("RawSonarPlayer: msgId={:#04x} ver={} payload={} packet={}",
+               static_cast<uint16_t>(header.msgId()), header.msgVersion(),
+               header.payloadSize(), header.packetSize());
 
   // LOG(DEBUG) << "Reading " << header.payloadSize() << " additional bytes";
 
   // Read the rest of the data
   buffer->resize(header.packetSize());
-  _input.get(
+  _input.read(
       reinterpret_cast<char *>(buffer->data() + sizeof(OculusMessageHeader)),
       header.payloadSize());
+  if (_input.gcount() != static_cast<std::streamsize>(header.payloadSize())) {
+    oclog::warn("RawSonarPlayer: short read on payload (wanted {}, got {})",
+                header.payloadSize(), _input.gcount());
+    return false;
+  }
 
   if (header.msgId() == messageSimplePingResult) {
     if (header.msgVersion() == 2) {
-      callback(SimplePingResultV2(buffer));
+      SimplePingResultV2 ping(buffer);
+      const bool ok = ping.valid();
+      oclog::debug("RawSonarPlayer: ping v2 valid={}", ok);
+      if (!ok) {
+        oclog::warn(
+            "RawSonarPlayer: invalid ping v2 (offset={}, size={}, beams={}, "
+            "ranges={}, dataSize={})",
+            ping.ping()->imageOffset, ping.ping()->imageSize,
+            ping.ping()->nBeams, ping.ping()->nRanges,
+            static_cast<int>(ping.ping()->dataSize));
+        return false;
+      }
+      oclog::debug("RawSonarPlayer: invoking v2 callback");
+      callback(ping);
     } else {
-      callback(SimplePingResultV1(buffer));
+      SimplePingResultV1 ping(buffer);
+      const bool ok = ping.valid();
+      oclog::debug("RawSonarPlayer: ping v1 valid={}", ok);
+      if (!ok) {
+        oclog::warn(
+            "RawSonarPlayer: invalid ping v1 (offset={}, size={}, beams={}, "
+            "ranges={}, dataSize={})",
+            ping.ping()->imageOffset, ping.ping()->imageSize,
+            ping.ping()->nBeams, ping.ping()->nRanges,
+            static_cast<int>(ping.ping()->dataSize));
+        return false;
+      }
+      oclog::debug("RawSonarPlayer: invoking v1 callback");
+      callback(ping);
     }
   }
 

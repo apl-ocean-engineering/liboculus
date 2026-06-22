@@ -67,7 +67,7 @@ void DataRx::connect(const std::string &strAddr) {
 
 void DataRx::onConnect(const boost::system::error_code &ec) {
   if (ec) {
-    // LOG(DEBUG) << "Error on connect: " << ec.message();
+    oclog::error("DataRx connect failed: {} ({})", ec.message(), ec.value());
     disconnect();
     return;
   } else if (!isConnected()) {
@@ -75,7 +75,7 @@ void DataRx::onConnect(const boost::system::error_code &ec) {
     return;
   }
 
-  // LOG(INFO) << "Successful connection to sonar!";
+  oclog::info("DataRx connected");
   restartReceiveCycle();
   if (_onConnectCallback)
     _onConnectCallback();
@@ -93,11 +93,10 @@ void DataRx::onTimeout(const boost::system::error_code &ec) {
   if (ec == boost::asio::error::operation_aborted) {
     return;
   } else if (ec) {
-    // LOG(WARNING) << "Error on timeout " << ec.message();
+    oclog::warn("DataRx timeout error: {} ({})", ec.message(), ec.value());
   }
 
-  // LOG(DEBUG) << "!! No data from sonar in " << timeout_secs_
-  //            << " seconds, timeout";
+  oclog::warn("DataRx: no data from sonar in {} seconds", timeout_secs_);
   if (_onTimeoutCallback)
     _onTimeoutCallback();
 }
@@ -147,8 +146,8 @@ void DataRx::rxFirstByteOculusId(const boost::system::error_code &ec,
     return;
   } else if (ec) {
     // Failure of this first read usually indicates a network failure
-    // LOG(WARNING) << "Error on receive of header: " << ec.value() << " "
-    //              << ec.message();
+    oclog::warn("DataRx recv header byte failed: {} ({})", ec.message(),
+                ec.value());
     disconnect();
     return;
   }
@@ -172,8 +171,8 @@ void DataRx::rxSecondByteOculusId(const boost::system::error_code &ec,
     // LOG(DEBUG) << "Receive cancelled, giving up...";
     return;
   } else if (ec) {
-    // LOG(WARNING) << "Error on receive of header: " << ec.value() << " "
-    //              << ec.message();
+    oclog::warn("DataRx recv header byte2 failed: {} ({})", ec.message(),
+                ec.value());
     goto exit;
   }
 
@@ -200,8 +199,7 @@ void DataRx::rxHeader(const boost::system::error_code &ec,
     // LOG(DEBUG) << "Receive cancelled, giving up...";
     return;
   } else if (ec) {
-    // LOG(WARNING) << "Error on receive of header: " << ec.value() << " "
-    //              << ec.message();
+    oclog::warn("DataRx recv header failed: {} ({})", ec.message(), ec.value());
     return;
   }
 
@@ -209,6 +207,8 @@ void DataRx::rxHeader(const boost::system::error_code &ec,
     // LOG(WARNING) << "Received short header of " << bytes_transferred
     //              << " expected " << sizeof(OculusMessageHeader);
     restartReceiveCycle();
+    // Short header means our buffer is incomplete; restart before parsing.
+    return;
   }
 
   MessageHeader hdr(_buffer);
@@ -237,8 +237,7 @@ void DataRx::rxPacket(const boost::system::error_code &ec,
     // LOG(DEBUG) << "Receive cancelled, giving up...";
     return;
   } else if (ec) {
-    // LOG(WARNING) << "Error on receive of packet data: " << ec.value() << " "
-    //              << ec.message();
+    oclog::warn("DataRx recv packet failed: {} ({})", ec.message(), ec.value());
     goto exit;
   }
 

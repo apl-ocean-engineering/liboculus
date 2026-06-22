@@ -1,0 +1,10 @@
+^F:\PROJECTS\LIBOCULUS\BUILD_CLEAN\_DEPS\FMT-SUBBUILD\CMAKEFILES\8DC4CDD2E11C87B73A3D8879CC6BCF23\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/Projects/liboculus/build_clean/_deps/fmt-subbuild -BF:/Projects/liboculus/build_clean/_deps/fmt-subbuild --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file F:/Projects/liboculus/build_clean/_deps/fmt-subbuild/fmt-populate.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

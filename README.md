@@ -60,6 +60,12 @@ make
 
 `CMakelists.txt` attempts to auto-detect ROS.  Cmake builds should be done in an environment where ROS has not been loaded (there are no `ROS_*` environment variables).
 
+### Windows (MSVC)
+
+See `BUILD_WINDOWS.md` for a repeatable Windows build flow that uses a clean
+out-of-source directory and forces fetching fmt/spdlog to avoid version
+conflicts.
+
 ## Logging
 
 Internally the library uses [spdlog](https://github.com/gabime/spdlog).  The library's logger does not have any registered sinks by default and will not output to the console.

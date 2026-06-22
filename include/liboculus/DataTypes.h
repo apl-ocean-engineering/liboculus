@@ -41,6 +41,10 @@
 
 namespace liboculus {
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 typedef std::vector<uint8_t> ByteVector;
 
 template <typename T> T deg2rad(const T &value) { return M_PI / 180.0 * value; }
