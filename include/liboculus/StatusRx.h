@@ -41,7 +41,6 @@
 
 namespace liboculus {
 
-using boost::asio::deadline_timer;
 using boost::asio::ip::udp;
 
 // ----------------------------------------------------------------------------
@@ -76,7 +75,7 @@ private:
 
   udp::socket _socket;
 
-  deadline_timer _deadline;
+  boost::asio::system_timer _deadline;
 
   SonarStatusCallback _sonarStatusCallback;
 };

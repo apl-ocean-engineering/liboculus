@@ -28,8 +28,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "liboculus/DataRx.h"
+#include <boost/asio.hpp>
+#include <chrono>
+
 #include "liboculus/Constants.h"
+#include "liboculus/DataRx.h"
 #include "liboculus/Logger.h"
 
 namespace liboculus {
@@ -59,7 +62,7 @@ void DataRx::connect(const asio::ip::address &addr) {
 }
 
 void DataRx::connect(const std::string &strAddr) {
-  auto addr(boost::asio::ip::address_v4::from_string(strAddr));
+  auto addr(boost::asio::ip::make_address_v4(strAddr));
   // LOG_IF(FATAL,addr.is_unspecified()) << "Couldn't parse IP address" <<
   // ipAddr;
   connect(addr);
@@ -128,8 +131,8 @@ void DataRx::restartReceiveCycle() {
   }
 
   // Reset timeout timer; this should cancel existing pending timeouts
-  const auto timeout = boost::posix_time::seconds(timeout_secs_);
-  timeout_timer_.expires_from_now(timeout);
+  const auto timeout = std::chrono::seconds(timeout_secs_);
+  timeout_timer_.expires_after(timeout);
   timeout_timer_.async_wait(
       std::bind(&DataRx::onTimeout, this, std::placeholders::_1));
 

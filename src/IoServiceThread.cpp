@@ -64,7 +64,7 @@ void IoServiceThread::join() {
   if (!_thread)
     return;
   _thread->join();
-  _context->reset();
+  _context.reset();
   _thread.reset();
 }
 

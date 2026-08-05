@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.3
+    rev: v0.16.1
     hooks:
       # Run the linter
       - id: ruff-check
@@ -9,7 +9,7 @@ repos:
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v20.1.7
+    rev: v22.1.8
     hooks:
     -   id: clang-format
         types_or: [c++, c]
@@ -21,7 +21,7 @@ repos:
   #   - id: gersemi
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict

@@ -21,6 +21,7 @@ jobs:
           #- {ROS_DISTRO: noetic}
           - {ROS_DISTRO: jazzy}
           - {ROS_DISTRO: kilted}
+          - {ROS_DISTRO: lyrical}
           - {ROS_DISTRO: rolling}
 
     steps:
