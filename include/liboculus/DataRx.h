@@ -147,7 +147,7 @@ private:
   OnTimeoutCallback _onTimeoutCallback;
 
   int timeout_secs_;
-  boost::asio::deadline_timer timeout_timer_;
+  boost::asio::system_timer timeout_timer_;
 
   MutexedVariable<bool> is_connected_;
 

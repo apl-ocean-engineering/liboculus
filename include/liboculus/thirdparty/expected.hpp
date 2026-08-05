@@ -1386,8 +1386,7 @@ public:
 #else
   template <class F>
   TL_EXPECTED_11_CONSTEXPR decltype(expected_map_impl(
-      std::declval<expected &>(), std::declval<F &&>()))
-  map(F &&f) & {
+      std::declval<expected &>(), std::declval<F &&>())) map(F &&f) & {
     return expected_map_impl(*this, std::forward<F>(f));
   }
   template <class F>
@@ -1430,8 +1429,7 @@ public:
 #else
   template <class F>
   TL_EXPECTED_11_CONSTEXPR decltype(expected_map_impl(
-      std::declval<expected &>(), std::declval<F &&>()))
-  transform(F &&f) & {
+      std::declval<expected &>(), std::declval<F &&>())) transform(F &&f) & {
     return expected_map_impl(*this, std::forward<F>(f));
   }
   template <class F>
