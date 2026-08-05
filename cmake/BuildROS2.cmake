@@ -6,7 +6,7 @@ find_package(Boost OPTIONAL_COMPONENTS system)
 
 add_library(oculus SHARED ${oculus_SRCS})
 target_link_libraries(oculus PUBLIC
-     Boost::system
+     Boost::headers
      spdlog::spdlog)
 
 target_include_directories(
