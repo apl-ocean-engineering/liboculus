@@ -33,7 +33,7 @@ install(
 
 if(CATKIN_ENABLE_TESTING)
     add_definitions(-DTEST_DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/test/data")
-    include_directories(test/data/)
+    include_directories(test/)
 
     file(GLOB oculus_test_SRCS test/unit/*cpp)
 

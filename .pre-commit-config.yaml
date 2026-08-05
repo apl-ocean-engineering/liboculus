@@ -14,6 +14,21 @@ repos:
     -   id: clang-format
         types_or: [c++, c]
 
+  - repo: https://gitlab.com/daverona/pre-commit/cpp
+    rev: 0.8.0
+    hooks:
+    -   id: cpplint
+        # Don't want to fix thirdparty ...
+        exclude: ^(include/liboculus/thirdparty)/.*
+        # - runtime/int is warning to use int32_t instead of "long int"
+        #   didn't feel like fixing it.
+        #
+        # - readability/todo enforces that todos should have username.
+        #
+        # - whitespace/indent_namespace, whitespace/indent, whitespace/comments
+        #   and build/include_order conflict with choices made by clang format
+        args: ["--quiet", "--filter=-runtime/int,-readability/todo,-whitespace/indent_namespace,-whitespace/indent,-whitespace/comments,-build/include_order"]
+
   # CMake formatter
   # - repo: https://github.com/BlankSpruce/gersemi
   #   rev: 0.19.3
