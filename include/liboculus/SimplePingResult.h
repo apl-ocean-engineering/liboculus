@@ -72,9 +72,15 @@ public:
 
   const Ping_t *ping() const;
 
+  const unsigned int nBeams() const { return ping()->nBeams; }
   const BearingData &bearings() const { return _bearings; }
+
+  const unsigned int nRanges() const { return ping()->nRanges; }
+
   const GainData_t &gains() const { return _gains; }
   const ImageData &image() const { return _image; }
+
+  const double speedOfSoundUsed() const { return ping()->speedOfSoundUsed; }
 
   uint8_t dataSize() const { return SizeOfDataSize(ping()->dataSize); }
 
