@@ -139,6 +139,16 @@ SonarConfiguration &SonarConfiguration::set512Beams(bool v) {
   return *this;
 }
 
+SonarConfiguration &SonarConfiguration::setSpeedOfSound(double ms) {
+  _sfm.speedOfSound = ms;
+  return *this;
+}
+
+SonarConfiguration &SonarConfiguration::setSalinity(double ppt) {
+  _sfm.salinity = ppt;
+  return *this;
+}
+
 //== Serialization functions
 
 template <>

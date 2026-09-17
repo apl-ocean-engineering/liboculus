@@ -93,6 +93,19 @@ public:
   bool getSimpleReturn() const { return _simpleReturn; }
   bool getGainAssistance() const { return _gainAssistance; }
 
+  // From the Oculus documentation:
+  // Speed of sound:  ms-1, if set to zero then internal calc will apply using
+  // salinity Salinity:        ppt,  set to zero if we are in fresh water
+  //
+  // These setters only affect the respective field,
+  // and _does not_ automatically interconnect the two.
+  //
+  // That is,      setSalinity(35.0)    _does not_
+  // automatically setSpeedOfSound(0.0) so the salinity value is used
+  //
+  SonarConfiguration &setSpeedOfSound(double ms);
+  SonarConfiguration &setSalinity(double ppt);
+
   std::vector<std::string> dump(std::vector<std::string> &) const;
 
 private:
